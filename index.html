@@ -10,555 +10,457 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Recipe Box">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#2e6f6a">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f7f6f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 
-  <!-- Fonts: Kalam (ballpoint handwriting) + Courier Prime (typewriter) -->
+  <!-- Fonts: Libre Caslon Display (titles) + Libre Caslon Text (everything else) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap">
 
   <style>
-/* Recipe Box — a 1950s enamel recipe tin full of ruled index cards. */
+/* Recipe Box — set like a mid-century cookbook: black ink and one green spot color on white stock. */
 
 :root {
-  /* the tin */
-  --tin: #2e6f6a;
-  --tin-deep: #22534f;
-  --tin-ink: #f6f1e2;
-  --brass-hi: #e3c77e;
-  --brass-lo: #8c6a27;
+  --paper: #f7f6f1;
+  --paper-2: #efede6;
+  --ink: #1c1a17;
+  --ink-2: #5d5951;
+  --rule: #d8d4c9;
+  --spot: #2a5a3e;          /* basil green, the one spot color */
+  --spot-ink: #fdfcf8;
+  --gold: #b8862b;          /* stars only */
+  --danger: #9b2c22;
 
-  /* the cards */
-  --card: #fdfbf4;
-  --card-edge: #e6dfcd;
-  --rule-blue: #b7cde4;
-  --rule-red: #d24b45;
-  --ink: #233056;          /* ballpoint */
-  --type: #2c2722;         /* typewriter ribbon */
-  --type-soft: #6a6157;
-  --cherry: #b3312b;
-  --cherry-deep: #8f2621;
-  --manila: #ead9a7;
-  --manila-deep: #cdb676;
-  --pad: #fbf0b2;
-  --pad-rule: #e2cf7a;
+  --display: 'Libre Caslon Display', 'Big Caslon', 'Iowan Old Style', Georgia, serif;
+  --text: 'Libre Caslon Text', 'Iowan Old Style', 'Palatino', Georgia, serif;
 
-  --lh: 2rem;              /* ruled line spacing */
-  --radius-card: 3px;
-  --shadow-card: 0 1px 0 var(--card-edge), 0 6px 14px -6px rgba(10, 30, 28, .45);
-
-  --hand: 'Kalam', 'Bradley Hand', 'Segoe Print', cursive;
-  --typed: 'Courier Prime', 'Courier New', Courier, monospace;
-
+  --measure: 38rem;
+  --gutter: 1.25rem;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --tabs-h: 3.75rem;
+  --tabs-h: 3.6rem;
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --tin: #18403c;
-    --tin-deep: #102d2a;
-    --card: #ece7da;
-    --card-edge: #c9c1ad;
-    --pad: #e6dca0;
-    --shadow-card: 0 1px 0 #0b1f1d, 0 8px 18px -6px rgba(0, 0, 0, .7);
+    --paper: #161513;
+    --paper-2: #221f1c;
+    --ink: #ebe7de;
+    --ink-2: #a39e93;
+    --rule: #3a3731;
+    --spot: #8dbb9c;
+    --spot-ink: #10140f;
+    --gold: #d6a54a;
+    --danger: #e0806f;
+    color-scheme: dark;
   }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-
-html { -webkit-text-size-adjust: 100%; background: var(--tin); }
+html { -webkit-text-size-adjust: 100%; background: var(--paper); }
 
 body {
   margin: 0;
-  overflow-x: hidden;
   min-height: 100dvh;
-  font-family: var(--typed);
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--type);
-  background-color: var(--tin);
-  /* enamel speckle */
-  background-image:
-    radial-gradient(rgba(255, 255, 255, .06) 1px, transparent 1.2px),
-    radial-gradient(rgba(0, 0, 0, .07) 1px, transparent 1.2px);
-  background-size: 7px 7px, 11px 11px;
-  background-position: 0 0, 3px 4px;
+  overflow-x: hidden;
+  font-family: var(--text);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  font-variant-numeric: oldstyle-nums proportional-nums;
 }
 
 main {
-  max-width: 46rem;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
   margin: 0 auto;
-  padding: calc(var(--safe-top) + .75rem) 1rem calc(var(--tabs-h) + var(--safe-bottom) + 2rem);
+  padding: calc(var(--safe-top) + .5rem) var(--gutter) calc(var(--tabs-h) + var(--safe-bottom) + 2.5rem);
   outline: none;
 }
 
 img { max-width: 100%; display: block; }
+a { color: var(--spot); }
+p { margin: 0 0 .75rem; }
 
-a { color: var(--cherry); }
-
-:focus-visible { outline: 3px solid var(--brass-hi); outline-offset: 2px; border-radius: 2px; }
-.card :focus-visible, .pad :focus-visible { outline-color: var(--cherry); }
+:focus-visible { outline: 2px solid var(--spot); outline-offset: 3px; border-radius: 2px; }
 
 .sr-only {
   position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .skip-link { position: absolute; left: -999px; top: 0; }
-.skip-link:focus { left: 1rem; top: calc(var(--safe-top) + .5rem); z-index: 50; background: var(--card); padding: .5rem 1rem; }
+.skip-link:focus { left: 1rem; top: calc(var(--safe-top) + .5rem); z-index: 50; background: var(--paper); padding: .5rem 1rem; }
 
-.hand { font-family: var(--hand); color: var(--ink); font-weight: 400; }
+/* ---------- type ---------- */
 
-/* ---------- buttons ---------- */
+.book-title, .page-title, .chapter-title, .sec-title {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -.005em;
+  margin: 0;
+}
+.page-title { font-size: clamp(2.1rem, 9vw, 2.8rem); line-height: 1.08; text-wrap: balance; }
+.sec-title { font-size: 1.55rem; line-height: 1.2; color: var(--spot); }
+.chapter-title { font-size: 1.5rem; line-height: 1.2; color: var(--spot); }
+.hint { font-style: italic; color: var(--ink-2); font-size: .95rem; }
+
+/* ---------- controls ---------- */
 
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
-  min-height: 2.75rem; padding: .5rem 1.1rem;
-  font: 700 1rem/1.2 var(--typed);
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 2.75rem; padding: .55rem 1.15rem;
+  font: 400 1rem/1.2 var(--text);
   text-decoration: none; cursor: pointer;
-  border-radius: 4px; border: 1.5px solid transparent;
+  border-radius: 3px; border: 1px solid transparent;
   touch-action: manipulation;
 }
-.btn:disabled { opacity: .45; cursor: default; }
-.btn-primary { background: var(--cherry); color: #fff8ee; border-color: var(--cherry-deep); box-shadow: inset 0 -2px 0 var(--cherry-deep); }
-.btn-primary:active:not(:disabled) { box-shadow: none; transform: translateY(1px); }
-.btn-secondary { background: transparent; color: var(--type); border-color: var(--type); }
-.btn-secondary[aria-pressed="true"] { background: var(--type); color: var(--card); }
-.btn-danger { background: transparent; color: var(--cherry); border-color: var(--cherry); }
-.btn-small { min-height: 2.5rem; padding: .35rem .9rem; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn-primary { background: var(--spot); color: var(--spot-ink); }
+.btn-primary:active:not(:disabled) { filter: brightness(.92); }
+.btn-secondary { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn-secondary[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn-quiet { background: none; color: var(--ink-2); font-style: italic; padding-inline: .5rem; }
+.btn-wide { width: 100%; }
 .file-btn { position: relative; }
-.link-btn { background: none; border: 0; padding: .25rem 0; font: 700 1rem var(--typed); color: var(--cherry); text-decoration: underline; cursor: pointer; }
 
-/* ---------- masthead: the label holder on the front of the tin ---------- */
+.text-btn {
+  display: inline-flex; align-items: center; min-height: 2.75rem;
+  background: none; border: 0; padding: 0 .25rem; cursor: pointer;
+  font: italic 400 1rem var(--text); color: var(--spot); text-decoration: none;
+}
+.icon-btn { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; color: var(--ink-2); border-radius: 50%; }
 
-.masthead {
-  position: relative;
-  display: flex; justify-content: center;
-  padding: 1.25rem 0 1.5rem;
-}
-.label-holder {
-  display: flex; align-items: center; gap: .6rem;
-  padding: .55rem .7rem;
-  border-radius: 6px;
-  background: linear-gradient(160deg, var(--brass-hi), #b8954a 45%, var(--brass-lo));
-  box-shadow: 0 2px 0 rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .5);
-}
-.rivet {
-  width: .65rem; height: .65rem; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff3c9, #a27f36 60%, #5e4517);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, .35);
-}
-.label-card {
-  background: var(--card);
-  padding: .1rem 1.4rem .2rem;
-  border-radius: 2px;
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .18);
-  background-image: linear-gradient(to bottom, transparent calc(100% - .55rem), var(--rule-red) calc(100% - .55rem), var(--rule-red) calc(100% - .45rem), transparent calc(100% - .45rem));
-}
-.label-card h1 {
-  margin: 0;
-  font: 700 clamp(2.1rem, 9vw, 2.9rem)/1.2 var(--hand);
-  color: var(--ink);
-  transform: rotate(-1.5deg);
-}
-.icon-link {
-  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-  display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
-  color: var(--tin-ink); opacity: .85; border-radius: 50%;
-}
-
-.slip {
-  background: var(--card); color: var(--type);
-  padding: .75rem 1rem; margin: 0 0 1rem;
-  border-left: 4px solid var(--rule-red);
-  box-shadow: var(--shadow-card);
-}
-.slip p { margin: 0 0 .25rem; }
-
-/* ---------- home tools ---------- */
-
-.search input {
-  width: 100%;
-  min-height: 2.9rem;
-  padding: .6rem .9rem;
-  font: 1rem var(--typed);
-  color: var(--type);
-  background: var(--card);
-  border: 0; border-radius: 3px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .18);
-  -webkit-appearance: none; appearance: none;
-}
-
-.dividers {
-  display: flex; gap: .35rem;
-  overflow-x: auto; scrollbar-width: none;
-  margin: 1.1rem -1rem 0; padding: 0 1rem;
-  scroll-snap-type: x proximity;
-}
-.dividers::-webkit-scrollbar { display: none; }
-.divider {
-  flex: none;
-  scroll-snap-align: start;
-  font: 700 .95rem var(--typed);
-  color: var(--type);
-  padding: .55rem .95rem .45rem;
-  min-height: 2.6rem;
-  border: 0;
-  border-radius: 10px 10px 0 0;
-  background: var(--manila-deep);
-  cursor: pointer;
-  transform: translateY(4px);
-  transition: transform .15s ease;
-}
-.divider[aria-pressed="true"] { background: var(--manila); transform: translateY(0); }
-
-.sort-row {
-  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-  background: var(--manila);
-  padding: .5rem .9rem;
-  font-size: .9rem;
-  border-radius: 0 3px 3px 3px;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, .15);
-}
-.sort { display: flex; align-items: center; gap: .4rem; }
-.sort select {
-  font: 700 .9rem var(--typed); color: var(--type);
-  background: transparent; border: 0; border-bottom: 1.5px solid var(--type);
-  padding: .2rem 0; min-height: 2rem;
-}
-
-/* ---------- the stack of index cards ---------- */
-
-.card-stack {
-  list-style: none; margin: 1.25rem 0 0; padding: 0;
-  display: grid; gap: 1rem;
-  grid-template-columns: minmax(0, 1fr);
-}
-.card-stack > li { min-width: 0; }
-@media (min-width: 40rem) { .card-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-.index-card {
-  position: relative;
-  display: block; min-height: 8.5rem;
-  padding: .9rem 1rem 1rem;
-  text-decoration: none; color: var(--type);
-  background:
-    linear-gradient(var(--rule-red), var(--rule-red)) 0 3.4rem / 100% 2px no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), var(--rule-blue) calc(1.75rem - 1px) 1.75rem) 0 3.4rem / 100% 100% no-repeat,
-    var(--card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  transform: rotate(var(--tilt, 0deg));
-}
-.index-card:active { transform: rotate(0deg) translateY(1px); }
-.ic-title {
-  display: block;
-  font: 700 1.55rem/1.6 var(--hand); color: var(--ink);
-  padding-right: 4.5rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.heart { color: var(--cherry); }
-.ic-meta {
-  display: flex; flex-wrap: wrap; gap: .25rem 1rem;
-  margin-top: .65rem;
-  font-size: .9rem; line-height: 1.75rem;
-  padding-right: 4.5rem;
-}
-.stars-static { color: var(--cherry); letter-spacing: .05em; }
-.stars-static .dim { color: var(--card-edge); }
-.ic-photo {
-  position: absolute; right: .9rem; top: .7rem;
-  width: 3.9rem; height: 3.9rem; object-fit: cover;
-  border: 4px solid #fff; border-bottom-width: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
-  transform: rotate(4deg);
-}
-
-.empty-card { padding: 1.25rem 1.25rem 1.5rem; background: var(--card); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
-.empty-card h1, .empty-card h2 { margin: 0 0 .5rem; font: 700 1.6rem/1.3 var(--hand); color: var(--ink); }
-.empty-card p { margin: 0 0 1rem; max-width: 34em; }
+.action-row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
 
 /* ---------- top bar ---------- */
 
-.topbar { padding: .25rem 0 .75rem; }
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 0 -.25rem .5rem;
+}
 .back {
-  display: inline-flex; align-items: center; gap: .4rem;
-  min-height: 2.75rem;
-  color: var(--tin-ink); font-weight: 700; text-decoration: none;
+  display: inline-flex; align-items: center; gap: .35rem; min-height: 2.75rem; padding: 0 .25rem;
+  color: var(--ink); text-decoration: none; font-style: italic;
 }
-.back::before { content: '‹'; font-size: 1.6rem; line-height: 1; margin-top: -.15rem; }
-
-/* ---------- a full recipe card ---------- */
-
-.card {
-  background: var(--card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+.back::before {
+  content: ''; width: .5rem; height: .5rem;
+  border-left: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); margin-right: .15rem;
 }
 
-.recipe-head {
-  padding: 1.25rem 1.25rem 1rem;
-  border-bottom: 5px double var(--rule-red);
-}
-.recipe-head h1 { margin: 0; font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1.2; font-weight: 700; }
+/* ---------- home: contents ---------- */
 
-.rating-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-top: .5rem; }
-.stars { display: flex; }
+.masthead {
+  position: relative;
+  padding: 2.25rem 0 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 3px double var(--ink);
+  text-align: center;
+}
+.book-title { font-size: clamp(3rem, 15vw, 4.25rem); line-height: 1; }
+.book-sub { margin: .5rem 0 0; font-style: italic; color: var(--ink-2); min-height: 1.6em; }
+.masthead-settings { position: absolute; top: 1rem; right: -.6rem; }
+
+.notice {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .75rem 1rem; margin-bottom: 1.25rem;
+  background: var(--paper-2); border-left: 3px solid var(--spot);
+}
+.notice p { margin: 0; font-size: .95rem; }
+
+.search input {
+  width: 100%; min-height: 2.9rem;
+  padding: .5rem 0;
+  font: italic 1.0625rem var(--text); color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid var(--ink);
+  border-radius: 0; -webkit-appearance: none; appearance: none;
+}
+.search input:focus { outline: none; border-bottom: 2px solid var(--spot); }
+.search input::placeholder { color: var(--ink-2); }
+
+.finder-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .6rem; }
+.chapters {
+  display: flex; gap: .25rem 1.1rem; overflow-x: auto; scrollbar-width: none;
+  flex: 1; min-width: 0; padding: .1rem 0;
+}
+.chapters::-webkit-scrollbar { display: none; }
+.chapters { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent); padding-right: 2rem; }
+.chapter-link {
+  flex: none; background: none; border: 0; padding: .4rem 0; min-height: 2.5rem; cursor: pointer;
+  font: 1rem var(--text); color: var(--ink-2);
+  border-bottom: 2px solid transparent;
+}
+.chapter-link[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--spot); }
+.sort select {
+  font: italic .95rem var(--text); color: var(--ink-2);
+  background: transparent; border: 0; padding: .4rem 0; min-height: 2.5rem; cursor: pointer;
+  -webkit-appearance: none; appearance: none; text-align: right;
+}
+
+.contents { margin-top: 1.25rem; }
+.chapter + .chapter { margin-top: 2rem; }
+.chapter-title { padding-bottom: .35rem; border-bottom: 1px solid var(--rule); }
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc-row {
+  display: block; padding: .8rem 0; color: var(--ink); text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+.toc-row:active { background: var(--paper-2); }
+.toc-line { display: flex; align-items: baseline; gap: .4rem; }
+.toc-title { font-size: 1.2rem; line-height: 1.3; }
+.toc-leader { flex: 1; min-width: 1rem; border-bottom: 1.5px dotted var(--ink-2); opacity: .55; transform: translateY(-.3em); }
+.toc-meta { flex: none; }
+.toc-sub { display: block; margin-top: .15rem; font-size: .92rem; font-style: italic; color: var(--ink-2); }
+.fav-mark { color: var(--spot); font-size: .9em; }
+.stars-static { color: var(--gold); letter-spacing: .08em; font-size: .9rem; }
+.stars-static .dim { color: var(--rule); }
+
+.empty { padding: 1.5rem 0; }
+.empty .chapter-title { border: 0; margin-bottom: .5rem; }
+.empty p { max-width: 32em; color: var(--ink-2); }
+
+/* ---------- recipe page ---------- */
+
+.recipe-head { padding: 1rem 0 1.25rem; border-bottom: 3px double var(--ink); }
+.recipe-meta { margin: .6rem 0 0; font-style: italic; color: var(--ink-2); }
+.rating-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .5rem; }
+.stars { display: flex; margin-left: -.5rem; }
 .star {
-  font-size: 1.8rem; line-height: 1;
-  width: 2.75rem; height: 2.75rem;
-  background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--card-edge);
-  -webkit-text-stroke: 1px var(--cherry);
+  width: 2.6rem; height: 2.75rem; padding: 0; border: 0; background: none; cursor: pointer;
+  font-size: 1.45rem; line-height: 1; color: var(--rule);
   transition: transform .12s ease;
 }
-.star[aria-pressed="true"] { color: var(--cherry); }
-.star:active { transform: scale(1.2); }
-.fav-btn {
-  background: none; border: 0; cursor: pointer;
-  font: 700 .95rem var(--typed); color: var(--cherry);
-  min-height: 2.75rem; padding: 0 .25rem;
-}
+.star[aria-pressed="true"] { color: var(--gold); }
+.star:active { transform: scale(1.18); }
+.fav-btn[aria-pressed="true"] { font-style: normal; }
 
-.facts {
-  display: flex; flex-wrap: wrap; gap: .5rem 1.5rem;
-  margin: .75rem 0 0;
-}
-.facts div { display: flex; gap: .4rem; align-items: baseline; }
-.facts dt { font-size: .85rem; color: var(--type-soft); }
-.facts dt::after { content: ':'; }
-.facts dd { margin: 0; font: 700 1.2rem var(--hand); color: var(--ink); }
+.sec { padding: 1.5rem 0; }
+.sec + .sec { border-top: 1px solid var(--rule); }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.sec > .sec-title { margin-bottom: .75rem; }
+.sec .hint { margin: .75rem 0 0; }
 
-.photo-strip { display: flex; gap: .75rem; overflow-x: auto; padding: 1rem 1.25rem .25rem; }
-.snapshot {
-  flex: none; padding: 5px 5px 14px; background: #fff; border: 0; cursor: zoom-in;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
-}
-.snapshot:nth-child(odd) { transform: rotate(-2deg); }
-.snapshot:nth-child(even) { transform: rotate(2deg); }
-.snapshot img { width: 6.5rem; height: 6.5rem; object-fit: cover; }
-
-/* Ruled sections: text sits on blue lines spaced at --lh */
-.ruled {
-  line-height: var(--lh);
-  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--lh) - 1px), var(--rule-blue) calc(var(--lh) - 1px) var(--lh));
-  background-position: 0 1rem;
-}
-.block { padding: 1rem 1.25rem var(--lh); }
-.block + .block { border-top: 1px dashed var(--card-edge); }
-.block h2 { margin: 0; font: 700 1.5rem/var(--lh) var(--hand); color: var(--cherry); }
-.block-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.hint { margin: 0; font-size: .9rem; color: var(--type-soft); }
-.ruled .hint { line-height: var(--lh); }
-
-.scaler { display: flex; border: 1.5px solid var(--type); border-radius: 4px; overflow: hidden; background: var(--card); }
+.scaler { display: flex; border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; }
 .scaler button {
-  font: 700 .95rem var(--typed); color: var(--type);
-  background: none; border: 0; min-width: 2.75rem; min-height: 2.25rem; cursor: pointer;
+  font: .95rem var(--text); color: var(--ink); background: none; border: 0;
+  min-width: 2.75rem; min-height: 2.25rem; cursor: pointer;
+  font-variant-numeric: lining-nums;
 }
-.scaler button + button { border-left: 1.5px solid var(--type); }
-.scaler button[aria-pressed="true"] { background: var(--type); color: var(--card); }
+.scaler button + button { border-left: 1px solid var(--ink); }
+.scaler button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
-.ingredients { list-style: none; margin: 0 0 var(--lh); padding: 0; }
+/* ingredients: quantity column + item, like a printed cookbook */
+.ing-list { list-style: none; margin: 0; padding: 0; }
 .ing {
-  display: block; width: 100%; text-align: left;
-  font: 1.05rem/var(--lh) var(--typed); color: var(--type);
-  background: none; border: 0; padding: 0 0 0 1.4rem; cursor: pointer;
-  position: relative;
+  display: grid; grid-template-columns: 6.25rem 1fr; gap: .9rem;
+  width: 100%; padding: .45rem 0; text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--ink);
+  font: 1.0625rem/1.45 var(--text);
+  border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
 }
-.ing::before { content: '–'; position: absolute; left: .2rem; color: var(--type-soft); }
-.ing[aria-pressed="true"] {
-  color: var(--type-soft);
-  text-decoration: line-through; text-decoration-color: var(--cherry); text-decoration-thickness: 2px;
+.ing-qty { text-align: right; font-variant-numeric: lining-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ing-item { min-width: 0; }
+.ing[aria-pressed="true"] { color: var(--ink-2); }
+.ing[aria-pressed="true"] .ing-item, .ing[aria-pressed="true"] .ing-qty {
+  text-decoration: line-through; text-decoration-color: var(--spot); text-decoration-thickness: 1.5px;
 }
+.ing-list + .hint + .btn { margin-top: 1rem; }
 
-.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
-.steps li {
-  counter-increment: step;
-  position: relative;
-  padding-left: 2.2rem;
-  font-size: 1.05rem;
-  cursor: pointer;
+.method { list-style: none; margin: 0; padding: 0; }
+.method-step {
+  display: grid; grid-template-columns: 2.25rem 1fr; gap: .5rem;
+  padding: .5rem 0 .9rem; cursor: pointer;
 }
-.steps li::before {
-  content: counter(step) '.';
-  position: absolute; left: 0;
-  font: 700 1.35rem/var(--lh) var(--hand); color: var(--ink);
+.step-num {
+  font-family: var(--display); font-size: 1.9rem; line-height: 1; color: var(--spot);
+  font-variant-numeric: lining-nums; padding-top: .1rem;
 }
-.steps li.done { color: var(--type-soft); }
-.steps li.done::before { content: '✓'; color: var(--cherry); }
+.method-step p { margin: 0; max-width: 34em; }
+.method-step.done { color: var(--ink-2); }
+.method-step.done .step-num { color: var(--rule); }
+.method-step.done p { text-decoration: line-through; text-decoration-color: var(--rule); }
 
-.ruled-input {
-  display: block; width: 100%;
-  font: 1.05rem/var(--lh) var(--typed); color: var(--type);
-  background-color: transparent;
-  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--lh) - 1px), var(--rule-blue) calc(var(--lh) - 1px) var(--lh));
-  background-attachment: local;
-  border: 0; border-left: 2px solid var(--rule-red);
-  padding: 0 .5rem;
-  resize: vertical;
-  border-radius: 0;
+.notes-input {
+  display: block; width: 100%; min-height: 4.5rem;
+  font: italic 1.0625rem/1.55 var(--text); color: var(--ink);
+  background: var(--paper-2); border: 1px solid transparent; border-radius: 3px;
+  padding: .7rem .85rem; resize: vertical;
 }
-.ruled-input:focus { outline: none; border-left-color: var(--cherry); background-color: rgba(255, 255, 255, .5); }
-.block .ruled-input { background-image: none; border-left: 0; padding: 0; }
+.notes-input:focus { outline: none; border-color: var(--spot); background: transparent; }
 
-.recipe-actions { padding: 1.25rem; border-top: 2px solid var(--rule-red); display: grid; gap: 1rem; }
-.made { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
-.made-count { font-size: .9rem; color: var(--type-soft); }
-.action-row { display: flex; flex-wrap: wrap; gap: .6rem; }
+.photo-strip { display: flex; gap: .6rem; overflow-x: auto; padding-bottom: .25rem; }
+.thumb { flex: none; padding: 0; border: 1px solid var(--rule); background: var(--paper-2); cursor: zoom-in; }
+.thumb img { width: 5.5rem; height: 7rem; object-fit: cover; object-position: top; }
+
+.recipe-foot { padding-top: 1.5rem; border-top: 3px double var(--ink); }
+.made-count { font-style: italic; color: var(--ink-2); }
 
 /* ---------- form ---------- */
 
-.form { padding: 1.25rem; }
-.form h1 { margin: 0 0 .5rem; font-size: 2.2rem; line-height: 1.2; font-weight: 700; }
-.form h2 { font: 700 1.4rem/1.3 var(--hand); color: var(--cherry); margin: 1.25rem 0 .5rem; }
-.scan { padding-bottom: 1.25rem; border-bottom: 2px solid var(--rule-red); }
-.scan .hint { margin-bottom: .9rem; max-width: 36em; }
-.scan-buttons { display: flex; flex-wrap: wrap; gap: .6rem; }
-
-.photo-tray { display: flex; flex-wrap: wrap; gap: .9rem; margin-bottom: 1rem; }
+.form .page-title { padding: 1rem 0 1.25rem; border-bottom: 3px double var(--ink); }
+.scan .hint { margin: 0 0 1rem; max-width: 34em; }
+.photo-tray { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .photo-tray[hidden] { display: none; }
-.tray-photo { position: relative; margin: 0; padding: 4px 4px 12px; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
-.tray-photo img { width: 5.5rem; height: 5.5rem; object-fit: cover; }
+.tray-photo { position: relative; margin: 0; border: 1px solid var(--rule); }
+.tray-photo img { width: 4.5rem; height: 6rem; object-fit: cover; object-position: top; }
 .tray-remove {
-  position: absolute; top: -.7rem; right: -.7rem;
-  width: 2rem; height: 2rem; border-radius: 50%;
-  border: 0; background: var(--type); color: var(--card);
-  font: 700 1.2rem/1 var(--typed); cursor: pointer;
+  position: absolute; top: -.6rem; right: -.6rem;
+  display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%;
+  border: 0; background: var(--ink); color: var(--paper); cursor: pointer;
 }
+.tray-remove svg { width: 14px; height: 14px; }
 
 .progress { margin-top: 1rem; }
 .progress[hidden] { display: none; }
-.progress-track { height: .6rem; background: var(--card-edge); border-radius: 3px; overflow: hidden; }
-.progress-fill { display: block; height: 100%; width: 0; background: var(--cherry); transition: width .25s ease; }
-.progress-label { margin: .5rem 0 0; font-size: .95rem; }
+.progress-track { height: 3px; background: var(--rule); overflow: hidden; }
+.progress-fill { display: block; height: 100%; width: 0; background: var(--spot); transition: width .25s ease; }
+.progress-label { margin: .6rem 0 0; font-style: italic; }
 
 .raw { margin-top: .9rem; font-size: .9rem; }
 .raw[hidden] { display: none; }
-.raw summary { cursor: pointer; font-weight: 700; min-height: 2.25rem; display: flex; align-items: center; }
+.raw summary { cursor: pointer; color: var(--spot); font-style: italic; min-height: 2.5rem; display: flex; align-items: center; }
 .raw pre {
-  white-space: pre-wrap; font: .85rem/1.5 var(--typed);
-  background: rgba(0, 0, 0, .04); padding: .75rem; max-height: 18rem; overflow: auto;
+  white-space: pre-wrap; font: .85rem/1.5 ui-monospace, Menlo, monospace;
+  background: var(--paper-2); padding: .75rem; max-height: 18rem; overflow: auto; margin: 0;
 }
 
-.field { display: grid; gap: .25rem; margin-bottom: 1.1rem; min-width: 0; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.field label, .field > span { font-size: .9rem; color: var(--type-soft); }
-.label-hint { font-style: italic; }
+.field { display: grid; gap: .1rem; margin-bottom: 1rem; min-width: 0; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.25rem; }
+.field label { font-size: .9rem; font-style: italic; color: var(--ink-2); }
 .field input, .field select {
-  width: 100%;
-  font: 1.3rem/1.4 var(--hand); color: var(--ink);
-  background: transparent;
-  border: 0; border-bottom: 1.5px solid var(--rule-blue);
-  border-radius: 0;
-  padding: .25rem 0; min-height: 2.75rem;
+  width: 100%; min-height: 2.75rem; padding: .35rem 0;
+  font: 1.125rem var(--text); color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid var(--rule); border-radius: 0;
   -webkit-appearance: none; appearance: none;
 }
 .field select {
-  background-image: linear-gradient(45deg, transparent 50%, var(--type) 50%), linear-gradient(135deg, var(--type) 50%, transparent 50%);
-  background-position: calc(100% - 12px) 55%, calc(100% - 7px) 55%;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 10px) 55%, calc(100% - 5px) 55%;
   background-size: 5px 5px; background-repeat: no-repeat;
 }
-.field input:focus, .field select:focus { outline: none; border-bottom-color: var(--cherry); border-bottom-width: 2px; }
-.field input::placeholder { color: #b0a898; }
-.field-error { margin: 0; color: var(--cherry); font-weight: 700; font-size: .9rem; }
+.field input:focus, .field select:focus { outline: none; border-bottom: 2px solid var(--spot); }
+.field input::placeholder { color: color-mix(in srgb, var(--ink-2) 60%, transparent); }
+.field-error { margin: .25rem 0 0; color: var(--danger); font-size: .9rem; }
 .field-error[hidden] { display: none; }
-.check-row { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; }
+
+/* editable lists: one box per ingredient or step, reorderable by the handle */
+.edit-list { list-style: none; margin: .75rem 0 0; padding: 0; }
+.edit-row {
+  display: grid; grid-template-columns: 2.25rem 1fr 2.5rem; align-items: start;
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 4px;
+  margin-bottom: .5rem;
+}
+.edit-list.steps .edit-row { grid-template-columns: 2.25rem 1.6rem 1fr 2.5rem; }
+.grip {
+  display: grid; place-items: center; align-self: stretch; min-height: 2.75rem;
+  background: none; border: 0; color: var(--ink-2); cursor: grab;
+  touch-action: none; /* lets a finger drag the row without scrolling the page */
+}
+.grip:active { cursor: grabbing; }
+.row-num {
+  font-family: var(--display); font-size: 1.35rem; line-height: 1; color: var(--spot);
+  padding-top: .7rem; font-variant-numeric: lining-nums;
+}
+.row-input {
+  display: block; width: 100%; min-height: 2.75rem; resize: none; overflow: hidden;
+  padding: .6rem .25rem; border: 0; background: transparent;
+  font: 1.0625rem/1.5 var(--text); color: var(--ink);
+}
+.edit-list.steps .row-input { min-height: 6.25rem; }
+.row-input:focus { outline: none; }
+.edit-row:focus-within { border-color: var(--spot); box-shadow: 0 0 0 1px var(--spot); }
+.row-remove {
+  display: grid; place-items: center; width: 2.5rem; height: 2.75rem;
+  background: none; border: 0; color: var(--ink-2); cursor: pointer;
+}
+.edit-row.dragging {
+  position: relative; z-index: 5;
+  border-color: var(--spot);
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .28);
+  background: var(--paper);
+}
+.is-dragging .edit-row:not(.dragging) { transition: transform .15s ease; }
+.add-row { margin-top: .1rem; }
+
+.check-row { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; margin-top: .75rem; }
 .check-row[hidden] { display: none; }
-.check-row input { width: 1.25rem; height: 1.25rem; accent-color: var(--cherry); }
-.form-actions { padding-top: 1rem; border-top: 2px solid var(--rule-red); }
-.form-actions .btn { width: 100%; }
+.check-row input { width: 1.2rem; height: 1.2rem; accent-color: var(--spot); }
+.form-actions { padding-top: 1.25rem; border-top: 3px double var(--ink); }
 
-/* ---------- grocery pad ---------- */
+/* ---------- grocery list ---------- */
 
-.pad {
-  max-width: 32rem; margin: .75rem auto 0;
-  background: var(--pad);
-  box-shadow: var(--shadow-card);
-  transform: rotate(-.4deg);
-}
-.pad-binding {
-  height: 1.5rem;
-  background:
-    radial-gradient(circle at 50% 100%, var(--tin) .35rem, transparent .4rem) 0 0 / 1.1rem 100% repeat-x,
-    linear-gradient(#c5a94f, #a88b33);
-}
-.pad-body {
-  padding: .75rem 1.25rem 1.5rem 2.75rem;
-  background:
-    linear-gradient(var(--rule-red), var(--rule-red)) 2rem 0 / 2px 100% no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 calc(var(--lh) - 1px), var(--pad-rule) calc(var(--lh) - 1px) var(--lh)) 0 .4rem;
-}
-.pad h1 { margin: 0 0 .5rem; font-size: 2.2rem; line-height: 1.3; font-weight: 700; }
-.add-item { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.grocery .page-title { padding-top: 1rem; }
+.grocery > .recipe-meta { margin-bottom: 1.25rem; min-height: 1.6em; }
+.add-item { display: flex; gap: .75rem; align-items: end; margin-bottom: 1.25rem; }
 .add-item input {
-  flex: 1; min-width: 0;
-  font: 1.3rem var(--hand); color: var(--ink);
-  background: transparent; border: 0; border-bottom: 1.5px dashed var(--type-soft);
-  border-radius: 0; padding: .25rem 0; min-height: 2.5rem;
+  flex: 1; min-width: 0; min-height: 2.75rem; padding: .4rem 0;
+  font: 1.0625rem var(--text); color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0;
 }
-.add-item input:focus { outline: none; border-bottom: 2px solid var(--cherry); }
+.add-item input:focus { outline: none; border-bottom: 2px solid var(--spot); }
 
-.segmented { display: inline-flex; border: 1.5px solid var(--type); border-radius: 4px; overflow: hidden; margin-bottom: .5rem; }
-.segmented button { font: 700 .9rem var(--typed); color: var(--type); background: none; border: 0; padding: .4rem .9rem; min-height: 2.5rem; cursor: pointer; }
-.segmented button + button { border-left: 1.5px solid var(--type); }
-.segmented button[aria-pressed="true"] { background: var(--type); color: var(--pad); }
+.segmented { display: inline-flex; border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; margin-bottom: .5rem; }
+.segmented button { font: .95rem var(--text); color: var(--ink); background: none; border: 0; padding: .35rem .9rem; min-height: 2.5rem; cursor: pointer; }
+.segmented button + button { border-left: 1px solid var(--ink); }
+.segmented button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
-.group h2 { margin: .75rem 0 0; font: 700 1.25rem/var(--lh) var(--hand); color: var(--cherry); }
-.group ul { list-style: none; margin: 0; padding: 0; }
-.gitem { display: flex; align-items: center; justify-content: space-between; gap: .5rem; line-height: var(--lh); }
-.gitem label { display: flex; align-items: flex-start; gap: .65rem; cursor: pointer; flex: 1; min-height: 2.75rem; padding-top: .35rem; }
-.gitem input {
-  -webkit-appearance: none; appearance: none;
-  flex: none; width: 1.3rem; height: 1.3rem; margin: .1rem 0 0;
-  border: 2px solid var(--ink); border-radius: 2px 4px 3px 2px;
-  background: transparent; cursor: pointer; display: grid; place-items: center;
+.g-group { margin-top: 1.25rem; }
+.g-title { font: italic 1.05rem var(--text); color: var(--spot); margin: 0 0 .25rem; }
+.g-list { list-style: none; margin: 0; padding: 0; }
+.g-item { display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--rule); }
+.g-item label { display: flex; align-items: flex-start; gap: .75rem; flex: 1; padding: .6rem 0; cursor: pointer; min-height: 2.75rem; }
+.g-item input {
+  -webkit-appearance: none; appearance: none; flex: none;
+  width: 1.15rem; height: 1.15rem; margin: .22rem 0 0;
+  border: 1.5px solid var(--ink); border-radius: 2px; background: transparent; cursor: pointer;
+  display: grid; place-items: center;
 }
-.gitem input:checked::after { content: '✓'; font: 700 1.3rem/1 var(--hand); color: var(--cherry); margin-top: -.3rem; }
-.gitem span { font: 1.3rem/1.35 var(--hand); color: var(--ink); }
-.gitem.done span { color: var(--type-soft); text-decoration: line-through; text-decoration-color: var(--cherry); }
-.gdel { flex: none; width: 2.5rem; height: 2.5rem; border: 0; background: none; font: 1.4rem var(--typed); color: var(--type-soft); cursor: pointer; }
-.list-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.5rem 0 1rem; }
-.empty-pad { font: 1.3rem/var(--lh) var(--hand); color: var(--ink); margin: 0; }
+.g-item input:checked { background: var(--spot); border-color: var(--spot); }
+.g-item input:checked::after {
+  content: ''; width: .32rem; height: .6rem; margin-top: -.12rem;
+  border-right: 2px solid var(--spot-ink); border-bottom: 2px solid var(--spot-ink); transform: rotate(45deg);
+}
+.g-item.done span { color: var(--ink-2); text-decoration: line-through; }
+.list-actions { margin: 1.5rem 0 .25rem; }
+.empty-note { font-style: italic; color: var(--ink-2); }
 
 /* ---------- settings ---------- */
 
-.settings { padding: 1.25rem; }
-.settings h1 { margin: 0; font-size: 2.2rem; line-height: 1.2; font-weight: 700; }
-.settings h2 { margin: 1.5rem 0 .4rem; padding-top: 1rem; border-top: 1px dashed var(--card-edge); font: 700 1.35rem var(--hand); color: var(--cherry); }
-.settings p { max-width: 36em; margin: 0 0 .75rem; }
-.install-steps { margin: 0 0 .75rem; padding-left: 1.4rem; }
+.settings .page-title { padding: 1rem 0 1.25rem; border-bottom: 3px double var(--ink); }
+.settings p { max-width: 34em; }
+.plain-steps { margin: 0 0 .75rem; padding-left: 1.3rem; }
 
-/* ---------- bottom tabs: dividers sticking out of the tin ---------- */
+/* ---------- bottom tabs ---------- */
 
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  display: flex; justify-content: center; gap: .35rem;
-  padding: .5rem .75rem calc(var(--safe-bottom) + .5rem);
-  background: var(--tin-deep);
-  box-shadow: 0 -1px 0 rgba(255, 255, 255, .08), 0 -6px 14px -6px rgba(0, 0, 0, .5);
+  display: flex; justify-content: center;
+  padding: .3rem .5rem calc(var(--safe-bottom) + .3rem);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--rule);
 }
 .tab {
-  flex: 1; max-width: 11rem;
-  display: flex; align-items: center; justify-content: center; gap: .35rem;
-  min-height: 2.75rem; padding: .35rem .5rem;
-  font: 700 .9rem/1.15 var(--typed); text-align: center; text-decoration: none;
-  color: var(--type);
-  background: var(--manila-deep);
-  border-radius: 8px;
+  position: relative; flex: 1; max-width: 9rem;
+  display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  min-height: 2.9rem; padding: .25rem 0;
+  font: .78rem/1.2 var(--text); color: var(--ink-2); text-decoration: none;
 }
-.tab[aria-current="page"] { background: var(--card); color: var(--ink); box-shadow: inset 0 -3px 0 var(--cherry); }
+.tab[aria-current="page"] { color: var(--spot); }
 .tab-count {
-  min-width: 1.4rem; height: 1.4rem; padding: 0 .3rem;
-  border-radius: .7rem; background: var(--cherry); color: #fff8ee;
-  font-size: .8rem; line-height: 1.4rem;
+  position: absolute; top: .1rem; left: calc(50% + .55rem);
+  min-width: 1.15rem; height: 1.15rem; padding: 0 .3rem; border-radius: .6rem;
+  background: var(--spot); color: var(--spot-ink);
+  font: .7rem/1.15rem var(--text); text-align: center; font-variant-numeric: lining-nums;
 }
 .tab-count[hidden] { display: none; }
 
@@ -566,37 +468,34 @@ a { color: var(--cherry); }
 
 .toast {
   position: fixed; left: 50%; z-index: 20;
-  bottom: calc(var(--tabs-h) + var(--safe-bottom) + 1rem);
+  bottom: calc(var(--tabs-h) + var(--safe-bottom) + .9rem);
   max-width: min(26rem, calc(100vw - 2rem));
-  padding: .7rem 1rem;
-  background: var(--card); color: var(--type);
-  border-left: 4px solid var(--cherry);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
-  font-weight: 700; font-size: .95rem;
-  transform: translate(-50%, 1rem); opacity: 0; pointer-events: none;
+  padding: .65rem 1.1rem;
+  background: var(--ink); color: var(--paper);
+  border-radius: 3px; font-size: .95rem;
+  transform: translate(-50%, .75rem); opacity: 0; pointer-events: none;
   transition: opacity .2s ease, transform .2s ease;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 .photo-viewer {
   border: 0; padding: 0; max-width: 100vw; max-height: 100dvh; width: 100vw; height: 100dvh;
-  background: rgba(10, 20, 19, .92);
+  background: rgba(12, 12, 10, .94);
 }
-.photo-viewer[open] { display: grid; place-items: center; }
-.photo-viewer::backdrop { background: rgba(10, 20, 19, .92); }
-.photo-viewer img { max-width: 96vw; max-height: 84dvh; object-fit: contain; background: #fff; padding: 6px; }
+.photo-viewer[open] { display: grid; place-items: center; overflow: auto; }
+.photo-viewer::backdrop { background: rgba(12, 12, 10, .94); }
+.photo-viewer img { max-width: 96vw; max-height: 86dvh; object-fit: contain; }
 .photo-close {
   position: fixed; top: calc(var(--safe-top) + .75rem); right: 1rem;
   min-height: 2.75rem; padding: 0 1rem;
-  font: 700 1rem var(--typed); color: var(--type); background: var(--card);
-  border: 0; border-radius: 4px; cursor: pointer;
+  font: 1rem var(--text); color: #1c1a17; background: #f7f6f1;
+  border: 0; border-radius: 3px; cursor: pointer;
 }
 
-.noscript { color: var(--tin-ink); text-align: center; padding: 2rem; }
+.noscript { text-align: center; padding: 2rem; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
-  .index-card, .pad { transform: none; }
 }
   </style>
 </head>
@@ -606,9 +505,18 @@ a { color: var(--cherry); }
   <main id="view" tabindex="-1" aria-live="polite"></main>
 
   <nav class="tabs" aria-label="Main">
-    <a class="tab" href="#/" data-tab="home">Recipes</a>
-    <a class="tab" href="#/new" data-tab="new">Add recipe</a>
-    <a class="tab" href="#/list" data-tab="list">Grocery list <span class="tab-count" id="listCount" hidden></span></a>
+    <a class="tab" href="#/" data-tab="home">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 4.5h6.5a2 2 0 0 1 2 2V20a1.6 1.6 0 0 0-1.6-1.6H4zM20 4.5h-6.5a2 2 0 0 0-2 2V20a1.6 1.6 0 0 1 1.6-1.6H20z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span>Recipes</span>
+    </a>
+    <a class="tab" href="#/new" data-tab="new">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>Add recipe</span>
+    </a>
+    <a class="tab" href="#/list" data-tab="list">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 6.5l1 1 1.8-2M4 12l1 1 1.8-2M4 17.5l1 1 1.8-2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Grocery list</span><span class="tab-count" id="listCount" hidden></span>
+    </a>
   </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -629,9 +537,9 @@ a { color: var(--cherry); }
   const base = new URL('./', location.href).href;
   const manifest = {
     name: 'Recipe Box', short_name: 'Recipe Box',
-    description: 'Scan, keep and cook from your recipe cards.',
+    description: 'Scan, keep and cook from your recipes.',
     start_url: base, scope: base, display: 'standalone', orientation: 'portrait',
-    background_color: '#2e6f6a', theme_color: '#2e6f6a',
+    background_color: '#f7f6f1', theme_color: '#f7f6f1',
     icons: [
       { src: base + 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: base + 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
@@ -743,6 +651,8 @@ const HEADINGS = {
 const STEP_VERBS = /^(?:preheat|heat|mix|combine|stir|add|bake|beat|whisk|pour|place|cook|simmer|boil|bring|remove|let|serve|cover|chill|refrigerate|fold|cream|sift|blend|spread|sprinkle|roll|cut|chop|slice|dice|mince|melt|grease|line|transfer|season|drain|toss|top|garnish|put|set|turn|reduce|saut[eé]|fry|roast|grill|broil|knead|divide|shape|brush|arrange|repeat|cool|allow|meanwhile|when|once|while|after|then|until|return|wash|peel|mash|puree|purée|process|pulse|measure|prepare|make|start|in a|in the|using|on a|spoon|scoop|press|dissolve|soak|marinate|rinse|pat|stuff|wrap|freeze|thaw|squeeze|crack|separate|layer|insert|check|enjoy|store|toast|microwave|blanch|steam|poach|caramelize|deglaze|strain|whip|dust|chop)\b/i;
 
 const NUMBER_MARKER = /^(?:step\s*)?(\d{1,2})\s*[.):]\s+(?=\S)/i;
+// "STEP 1" or "1." alone on a line, with the text on the following lines.
+const STEP_ONLY = /^(?:(?:step|stage)\s*(\d{1,2})\s*[.:)]?|(\d{1,2})\s*[.)])$/i;
 
 // ---------- cleaning ----------
 
@@ -796,6 +706,7 @@ function looksLikeIngredient(s) {
 }
 
 function looksLikeStep(s) {
+  if (STEP_ONLY.test(s)) return true;
   if (NUMBER_MARKER.test(s)) {
     const body = s.replace(NUMBER_MARKER, '');
     return !QTY_START.test(body) || STEP_VERBS.test(body);
@@ -811,6 +722,9 @@ const META = {
   cookTime: new RegExp(`\\b(?:cook(?:ing)?|bake|baking)(?:\\s*time\\s*:?|\\s*:)\\s*${TIME}`, 'i'),
   source: /\b(?:from the kitchen of|recipe from|from)\s*:\s*(.+)$/i,
 };
+const SERVINGS_LINE = /^((?:about\s+)?[\d½¼¾]+(?:\s*(?:-|–|to)\s*\d+)?)\s+(?:servings?|portions?|people)\b/i;
+// App/website labels that aren't part of the recipe.
+const UI_LINE = /^(?:(?:yield|scale|convert|servings|print|share|save|rate|\d?x|ix|ixv)\s*)+$/i;
 // "Bake 30 min" alone on a short line is metadata; inside a sentence it's a step.
 const LOOSE_COOK = new RegExp(`^(?:cook|bake)\\s+${TIME}$`, 'i');
 
@@ -820,7 +734,7 @@ const LOOSE_COOK = new RegExp(`^(?:cook|bake)\\s+${TIME}$`, 'i');
  * @param {string} rawText  full OCR text (pages separated by blank lines)
  * @param {Array<{text:string,height:number}>} [ocrLines] lines with text height, used to find the title
  */
-function parseRecipeText(rawText, ocrLines = []) {
+function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
   const out = { title: '', servings: '', prepTime: '', cookTime: '', source: '', ingredients: [], steps: [], notes: '' };
 
   // Keep blank lines as paragraph breaks (null entries).
@@ -834,6 +748,10 @@ function parseRecipeText(rawText, ocrLines = []) {
   // Pull out metadata lines (serves, times, source) wherever they appear.
   lines = lines.filter(s => {
     if (s === null) return true;
+    if (UI_LINE.test(s)) return false;
+    // "4 servings" (number first) is checked before "Servings 4" so "4 servings 1x" reads as 4.
+    const sv = !out.servings && s.match(SERVINGS_LINE);
+    if (sv && s.length < 30) { out.servings = sv[1]; return false; }
     let matched = false;
     for (const [key, re] of Object.entries(META)) {
       const m = s.match(re);
@@ -845,9 +763,16 @@ function parseRecipeText(rawText, ocrLines = []) {
     return !(matched && s.length < 60 && !looksLikeStep(s));
   });
 
+  // A title found elsewhere (e.g. an app's title bar): use it and drop repeats of it.
+  if (titleHint) {
+    out.title = titleHint;
+    const t = titleHint.toLowerCase().replace(/[^a-z0-9]/g, '');
+    lines = lines.filter(s => s === null || s.toLowerCase().replace(/[^a-z0-9]/g, '') !== t);
+  }
+
   // Recipe card templates: "Recipe for: Apple Pie", a lone "Recipe" header.
   lines = lines.filter(s => s === null || !/^recipes?:?$/i.test(s));
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length && !out.title; i++) {
     const m = lines[i] && lines[i].match(/^recipe(?:\s+for)?\s*:?\s+(.{3,})$/i);
     if (m) { out.title = m[1].trim(); lines.splice(i, 1); break; }
   }
@@ -942,16 +867,37 @@ function splitTwoColumn(s) {
   return parts.filter(Boolean);
 }
 
+const STARTS_NUM = new RegExp(`^[\\d${FRAC}]`);
+
 function buildIngredients(lines) {
-  const items = [];
+  // Paragraph mode: when blank lines separate most items (common in apps and
+  // cookbooks), each paragraph is one ingredient however many lines it wraps to.
+  const paras = [];
+  let cur = [];
   for (const s of lines) {
-    if (!s) continue;
-    for (const part of splitTwoColumn(s)) {
-      const prev = items[items.length - 1];
-      const continuation = /^[a-z(]/.test(part) && !QTY_START.test(part);
-      if (prev && continuation && prev.length < 60) items[items.length - 1] = joinWrapped(prev, part);
-      else items.push(part);
+    if (s === null) { if (cur.length) paras.push(cur); cur = []; } else cur.push(s);
+  }
+  if (cur.length) paras.push(cur);
+  const multiLine = paras.filter(p => p.length > 1).length;
+  const paragraphMode = paras.length >= 4 && paras.every(p => p.length <= 4) && multiLine <= paras.length * 0.6;
+
+  const items = [];
+  const continues = prev => /[,(]$|\b(?:or|and|plus|about|to|of|with)$/i.test(prev);
+  for (const para of (paragraphMode ? paras : [lines.filter(Boolean)])) {
+    let startNew = true;
+    for (const s of para) {
+      for (const part of splitTwoColumn(s)) {
+        const prev = items[items.length - 1];
+        const lower = /^[a-z(]/.test(part) && !QTY_START.test(part);
+        const join = prev && !startNew && (paragraphMode
+          ? !(/^[\d${FRAC}]/.test(part) && !continues(prev))
+          : lower && prev.length < 120);
+        if (join) items[items.length - 1] = joinWrapped(prev, part);
+        else items.push(part);
+        startNew = false;
+      }
     }
+    if (!paragraphMode) break;
   }
   return items.map(i => i.replace(/[,;]$/, '').trim()).filter(Boolean);
 }
@@ -973,13 +919,16 @@ function joinParagraphs(lines) {
 }
 
 function buildSteps(lines) {
-  const hasMarkers = lines.filter(s => s && NUMBER_MARKER.test(s)).length >= 2;
+  const real = lines.filter(Boolean);
+  const markerOnly = real.filter(s => STEP_ONLY.test(s)).length;
+  const inline = real.filter(s => NUMBER_MARKER.test(s)).length;
   let steps = [];
-  if (hasMarkers) {
-    for (const s of lines) {
-      if (!s) continue;
-      if (NUMBER_MARKER.test(s)) steps.push(s.replace(NUMBER_MARKER, ''));
-      else if (steps.length) steps[steps.length - 1] = joinWrapped(steps[steps.length - 1], s);
+  if (markerOnly >= 2 || inline >= 2) {
+    let open = false;
+    for (const s of real) {
+      if (STEP_ONLY.test(s)) { steps.push(''); open = true; continue; }
+      if (NUMBER_MARKER.test(s) && markerOnly < 2) { steps.push(s.replace(NUMBER_MARKER, '')); open = true; continue; }
+      if (open && steps.length) steps[steps.length - 1] = steps[steps.length - 1] ? joinWrapped(steps[steps.length - 1], s) : s;
       else steps.push(s);
     }
   } else {
@@ -1069,6 +1018,24 @@ function scaleIngredient(text, factor) {
   return qty + (rest.startsWith(' ') || !rest ? '' : ' ') + rest;
 }
 
+// Split an ingredient for display: { qty: "¼ cup", item: "all-purpose flour" }.
+const DISPLAY_UNITS = new RegExp(`^\\s*(?:${UNIT_WORDS.filter(u => !/^eggs/.test(u)).join('|')})\\.?(?=\\s|$)`, 'i');
+function displayIngredient(text, factor = 1) {
+  const m = text.match(QTY_RE);
+  if (!m) return { qty: '', item: text };
+  const a = toNumber(m[1]);
+  if (!isFinite(a)) return { qty: '', item: text };
+  let qty = formatQuantity(a * factor);
+  if (m[3]) {
+    const b = toNumber(m[3]);
+    if (isFinite(b)) qty += `–${formatQuantity(b * factor)}`;
+  }
+  let rest = text.slice(m[0].length);
+  const u = rest.match(DISPLAY_UNITS);
+  if (u) { qty += ` ${u[0].trim()}`; rest = rest.slice(u[0].length); }
+  return { qty, item: rest.trim() };
+}
+
 // ---------- grocery aisles ----------
 
 const AISLES = ['Produce', 'Meat & seafood', 'Dairy & eggs', 'Bakery', 'Baking', 'Spices', 'Pantry', 'Frozen', 'Other'];
@@ -1099,17 +1066,336 @@ function ingredientName(text) {
 }
 
 // ================================================================
+// Scan clean-up: fraction repair, screenshot clutter, overlapping pages
+// ================================================================
+
+// Turns raw OCR results from one or more photos/screenshots into clean recipe text.
+// Pure functions (no DOM), so they can be tested outside the browser.
+
+// ---------- 1. Fraction repair ----------
+// OCR engines misread single-glyph fractions (½ -> "Y%", ¼ -> "Y4", 2¼ -> "2%").
+// We find those tokens, split the glyph into numerator / slash / denominator
+// by connected components, and read the two small digits on their own.
+
+const GLYPH = {
+  '1/2': '½', '1/3': '⅓', '2/3': '⅔', '1/4': '¼', '3/4': '¾', '1/5': '⅕', '2/5': '⅖',
+  '3/5': '⅗', '4/5': '⅘', '1/6': '⅙', '5/6': '⅚', '1/8': '⅛', '3/8': '⅜', '5/8': '⅝', '7/8': '⅞',
+};
+
+function isSuspectToken(t) {
+  if (!t || t.length > 6 || /[A-Za-z]{3}/.test(t)) return false;
+  return /^[([]?\d*(?:[%¥Y¢£€§]|V[a-z2-4]|\/\d)[%¥Y¢£€§\w']*[)\],.;]?$/.test(t);
+}
+
+function components(ink, w, h) {
+  const seen = new Uint8Array(w * h);
+  const comps = [];
+  const stack = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const start = y * w + x;
+      if (!ink[start] || seen[start]) continue;
+      seen[start] = 1; stack.push(start);
+      const c = { x0: x, x1: x, y0: y, y1: y, n: 0, pts: [] };
+      while (stack.length) {
+        const p = stack.pop();
+        const py = (p / w) | 0, px = p - py * w;
+        c.n++; c.pts.push(px, py);
+        if (px < c.x0) c.x0 = px; if (px > c.x1) c.x1 = px;
+        if (py < c.y0) c.y0 = py; if (py > c.y1) c.y1 = py;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = px + dx, ny = py + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const q = ny * w + nx;
+          if (ink[q] && !seen[q]) { seen[q] = 1; stack.push(q); }
+        }
+      }
+      if (c.n > 4) comps.push(c);
+    }
+  }
+  return comps;
+}
+
+function isSlash(c, H) {
+  const ch = c.y1 - c.y0 + 1, cw = c.x1 - c.x0 + 1;
+  if (ch < 0.6 * H || cw < 0.25 * ch || cw > 0.9 * ch) return false;
+  let topSum = 0, topN = 0, botSum = 0, botN = 0;
+  for (let i = 0; i < c.pts.length; i += 2) {
+    const x = c.pts[i], y = c.pts[i + 1];
+    if (y < c.y0 + ch * 0.2) { topSum += x; topN++; }
+    else if (y > c.y1 - ch * 0.2) { botSum += x; botN++; }
+  }
+  return topN && botN && (topSum / topN - botSum / botN) > 0.35 * cw;
+}
+
+/**
+ * Look for a stacked-fraction glyph inside bbox of a grayscale image.
+ * Returns the numerator and denominator as { box, pts } in image coordinates, or null.
+ */
+function findFractionGlyph(gray, W, H, bbox) {
+  const x0 = Math.max(0, bbox.x0 - 2), y0 = Math.max(0, bbox.y0 - 2);
+  const x1 = Math.min(W - 1, bbox.x1 + 2), y1 = Math.min(H - 1, bbox.y1 + 2);
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  if (w < 6 || h < 6 || w * h > 40000) return null;
+  const ink = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) ink[y * w + x] = gray[(y + y0) * W + (x + x0)] < 140 ? 1 : 0;
+  const comps = components(ink, w, h);
+  if (comps.length < 3) return null;
+  const top = Math.min(...comps.map(c => c.y0)), bottom = Math.max(...comps.map(c => c.y1));
+  const Hc = bottom - top + 1;
+  const slashes = comps.filter(c => isSlash(c, Hc));
+  if (slashes.length !== 1) return null;
+  const s = slashes[0];
+  const mid = (s.y0 + s.y1) / 2, sx = (s.x0 + s.x1) / 2;
+  const others = comps.filter(c => c !== s);
+  const tall = others.filter(c => (c.y1 - c.y0 + 1) >= 0.7 * Hc && c.x1 < s.x0);
+  const small = others.filter(c => !tall.includes(c));
+  const num = small.filter(c => (c.y0 + c.y1) / 2 < mid && (c.x0 + c.x1) / 2 < sx + 2);
+  const den = small.filter(c => (c.y0 + c.y1) / 2 > mid && (c.x0 + c.x1) / 2 > sx - 2);
+  if (!num.length || !den.length) return null;
+  // Each part carries only its own ink pixels, so a neighbouring slash can't leak in.
+  const part = cs => {
+    const pts = [];
+    for (const c of cs) for (let i = 0; i < c.pts.length; i += 2) pts.push(x0 + c.pts[i], y0 + c.pts[i + 1]);
+    return {
+      x0: x0 + Math.min(...cs.map(c => c.x0)), y0: y0 + Math.min(...cs.map(c => c.y0)),
+      x1: x0 + Math.max(...cs.map(c => c.x1)) + 1, y1: y0 + Math.max(...cs.map(c => c.y1)) + 1, pts,
+    };
+  };
+  return { num: part(num), den: part(den), tallCount: tall.length };
+}
+
+/**
+ * Repair fraction tokens in OCR words, in place.
+ * readDigit(part) -> Promise<string> reads one digit drawn from part.pts (x, y pairs).
+ */
+async function repairFractions(words, gray, W, H, readDigit) {
+  for (const word of words) {
+    if (!isSuspectToken(word.text)) continue;
+    const g = findFractionGlyph(gray, W, H, word.bbox);
+    if (!g) continue;
+    const n = await readDigit(g.num), d = await readDigit(g.den);
+    if (!/^[1-9]$/.test(n) || !/^[1-9]$/.test(d) || Number(n) >= Number(d)) continue;
+    const t = word.text;
+    const open = /^[([]/.test(t) ? t[0] : '';
+    const close = (t.match(/[)\],.;]$/) || [''])[0];
+    const lead = t.slice(open.length).match(/^\d+/);
+    const tallNeeded = open ? 2 : 1; // an opening paren is also a tall shape
+    const whole = lead && g.tallCount >= tallNeeded ? lead[0] : '';
+    const frac = GLYPH[`${n}/${d}`] || `${whole ? ' ' : ''}${n}/${d}`;
+    word.text = `${open}${whole}${frac}${close}`;
+  }
+}
+
+// ---------- 2. OCR result -> page of lines ----------
+
+/** Walk tesseract.js blocks (or a flat paragraphs list) into lines with layout info. */
+function pageFromOCR(data, width, height) {
+  const paragraphs = data.blocks ? data.blocks.flatMap(b => b.paragraphs || []) : (data.paragraphs || []);
+  const lines = [];
+  for (const p of paragraphs) {
+    let first = true;
+    for (const l of p.lines || []) {
+      const words = (l.words || []).filter(w => w.text && w.text.trim());
+      const text = words.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim();
+      if (!text) continue;
+      const conf = words.reduce((a, w) => a + (w.confidence ?? 100), 0) / words.length;
+      lines.push({ text, y0: l.bbox.y0, y1: l.bbox.y1, height: l.bbox.y1 - l.bbox.y0, conf, brk: first });
+      first = false;
+    }
+  }
+  // Drop garbage: very low confidence, or squashed lines (e.g. the edge of a photo).
+  const heights = lines.map(l => l.height).sort((a, b) => a - b);
+  const median = heights[heights.length >> 1] || 0;
+  const kept = lines.filter(l => l.conf >= 35 && !(l.height < median * 0.6 && l.conf < 70));
+  kept.forEach((l, i) => { if (i && !l.brk && !lines.includes(kept[i - 1])) l.brk = true; });
+  return { width, height, lines: kept };
+}
+
+// ---------- 3. Assemble pages ----------
+
+const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function similar(a, b) {
+  const x = norm(a), y = norm(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (Math.min(x.length, y.length) < 12) return false;
+  if (Math.abs(x.length - y.length) > Math.max(x.length, y.length) * 0.2) return false;
+  return 1 - levenshtein(x, y) / Math.max(x.length, y.length) >= 0.85;
+}
+
+function levenshtein(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+const STATUS_BAR = /\b\d{1,2}:\d{2}\b|\b(?:5G|LTE|4G|3G)\b/i;
+const TAB_WORDS = /^(?:(?:home|search|recent|saved|profile|account|recipe box|recipes|inspiration|explore|library|settings|more|shop|for you|cart|menu|favorites|collections|grocery list)\s*)+$/i;
+const CHROME_LINE = new RegExp([
+  '^advertisement$', '^sponsored', '^add a note$', '^your (?:private )?notes$', "^you don.?t have any notes",
+  '^cooked(?!\\s+[a-z]{3,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$',
+  '^share(?: recipe)?$', '^rate (?:this|the) recipe', '^leave a (?:review|comment)', '^(?:log|sign) in',
+  '^subscribe', '^read (?:more|comments)', '^\\d+ (?:comments|ratings|reviews)$', '^(?:yield|scale|convert)(?:\\s+(?:yield|scale|convert))*$',
+].join('|'), 'i');
+
+function lettersOnly(s) { return s.replace(/^[^A-Za-z]+/, ''); }
+
+/** "< Marry Me Chicken Gi) (4 A" -> "Marry Me Chicken" */
+function cleanTitleLine(s) {
+  const words = s.split(/\s+/);
+  const out = [];
+  for (const w of words) {
+    if (/^[A-Za-z][A-Za-z'’&-]*$/.test(w) || (out.length && /^(?:&|and|with|of|the|a)$/i.test(w))) out.push(w);
+    else if (out.length) break;
+  }
+  const t = out.join(' ');
+  return t.length >= 3 ? t : '';
+}
+
+function stepNumbers(lines) {
+  return lines.map(l => (l.text.match(/^step\s*(\d{1,2})\b/i) || [])[1]).filter(Boolean).map(Number);
+}
+
+/** Where does the start of page B overlap the end of page A? */
+function align(A, B) {
+  let best = null;
+  for (let j = 0; j < Math.min(5, B.length); j++) {
+    for (let i = A.length - 1; i >= Math.max(0, A.length - 60); i--) {
+      if (!similar(A[i].text, B[j].text)) continue;
+      let k = 1;
+      while (i + k < A.length && j + k < B.length && similar(A[i + k].text, B[j + k].text)) k++;
+      const reachesEnd = i + k >= A.length - 1; // the last line of A may be cut off
+      const strong = k >= 2 || norm(A[i].text).length >= 25;
+      if (reachesEnd && strong && (!best || k > best.score)) best = { i, j, score: k };
+    }
+    if (best) break;
+  }
+  return best;
+}
+
+/**
+ * pages: [{ width, height, lines:[{text,y0,y1,brk}] }] in the order the person chose.
+ * Returns { lines: [{text, brk}], titleHint }.
+ */
+function assemblePages(pages) {
+  const screenshot = p => p.height / p.width > 1.9;
+  const topZone = p => l => l.y1 < p.height * 0.12;
+  const bottomZone = p => l => l.y0 > p.height * 0.88;
+
+  // Text repeated at the top or bottom of several screenshots is app chrome.
+  const repeatedTop = new Map(), repeatedBottom = new Map();
+  for (const p of pages) {
+    for (const l of p.lines.filter(topZone(p))) repeatedTop.set(norm(l.text), (repeatedTop.get(norm(l.text)) || 0) + 1);
+    for (const l of p.lines.filter(bottomZone(p))) repeatedBottom.set(norm(l.text), (repeatedBottom.get(norm(l.text)) || 0) + 1);
+  }
+
+  let titleHint = '';
+  const cleaned = pages.map((p, index) => {
+    const lines = [];
+    let pendingBrk = false;
+    for (const l of p.lines) {
+      const key = norm(l.text);
+      const inTop = topZone(p)(l), inBottom = bottomZone(p)(l);
+      let drop = false;
+      if (inTop && l.y1 < p.height * 0.06 && STATUS_BAR.test(l.text)) drop = true;
+      else if (inTop && pages.length > 1 && repeatedTop.get(key) >= 2) {
+        drop = true;
+        if (!titleHint) titleHint = cleanTitleLine(lettersOnly(l.text));
+      }
+      else if (inBottom && pages.length > 1 && repeatedBottom.get(key) >= 2) drop = true;
+      else if (inBottom && TAB_WORDS.test(lettersOnly(l.text))) drop = true;
+      else if (CHROME_LINE.test(lettersOnly(l.text).trim()) || CHROME_LINE.test(l.text.replace(/^(?:\S*[^A-Za-z\s]\S*\s+|[A-Za-z]{1,2}\s+)+/, ''))) drop = true;
+      else if (screenshot(p) && inTop && pages.length === 1 && !titleHint && l.y1 < p.height * 0.11) {
+        const t = cleanTitleLine(lettersOnly(l.text));
+        if (t) { titleHint = t; drop = true; }
+      }
+      if (drop) { pendingBrk = pendingBrk || l.brk; continue; }
+      lines.push({ text: l.text, brk: l.brk || pendingBrk });
+      pendingBrk = false;
+    }
+    return { index, lines };
+  });
+
+  // Chain overlapping pages (screenshots scrolled with some overlap).
+  const n = cleaned.length;
+  const edges = [];
+  for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) {
+    if (a === b) continue;
+    const al = align(cleaned[a].lines, cleaned[b].lines);
+    if (al) edges.push({ a, b, ...al });
+  }
+  edges.sort((x, y) => y.score - x.score);
+  const next = new Array(n).fill(null), prev = new Array(n).fill(null), link = {};
+  for (const e of edges) {
+    if (next[e.a] !== null || prev[e.b] !== null) continue;
+    let c = e.b; let cycle = false;           // avoid a -> ... -> a
+    while (c !== null) { if (c === e.a) { cycle = true; break; } c = next[c]; }
+    if (cycle) continue;
+    next[e.a] = e.b; prev[e.b] = e.a; link[`${e.a}>${e.b}`] = e;
+  }
+
+  const chains = [];
+  for (let s = 0; s < n; s++) {
+    if (prev[s] !== null) continue;
+    const order = [];
+    for (let c = s; c !== null; c = next[c]) order.push(c);
+    let merged = cleaned[order[0]].lines.slice();
+    for (let k = 1; k < order.length; k++) {
+      const e = link[`${order[k - 1]}>${order[k]}`];
+      const B = cleaned[order[k]].lines;
+      const offset = merged.length - cleaned[order[k - 1]].lines.length; // A's lines sit at the end of merged
+      const cut = offset + e.i;
+      const first = { ...B[e.j], brk: merged[cut] ? merged[cut].brk : B[e.j].brk };
+      merged = merged.slice(0, cut).concat([first], B.slice(e.j + 1));
+    }
+    const hasIngredients = merged.some(l => /^ingredients?\b/i.test(l.text));
+    const steps = stepNumbers(merged);
+    chains.push({ merged, key: [hasIngredients ? 0 : 1, steps.length ? Math.min(...steps) : 999, order[0]] });
+  }
+  chains.sort((x, y) => x.key[0] - y.key[0] || x.key[1] - y.key[1] || x.key[2] - y.key[2]);
+
+  // Safety net: drop exact repeats of long lines across separate chains.
+  const seen = new Set();
+  const lines = [];
+  for (const ch of chains) {
+    ch.merged.forEach((l, i) => {
+      const key = norm(l.text);
+      if (key.length >= 30 && seen.has(key)) return;
+      seen.add(key);
+      lines.push({ text: l.text, brk: i === 0 ? true : l.brk });
+    });
+  }
+  if (lines.length) lines[0].brk = false;
+  return { lines, titleHint };
+}
+
+function linesToText(lines) {
+  return lines.map(l => (l.brk ? '\n' : '') + l.text).join('\n').trim();
+}
+
+// ================================================================
 // On-device text recognition
 // ================================================================
 
 // On-device text recognition with Tesseract.js (loaded from a CDN on first use).
 // The language data (~4 MB) downloads once and is then cached by the browser.
 
+
 const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const MAX_SIDE = 2400; // text reads most accurately around this size; also keeps memory low on phones
 
 let scriptPromise = null;
 let workerPromise = null;
 let progressHandler = null;
+let quiet = false; // true while reading fraction digits, so progress doesn't jump around
 
 function loadScript() {
   if (window.Tesseract) return Promise.resolve();
@@ -1132,9 +1418,13 @@ function loadScript() {
 async function getWorker() {
   await loadScript();
   if (!workerPromise) {
-    workerPromise = window.Tesseract.createWorker('eng', 1, {
-      logger: m => progressHandler && progressHandler(m),
-    }).catch(err => { workerPromise = null; throw err; });
+    workerPromise = (async () => {
+      const worker = await window.Tesseract.createWorker('eng', 1, {
+        logger: m => !quiet && progressHandler && progressHandler(m),
+      });
+      await worker.setParameters({ tessedit_pageseg_mode: '3' }); // automatic layout: keeps paragraphs apart
+      return worker;
+    })().catch(err => { workerPromise = null; throw err; });
   }
   return workerPromise;
 }
@@ -1149,12 +1439,12 @@ function loadImage(file) {
   });
 }
 
-// Grayscale + contrast stretch, sized for good OCR without exhausting phone memory.
+// Grayscale + contrast stretch. Returns the canvas plus its gray pixels for fraction repair.
 async function prepareForOCR(file) {
   const img = await loadImage(file);
   const longSide = Math.max(img.naturalWidth, img.naturalHeight);
   let scale = 1;
-  if (longSide > 2400) scale = 2400 / longSide;
+  if (longSide > MAX_SIDE) scale = MAX_SIDE / longSide;
   else if (longSide < 1400) scale = Math.min(2, 1400 / longSide);
   const w = Math.round(img.naturalWidth * scale);
   const h = Math.round(img.naturalHeight * scale);
@@ -1162,14 +1452,16 @@ async function prepareForOCR(file) {
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0, w, h);
 
   const data = ctx.getImageData(0, 0, w, h);
   const px = data.data;
+  const gray = new Uint8Array(w * h);
   const hist = new Uint32Array(256);
-  for (let i = 0; i < px.length; i += 4) {
+  for (let i = 0, j = 0; i < px.length; i += 4, j++) {
     const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0;
-    px[i] = g; hist[g]++;
+    gray[j] = g; hist[g]++;
   }
   // Ignore the darkest/lightest 1% so stray shadows don't flatten the stretch.
   const total = w * h;
@@ -1178,46 +1470,96 @@ async function prepareForOCR(file) {
   acc = 0;
   for (; hi > 0; hi--) { acc += hist[hi]; if (acc > total * 0.01) break; }
   const range = Math.max(1, hi - lo);
-  for (let i = 0; i < px.length; i += 4) {
-    const v = Math.max(0, Math.min(255, ((px[i] - lo) * 255) / range));
+  for (let j = 0, i = 0; j < gray.length; j++, i += 4) {
+    const v = Math.max(0, Math.min(255, ((gray[j] - lo) * 255) / range)) | 0;
+    gray[j] = v;
     px[i] = px[i + 1] = px[i + 2] = v;
   }
   ctx.putImageData(data, 0, 0);
-  return canvas;
+  return { canvas, gray, width: w, height: h };
+}
+
+// Draw one fraction digit (only its own pixels) at a fixed height with generous margins,
+// the layout single-character recognition handles best.
+function digitCanvas(part, gray, W, digitHeight) {
+  const w = part.x1 - part.x0, h = part.y1 - part.y0;
+  const small = document.createElement('canvas');
+  small.width = w; small.height = h;
+  const sctx = small.getContext('2d');
+  const img = sctx.createImageData(w, h);
+  img.data.fill(255);
+  for (let i = 0; i < part.pts.length; i += 2) {
+    const x = part.pts[i], y = part.pts[i + 1], v = gray[y * W + x], o = ((y - part.y0) * w + (x - part.x0)) * 4;
+    img.data[o] = img.data[o + 1] = img.data[o + 2] = v;
+  }
+  sctx.putImageData(img, 0, 0);
+  const s = digitHeight / h, pad = Math.round(digitHeight * 0.35);
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * s) + 2 * pad; c.height = digitHeight + 2 * pad;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(small, pad, pad, Math.round(w * s), digitHeight);
+  return c;
 }
 
 /**
- * Read text from one or more photos (e.g. front and back of a card).
+ * Read one or more photos or screenshots of a recipe, in any order.
  * onProgress receives { label, fraction } with fraction from 0 to 1.
+ * Returns { text, lines, titleHint } ready for parseRecipeText.
  */
 async function readRecipePhotos(files, onProgress = () => {}) {
   const count = files.length;
   let page = 0;
+  const label = () => (count > 1 ? `Reading photo ${page + 1} of ${count}` : 'Reading the recipe');
   progressHandler = m => {
-    if (m.status === 'recognizing text') {
-      onProgress({ label: count > 1 ? `Reading photo ${page + 1} of ${count}` : 'Reading the recipe', fraction: (page + (m.progress || 0)) / count });
-    } else if (/load|initializ/.test(m.status)) {
-      onProgress({ label: 'Getting the text reader ready', fraction: 0 });
-    }
+    if (m.status === 'recognizing text') onProgress({ label: label(), fraction: (page + (m.progress || 0) * 0.9) / count });
+    else if (/load|initializ/.test(m.status)) onProgress({ label: 'Getting the text reader ready', fraction: 0 });
   };
 
   onProgress({ label: 'Getting the text reader ready', fraction: 0 });
   const worker = await getWorker();
 
-  const texts = [];
-  const lines = [];
-  for (page = 0; page < count; page++) {
-    onProgress({ label: count > 1 ? `Reading photo ${page + 1} of ${count}` : 'Reading the recipe', fraction: page / count });
-    const canvas = await prepareForOCR(files[page]);
-    const { data } = await worker.recognize(canvas);
-    texts.push(data.text || '');
-    for (const line of data.lines || []) {
-      lines.push({ text: line.text.trim(), height: line.bbox ? line.bbox.y1 - line.bbox.y0 : 0 });
+  const pages = [];
+  try {
+    for (page = 0; page < count; page++) {
+      onProgress({ label: label(), fraction: page / count });
+      const prepared = await prepareForOCR(files[page]);
+      const { data } = await worker.recognize(prepared.canvas, {}, { text: true, blocks: true });
+
+      // Repair misread fractions (½, ¼, ¾…) by reading their digits one at a time.
+      const words = (data.blocks || []).flatMap(b => b.paragraphs.flatMap(p => p.lines.flatMap(l => l.words)));
+      let digitMode = false;
+      quiet = true;
+      await repairFractions(words, prepared.gray, prepared.width, prepared.height, async part => {
+        if (!digitMode) {
+          await worker.setParameters({ tessedit_pageseg_mode: '10', tessedit_char_whitelist: '0123456789' });
+          digitMode = true;
+        }
+        for (const size of [48, 72]) {
+          const r = await worker.recognize(digitCanvas(part, prepared.gray, prepared.width, size));
+          const digit = (r.data.text || '').trim().slice(0, 1);
+          if (/^[1-9]$/.test(digit)) return digit;
+        }
+        return '';
+      });
+      if (digitMode) await worker.setParameters({ tessedit_pageseg_mode: '3', tessedit_char_whitelist: '' });
+      quiet = false;
+
+      pages.push(pageFromOCR(data, prepared.width, prepared.height));
     }
+  } finally {
+    progressHandler = null;
+    quiet = false;
   }
-  progressHandler = null;
-  onProgress({ label: 'Done', fraction: 1 });
-  return { text: texts.join('\n\n'), lines };
+
+  onProgress({ label: 'Putting the pages together', fraction: 1 });
+  const { lines, titleHint } = assemblePages(pages);
+  return {
+    text: linesToText(lines),
+    lines: pages.flatMap(p => p.lines.map(l => ({ text: l.text, height: l.height }))),
+    titleHint,
+  };
 }
 
 // Shrink a photo for storage alongside the recipe.
@@ -1232,7 +1574,7 @@ async function compressPhoto(file, maxSide = 1400, quality = 0.8) {
 }
 
 // ================================================================
-// App: screens, routing, actions
+// App: screens, editor, routing, actions
 // ================================================================
 
 const CATEGORIES = ['Breakfast', 'Appetizers', 'Soups & salads', 'Mains', 'Sides', 'Breads', 'Desserts', 'Drinks', 'Other'];
@@ -1242,7 +1584,7 @@ const state = {
   recipes: [],
   grocery: [],                 // { id, text, checked, recipeId, recipeTitle, addedAt }
   settings: { groupBy: 'aisle', installTipDismissed: false },
-  filter: { q: '', cat: 'all', sort: 'newest' },
+  filter: { q: '', cat: 'all', sort: 'az' },
   scale: {},                   // recipeId -> factor, for this session
   draft: null,                 // photos being added on the form
 };
@@ -1250,13 +1592,19 @@ const state = {
 const view = document.getElementById('view');
 const toastEl = document.getElementById('toast');
 
+const ICONS = {
+  grip: '<svg viewBox="0 0 16 24" width="14" height="22" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="6" r="1.6"/><circle cx="11" cy="6" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="12" r="1.6"/><circle cx="5" cy="18" r="1.6"/><circle cx="11" cy="18" r="1.6"/></g></svg>',
+  remove: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+};
+
 // ---------- helpers ----------
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const linesOf = s => String(s || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let toastTimer;
 function toast(message) {
@@ -1266,15 +1614,17 @@ function toast(message) {
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
 }
 
-function tiltFor(id) {
-  let h = 0;
-  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0;
-  return ((Math.abs(h) % 13) - 6) / 10; // -0.6deg .. 0.6deg
-}
-
 function starsText(rating) {
   if (!rating) return '';
   return `<span class="stars-static" aria-label="Rated ${rating} out of 5">${'★'.repeat(rating)}<span class="dim">${'★'.repeat(5 - rating)}</span></span>`;
+}
+
+function metaSentence(r) {
+  const parts = [];
+  if (r.servings) parts.push(/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings);
+  if (r.prepTime) parts.push(`Prep ${r.prepTime}`);
+  if (r.cookTime) parts.push(`Cook ${r.cookTime}`);
+  return parts.join('. ') + (parts.length ? '.' : '');
 }
 
 async function saveRecipe(recipe) {
@@ -1310,7 +1660,7 @@ async function copyText(text) {
   }
 }
 
-async function shareText(text, title) {
+async function shareText(text) {
   if (navigator.share) {
     try { await navigator.share({ text }); return 'shared'; }
     catch (err) { if (err && err.name === 'AbortError') return 'cancelled'; }
@@ -1370,13 +1720,15 @@ function render() {
 
 function notFound() {
   view.innerHTML = `
-    <div class="topbar"><a class="back" href="#/">Recipes</a></div>
-    <div class="card empty-card"><h1 class="hand">That card isn't in the box</h1>
-    <p>It may have been deleted. Head back to your recipes to find another.</p>
-    <a class="btn btn-primary" href="#/">Back to recipes</a></div>`;
+    <div class="topbar"><a class="back" href="#/">Contents</a></div>
+    <section class="page empty">
+      <h1 class="page-title">That recipe isn't here</h1>
+      <p>It may have been deleted. Go back to the contents to find another.</p>
+      <a class="btn btn-primary" href="#/">Back to contents</a>
+    </section>`;
 }
 
-// ---------- home ----------
+// ---------- home: the contents page ----------
 
 function renderHome() {
   const used = CATEGORIES.filter(c => state.recipes.some(r => r.category === c));
@@ -1389,45 +1741,40 @@ function renderHome() {
 
   view.innerHTML = `
     <header class="masthead">
-      <div class="label-holder">
-        <span class="rivet" aria-hidden="true"></span>
-        <div class="label-card"><h1>Recipe Box</h1></div>
-        <span class="rivet" aria-hidden="true"></span>
-      </div>
-      <a class="icon-link" href="#/settings" aria-label="Backup and settings">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
-      </a>
+      <h1 class="book-title">Recipe Box</h1>
+      <p class="book-sub" id="bookCount"></p>
+      <a class="icon-btn masthead-settings" href="#/settings" aria-label="Backup and settings">${ICONS.settings}</a>
     </header>
     ${showInstall ? `
-      <aside class="slip install-tip">
-        <p>Keep Recipe Box on your Home Screen: tap the Share button in Safari, then Add to Home Screen.</p>
-        <button class="link-btn" data-action="dismiss-install">Got it</button>
+      <aside class="notice">
+        <p>Keep Recipe Box on your Home Screen: tap Share in Safari, then Add to Home Screen.</p>
+        <button class="text-btn" data-action="dismiss-install">Dismiss</button>
       </aside>` : ''}
-    <div class="home-tools">
-      <label class="search">
-        <span class="sr-only">Search recipes</span>
-        <input id="search" type="search" placeholder="Search recipes or ingredients" value="${esc(state.filter.q)}" autocomplete="off" enterkeyhint="search">
-      </label>
-      <div class="dividers" role="group" aria-label="Filter recipes">
-        ${filters.map(([k, label]) => `<button class="divider" aria-pressed="${state.filter.cat === k}" data-action="filter" data-cat="${esc(k)}">${esc(label)}</button>`).join('')}
-      </div>
-      <div class="sort-row">
-        <span id="resultCount"></span>
-        <label class="sort">Sort by
-          <select id="sort">
-            ${[['newest', 'Newest'], ['az', 'A to Z'], ['rating', 'Highest rated'], ['made', 'Most made']]
-              .map(([v, l]) => `<option value="${v}" ${state.filter.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
-          </select>
+    ${state.recipes.length ? `
+      <div class="finder">
+        <label class="search">
+          <span class="sr-only">Search recipes</span>
+          <input id="search" type="search" placeholder="Search by name or ingredient" value="${esc(state.filter.q)}" autocomplete="off" enterkeyhint="search">
         </label>
-      </div>
-    </div>
-    <ul class="card-stack" id="cardStack"></ul>`;
-  renderCards();
+        <div class="finder-row">
+          <div class="chapters" role="group" aria-label="Show">
+            ${filters.map(([k, label]) => `<button class="chapter-link" aria-pressed="${state.filter.cat === k}" data-action="filter" data-cat="${esc(k)}">${esc(label)}</button>`).join('')}
+          </div>
+          <label class="sort"><span class="sr-only">Sort recipes</span>
+            <select id="sort">
+              ${[['az', 'A to Z'], ['newest', 'Newest'], ['rating', 'Top rated'], ['made', 'Most made']]
+                .map(([v, l]) => `<option value="${v}" ${state.filter.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </label>
+        </div>
+      </div>` : ''}
+    <div class="contents" id="contents"></div>`;
+  renderContents();
 }
 
 function filteredRecipes() {
   const q = state.filter.q.trim().toLowerCase();
-  let list = state.recipes.filter(r => {
+  const list = state.recipes.filter(r => {
     if (state.filter.cat === 'fav' && !r.favorite) return false;
     if (!['all', 'fav'].includes(state.filter.cat) && r.category !== state.filter.cat) return false;
     if (!q) return true;
@@ -1443,124 +1790,153 @@ function filteredRecipes() {
   return list.sort(by);
 }
 
-function renderCards() {
-  const stack = document.getElementById('cardStack');
-  const count = document.getElementById('resultCount');
-  if (!stack) return;
+function tocRow(r) {
+  const sub = [metaSentence(r), r.timesMade ? `Made ${plural(r.timesMade, 'time')}.` : ''].filter(Boolean).join(' ');
+  return `
+    <li>
+      <a class="toc-row" href="#/recipe/${encodeURIComponent(r.id)}">
+        <span class="toc-line">
+          <span class="toc-title">${esc(r.title)}${r.favorite ? ' <span class="fav-mark" aria-label="Favorite">♥</span>' : ''}</span>
+          <span class="toc-leader" aria-hidden="true"></span>
+          <span class="toc-meta">${starsText(r.rating)}</span>
+        </span>
+        ${sub ? `<span class="toc-sub">${esc(sub)}</span>` : ''}
+      </a>
+    </li>`;
+}
+
+function renderContents() {
+  const box = document.getElementById('contents');
+  const count = document.getElementById('bookCount');
+  if (!box) return;
+  count.textContent = state.recipes.length ? plural(state.recipes.length, 'recipe') : '';
 
   if (!state.recipes.length) {
-    count.textContent = '';
-    stack.innerHTML = `
-      <li class="card empty-card">
-        <h2 class="hand">Your recipe box is empty</h2>
-        <p>Photograph a recipe card or cookbook page and Recipe Box will copy out the ingredients and steps for you.</p>
+    box.innerHTML = `
+      <section class="empty">
+        <h2 class="chapter-title">Nothing here yet</h2>
+        <p>Photograph a recipe card, a cookbook page, or take screenshots of a recipe app, and Recipe Box will copy out the ingredients and steps.</p>
         <a class="btn btn-primary" href="#/new">Add your first recipe</a>
-      </li>`;
+      </section>`;
     return;
   }
   const list = filteredRecipes();
-  count.textContent = plural(list.length, 'recipe');
   if (!list.length) {
-    stack.innerHTML = `
-      <li class="card empty-card">
+    box.innerHTML = `
+      <section class="empty">
         <p>No recipes match${state.filter.q ? ` “${esc(state.filter.q)}”` : ' this filter'}.</p>
         <button class="btn btn-secondary" data-action="clear-filters">Show all recipes</button>
-      </li>`;
+      </section>`;
     return;
   }
-  stack.innerHTML = list.map(r => `
-    <li>
-      <a class="index-card" href="#/recipe/${encodeURIComponent(r.id)}" style="--tilt:${tiltFor(r.id)}deg">
-        <span class="ic-title">${r.favorite ? '<span class="heart" aria-label="Favorite">♥</span> ' : ''}${esc(r.title)}</span>
-        <span class="ic-meta">
-          ${r.category ? `<span>${esc(r.category)}</span>` : ''}
-          ${starsText(r.rating)}
-          ${r.timesMade ? `<span>Made ${plural(r.timesMade, 'time')}</span>` : ''}
-        </span>
-        ${r.images && r.images[0] ? `<img class="ic-photo" src="${r.images[0]}" alt="" loading="lazy">` : ''}
-      </a>
-    </li>`).join('');
+  // Searching shows one flat list; otherwise recipes are grouped into chapters.
+  if (state.filter.q.trim()) {
+    box.innerHTML = `<section class="chapter"><h2 class="chapter-title">${plural(list.length, 'match', 'matches')}</h2><ol class="toc">${list.map(tocRow).join('')}</ol></section>`;
+    return;
+  }
+  const groups = new Map();
+  for (const r of list) {
+    const key = CATEGORIES.includes(r.category) ? r.category : 'Uncategorized';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+  const order = [...CATEGORIES, 'Uncategorized'].filter(c => groups.has(c));
+  box.innerHTML = order.map(c => `
+    <section class="chapter">
+      <h2 class="chapter-title">${esc(c)}</h2>
+      <ol class="toc">${groups.get(c).map(tocRow).join('')}</ol>
+    </section>`).join('');
 }
 
-// ---------- recipe card ----------
+// ---------- recipe page ----------
 
 function renderRecipe(id) {
   const r = state.recipes.find(x => x.id === id);
   if (!r) return notFound();
   const factor = state.scale[id] || 1;
-  const facts = [
-    ['Serves', r.servings], ['Prep', r.prepTime], ['Cook', r.cookTime],
-    ['Category', r.category], ['From', r.source],
-  ].filter(([, v]) => v);
+  const meta = metaSentence(r);
   const canWake = 'wakeLock' in navigator;
 
   view.innerHTML = `
-    <div class="topbar"><a class="back" href="#/">Recipes</a></div>
-    <article class="card recipe">
+    <div class="topbar">
+      <a class="back" href="#/">Contents</a>
+      <a class="text-btn" href="#/edit/${encodeURIComponent(r.id)}">Edit</a>
+    </div>
+    <article class="page recipe">
       <header class="recipe-head">
-        <h1 class="hand">${esc(r.title)}</h1>
+        <h1 class="page-title">${esc(r.title)}</h1>
+        ${meta || r.source ? `<p class="recipe-meta">${esc(meta)}${r.source ? `${meta ? ' ' : ''}From ${esc(r.source)}.` : ''}</p>` : ''}
         <div class="rating-row">
           <div class="stars" role="group" aria-label="Your rating">
             ${[1, 2, 3, 4, 5].map(n => `<button class="star" data-action="rate" data-value="${n}" aria-pressed="${n <= (r.rating || 0)}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}
           </div>
-          <button class="fav-btn" data-action="fav" aria-pressed="${!!r.favorite}">${r.favorite ? '♥ Favorite' : '♡ Add to favorites'}</button>
+          <button class="text-btn fav-btn" data-action="fav" aria-pressed="${!!r.favorite}">${r.favorite ? '♥ Favorite' : '♡ Favorite'}</button>
         </div>
-        ${facts.length ? `<dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
       </header>
 
-      ${r.images && r.images.length ? `
-        <div class="photo-strip">
-          ${r.images.map((src, i) => `<button class="snapshot" data-action="view-photo" data-index="${i}" aria-label="View photo ${i + 1} of the original recipe"><img src="${src}" alt=""></button>`).join('')}
-        </div>` : ''}
-
-      <section class="block ruled" aria-labelledby="ingHead">
-        <div class="block-head">
-          <h2 id="ingHead">Ingredients</h2>
+      <section class="sec" aria-labelledby="ingHead">
+        <div class="sec-head">
+          <h2 id="ingHead" class="sec-title">Ingredients</h2>
           ${r.ingredients.length ? `<div class="scaler" role="group" aria-label="Scale recipe">
             ${SCALES.map(([f, l]) => `<button data-action="scale" data-factor="${f}" aria-pressed="${f === factor}">${l}</button>`).join('')}
           </div>` : ''}
         </div>
         ${r.ingredients.length ? `
-          <p class="hint">Tap anything you already have to cross it off.</p>
-          <ul class="ingredients">
-            ${r.ingredients.map((ing, i) => `<li><button class="ing" data-action="tick" data-index="${i}" aria-pressed="false">${esc(scaleIngredient(ing, factor))}</button></li>`).join('')}
+          <ul class="ing-list">
+            ${r.ingredients.map((ing, i) => ingredientRow(ing, i, factor)).join('')}
           </ul>
+          <p class="hint">Tap anything you already have to cross it off.</p>
           <button class="btn btn-primary" data-action="add-to-list" id="addToList">Add ${plural(r.ingredients.length, 'item')} to grocery list</button>`
-          : `<p class="hint">No ingredients yet. <a href="#/edit/${encodeURIComponent(r.id)}">Edit the recipe</a> to add them.</p>`}
+          : `<p class="hint">No ingredients yet. <a href="#/edit/${encodeURIComponent(r.id)}">Add them</a>.</p>`}
       </section>
 
-      <section class="block ruled" aria-labelledby="stepHead">
-        <h2 id="stepHead">Method</h2>
+      <section class="sec" aria-labelledby="stepHead">
+        <h2 id="stepHead" class="sec-title">Method</h2>
         ${r.steps.length ? `
-          <p class="hint">Tap a step when it's done.</p>
-          <ol class="steps">${r.steps.map(s => `<li data-action="step">${esc(s)}</li>`).join('')}</ol>`
+          <ol class="method">${r.steps.map((s, i) => `
+            <li class="method-step" data-action="step">
+              <span class="step-num" aria-hidden="true">${i + 1}</span>
+              <p>${esc(s)}</p>
+            </li>`).join('')}
+          </ol>
+          <p class="hint">Tap a step when it's done.</p>`
           : '<p class="hint">No steps yet.</p>'}
       </section>
 
-      <section class="block ruled" aria-labelledby="notesHead">
-        <h2 id="notesHead"><label for="notes">Kitchen notes</label></h2>
-        <textarea id="notes" class="ruled-input" rows="3" placeholder="Swaps, oven quirks, who loved it…">${esc(r.notes)}</textarea>
+      <section class="sec" aria-labelledby="notesHead">
+        <h2 id="notesHead" class="sec-title"><label for="notes">Notes</label></h2>
+        <textarea id="notes" class="notes-input" rows="2" placeholder="Swaps, oven quirks, who loved it">${esc(r.notes)}</textarea>
       </section>
 
-      <footer class="recipe-actions">
-        <div class="made">
-          <button class="btn btn-secondary" data-action="made">I made this</button>
-          <span class="made-count">${r.timesMade ? `Made ${plural(r.timesMade, 'time')}, last on ${fmtDate(r.lastMade)}` : 'Not made yet'}</span>
-        </div>
+      ${r.images && r.images.length ? `
+        <section class="sec" aria-labelledby="photoHead">
+          <h2 id="photoHead" class="sec-title">Original</h2>
+          <div class="photo-strip">
+            ${r.images.map((src, i) => `<button class="thumb" data-action="view-photo" data-index="${i}" aria-label="View photo ${i + 1}"><img src="${src}" alt=""></button>`).join('')}
+          </div>
+        </section>` : ''}
+
+      <footer class="recipe-foot">
+        <p class="made-count">${r.timesMade ? `Made ${plural(r.timesMade, 'time')}, most recently ${fmtDate(r.lastMade)}.` : 'Not made yet.'}</p>
         <div class="action-row">
-          ${canWake ? `<button class="btn btn-secondary" data-action="wake" aria-pressed="false">Keep screen on</button>` : ''}
+          <button class="btn btn-secondary" data-action="made">I made this</button>
+          ${canWake ? '<button class="btn btn-secondary" data-action="wake" aria-pressed="false">Keep screen on</button>' : ''}
           <button class="btn btn-secondary" data-action="share-recipe">Share</button>
-          <a class="btn btn-secondary" href="#/edit/${encodeURIComponent(r.id)}">Edit</a>
-          <button class="btn btn-danger" data-action="delete">Delete</button>
+          <button class="btn btn-quiet" data-action="delete">Delete recipe</button>
         </div>
       </footer>
     </article>`;
 }
 
+function ingredientRow(ing, i, factor) {
+  const { qty, item } = displayIngredient(ing, factor);
+  return `<li><button class="ing" data-action="tick" data-index="${i}" aria-pressed="false"><span class="ing-qty">${esc(qty)}</span><span class="ing-item">${esc(item)}</span></button></li>`;
+}
+
 function recipeToText(r, factor = 1) {
   const out = [r.title];
-  const facts = [r.servings && `Serves ${r.servings}`, r.prepTime && `Prep ${r.prepTime}`, r.cookTime && `Cook ${r.cookTime}`].filter(Boolean);
-  if (facts.length) out.push(facts.join(', '));
+  const meta = metaSentence(r);
+  if (meta) out.push(meta);
   if (r.source) out.push(`From ${r.source}`);
   if (r.ingredients.length) out.push('', 'Ingredients', ...r.ingredients.map(i => `- ${scaleIngredient(i, factor)}`));
   if (r.steps.length) out.push('', 'Method', ...r.steps.map((s, i) => `${i + 1}. ${s}`));
@@ -1570,6 +1946,22 @@ function recipeToText(r, factor = 1) {
 
 // ---------- add / edit form ----------
 
+function editRow(kind, value, index) {
+  const label = kind === 'step' ? `Step ${index + 1}` : `Ingredient ${index + 1}`;
+  return `
+    <li class="edit-row" data-kind="${kind}">
+      <button type="button" class="grip" data-grip aria-label="Move ${label}. Drag, or use the arrow keys.">${ICONS.grip}</button>
+      ${kind === 'step' ? `<span class="row-num" aria-hidden="true">${index + 1}</span>` : ''}
+      <textarea class="row-input" rows="${kind === 'step' ? 3 : 1}" aria-label="${label}" enterkeyhint="next" placeholder="${kind === 'step' ? 'Describe this step' : 'e.g. 1 cup flour'}">${esc(value)}</textarea>
+      <button type="button" class="row-remove" data-action="row-remove" aria-label="Remove ${label}">${ICONS.remove}</button>
+    </li>`;
+}
+
+function editList(kind, values) {
+  const items = values.length ? values : [''];
+  return items.map((v, i) => editRow(kind, v, i)).join('');
+}
+
 function renderForm(id) {
   const existing = id ? state.recipes.find(r => r.id === id) : null;
   if (id && !existing) return notFound();
@@ -1577,37 +1969,39 @@ function renderForm(id) {
   state.draft = { id, photos: (r.images || []).map(src => ({ src })) };
 
   view.innerHTML = `
-    <div class="topbar"><a class="back" href="${id ? `#/recipe/${encodeURIComponent(id)}` : '#/'}">Cancel</a></div>
-    <form class="card form" id="recipeForm" novalidate>
-      <h1 class="hand">${id ? 'Edit recipe' : 'New recipe'}</h1>
+    <div class="topbar">
+      <a class="back" href="${id ? `#/recipe/${encodeURIComponent(id)}` : '#/'}">Cancel</a>
+    </div>
+    <form class="page form" id="recipeForm" novalidate>
+      <h1 class="page-title">${id ? 'Edit recipe' : 'New recipe'}</h1>
 
-      <section class="scan" aria-labelledby="scanHead">
-        <h2 id="scanHead">Scan a recipe</h2>
-        <p class="hint">Photograph a recipe card or cookbook page, front and back if needed. Printed and typed recipes read best; handwriting usually needs touching up.</p>
+      <section class="sec scan" aria-labelledby="scanHead">
+        <h2 id="scanHead" class="sec-title">Scan</h2>
+        <p class="hint">Add photos of a recipe card or cookbook page, or screenshots from a recipe app or website. Use as many as you need; they can overlap and be in any order.</p>
         <div class="photo-tray" id="photoTray"></div>
-        <div class="scan-buttons">
+        <div class="action-row">
           <label class="btn btn-secondary file-btn">Add photos
             <input type="file" accept="image/*" multiple id="photoInput" class="sr-only">
           </label>
-          <button type="button" class="btn btn-primary" data-action="scan" id="scanBtn">Read recipe from photos</button>
+          <button type="button" class="btn btn-primary" data-action="scan" id="scanBtn">Read recipe</button>
         </div>
         <div class="progress" id="scanProgress" hidden>
           <div class="progress-track"><span class="progress-fill"></span></div>
           <p class="progress-label" aria-live="polite"></p>
         </div>
-        <details class="raw" id="rawText" hidden><summary>Show the scanned text</summary><pre></pre></details>
+        <details class="raw" id="rawText" hidden><summary>Show everything the scanner read</summary><pre></pre></details>
       </section>
 
-      <section class="fields" id="fields" aria-labelledby="fieldsHead">
-        <h2 id="fieldsHead">${id ? 'Recipe' : 'Or type it in'}</h2>
+      <section class="sec" id="fields" aria-labelledby="detailsHead">
+        <h2 id="detailsHead" class="sec-title">Details</h2>
         <div class="field">
           <label for="f-title">Recipe name</label>
           <input id="f-title" name="title" value="${esc(r.title)}" autocomplete="off" required>
           <p class="field-error" id="titleError" hidden>Give the recipe a name to save it.</p>
         </div>
-        <div class="field-row">
+        <div class="field-grid">
           <div class="field">
-            <label for="f-category">Category</label>
+            <label for="f-category">Chapter</label>
             <select id="f-category" name="category">
               <option value="">Choose one</option>
               ${CATEGORIES.map(c => `<option ${r.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
@@ -1617,8 +2011,6 @@ function renderForm(id) {
             <label for="f-servings">Serves</label>
             <input id="f-servings" name="servings" value="${esc(r.servings)}" placeholder="4" autocomplete="off">
           </div>
-        </div>
-        <div class="field-row">
           <div class="field">
             <label for="f-prep">Prep time</label>
             <input id="f-prep" name="prepTime" value="${esc(r.prepTime)}" placeholder="15 min" autocomplete="off">
@@ -1629,31 +2021,145 @@ function renderForm(id) {
           </div>
         </div>
         <div class="field">
-          <label for="f-source">From the kitchen of</label>
+          <label for="f-source">From</label>
           <input id="f-source" name="source" value="${esc(r.source)}" placeholder="Grandma, a cookbook, a website" autocomplete="off">
         </div>
-        <div class="field">
-          <label for="f-ingredients">Ingredients <span class="label-hint">one per line</span></label>
-          <textarea id="f-ingredients" name="ingredients" class="ruled-input" rows="8">${esc(r.ingredients.join('\n'))}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-steps">Method <span class="label-hint">one step per line</span></label>
-          <textarea id="f-steps" name="steps" class="ruled-input" rows="9">${esc(r.steps.join('\n'))}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-notes">Notes</label>
-          <textarea id="f-notes" name="notes" class="ruled-input" rows="3">${esc(r.notes)}</textarea>
-        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="ingEditHead">
+        <h2 id="ingEditHead" class="sec-title">Ingredients</h2>
+        <p class="hint">Drag the handle to reorder. Pasting several lines adds a row for each.</p>
+        <ol class="edit-list" id="ingList" data-kind="ingredient">${editList('ingredient', r.ingredients)}</ol>
+        <button type="button" class="text-btn add-row" data-action="row-add" data-list="ingList">Add ingredient</button>
+      </section>
+
+      <section class="sec" aria-labelledby="stepEditHead">
+        <h2 id="stepEditHead" class="sec-title">Method</h2>
+        <p class="hint">Each box is one step. Drag the handle to reorder.</p>
+        <ol class="edit-list steps" id="stepList" data-kind="step">${editList('step', r.steps)}</ol>
+        <button type="button" class="text-btn add-row" data-action="row-add" data-list="stepList">Add step</button>
+      </section>
+
+      <section class="sec" aria-labelledby="notesEditHead">
+        <h2 id="notesEditHead" class="sec-title"><label for="f-notes">Notes</label></h2>
+        <textarea id="f-notes" name="notes" class="notes-input" rows="3">${esc(r.notes)}</textarea>
         <label class="check-row" id="keepPhotosRow">
           <input type="checkbox" id="f-keepPhotos" checked> Keep the photos with this recipe
         </label>
       </section>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary" id="saveBtn">Save recipe</button>
+        <button type="submit" class="btn btn-primary btn-wide" id="saveBtn">Save recipe</button>
       </div>
+      <p class="sr-only" id="moveStatus" aria-live="polite"></p>
     </form>`;
   renderPhotoTray();
+  view.querySelectorAll('.row-input').forEach(autosize);
+}
+
+function autosize(el) {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight + 2}px`;
+}
+
+function renumber(list) {
+  const kind = list.dataset.kind;
+  [...list.children].forEach((row, i) => {
+    const label = kind === 'step' ? `Step ${i + 1}` : `Ingredient ${i + 1}`;
+    const num = row.querySelector('.row-num');
+    if (num) num.textContent = i + 1;
+    row.querySelector('.grip').setAttribute('aria-label', `Move ${label}. Drag, or use the arrow keys.`);
+    row.querySelector('.row-input').setAttribute('aria-label', label);
+    row.querySelector('.row-remove').setAttribute('aria-label', `Remove ${label}`);
+  });
+}
+
+function addRow(list, value = '', after = null, focus = true) {
+  const tmp = document.createElement('ol');
+  tmp.innerHTML = editRow(list.dataset.kind, value, 0);
+  const row = tmp.firstElementChild;
+  list.insertBefore(row, after ? after.nextElementSibling : null);
+  renumber(list);
+  const input = row.querySelector('.row-input');
+  autosize(input);
+  if (focus) input.focus();
+  return row;
+}
+
+function setListValues(list, values) {
+  list.innerHTML = editList(list.dataset.kind, values);
+  list.querySelectorAll('.row-input').forEach(autosize);
+}
+
+function listValues(id) {
+  return [...document.querySelectorAll(`#${id} .row-input`)].map(t => t.value.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
+// Drag to reorder (edit screen only). Pointer events work for touch and mouse.
+function startDrag(e, grip) {
+  const row = grip.closest('.edit-row');
+  const list = row.parentElement;
+  e.preventDefault();
+  grip.setPointerCapture(e.pointerId);
+  const grabOffset = e.clientY - row.getBoundingClientRect().top;
+  let lastY = e.clientY;
+  row.classList.add('dragging');
+  list.classList.add('is-dragging');
+
+  const place = () => {
+    const y = lastY;
+    let before = null;
+    for (const sib of list.children) {
+      if (sib === row) continue;
+      const box = sib.getBoundingClientRect();
+      if (y < box.top + box.height / 2) { before = sib; break; }
+    }
+    if (before !== row.nextElementSibling && before !== row) list.insertBefore(row, before);
+    row.style.transform = '';
+    const natural = row.getBoundingClientRect().top;
+    row.style.transform = `translateY(${y - grabOffset - natural}px)`;
+  };
+
+  let raf = 0;
+  const edgeScroll = () => {
+    const edge = 90;
+    const bottomLimit = window.innerHeight - 80; // keep clear of the tab bar
+    let dy = 0;
+    if (lastY < edge) dy = -Math.ceil((edge - lastY) / 6);
+    else if (lastY > bottomLimit - edge) dy = Math.ceil((lastY - (bottomLimit - edge)) / 6);
+    if (dy) { window.scrollBy(0, dy); place(); }
+    raf = requestAnimationFrame(edgeScroll);
+  };
+  raf = requestAnimationFrame(edgeScroll);
+
+  const move = ev => { lastY = ev.clientY; place(); };
+  const end = () => {
+    cancelAnimationFrame(raf);
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', end);
+    grip.removeEventListener('pointercancel', end);
+    row.classList.remove('dragging');
+    list.classList.remove('is-dragging');
+    row.style.transform = '';
+    renumber(list);
+  };
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+}
+
+function moveWithKeys(e, grip) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  const row = grip.closest('.edit-row');
+  const list = row.parentElement;
+  if (e.key === 'ArrowUp' && row.previousElementSibling) list.insertBefore(row, row.previousElementSibling);
+  else if (e.key === 'ArrowDown' && row.nextElementSibling) list.insertBefore(row.nextElementSibling, row);
+  else return;
+  renumber(list);
+  grip.focus();
+  const pos = [...list.children].indexOf(row) + 1;
+  document.getElementById('moveStatus').textContent = `Moved to position ${pos} of ${list.children.length}`;
 }
 
 function renderPhotoTray() {
@@ -1662,8 +2168,8 @@ function renderPhotoTray() {
   const photos = state.draft.photos;
   tray.innerHTML = photos.map((p, i) => `
     <figure class="tray-photo">
-      <img src="${p.src}" alt="Recipe photo ${i + 1}">
-      <button type="button" class="tray-remove" data-action="remove-photo" data-index="${i}" aria-label="Remove photo ${i + 1}">×</button>
+      <img src="${p.src}" alt="Photo ${i + 1}">
+      <button type="button" class="tray-remove" data-action="remove-photo" data-index="${i}" aria-label="Remove photo ${i + 1}">${ICONS.remove}</button>
     </figure>`).join('');
   tray.hidden = !photos.length;
   document.getElementById('scanBtn').disabled = !photos.length;
@@ -1680,8 +2186,8 @@ async function runScan() {
   const form = document.getElementById('recipeForm');
   const photos = state.draft.photos;
   if (!photos.length) return;
-  const hasContent = form.ingredients.value.trim() || form.steps.value.trim();
-  if (hasContent && !confirm('Replace what is in the form with the scanned recipe?')) return;
+  const hasContent = listValues('ingList').length || listValues('stepList').length;
+  if (hasContent && !confirm('Replace the ingredients and steps in the form with the scanned recipe?')) return;
 
   const btn = document.getElementById('scanBtn');
   const box = document.getElementById('scanProgress');
@@ -1696,7 +2202,7 @@ async function runScan() {
       label.textContent = l;
       fill.style.width = `${Math.round(fraction * 100)}%`;
     });
-    const parsed = parseRecipeText(result.text, result.lines);
+    const parsed = parseRecipeText(result.text, result.lines, result.titleHint);
 
     const raw = document.getElementById('rawText');
     raw.hidden = false;
@@ -1704,19 +2210,19 @@ async function runScan() {
 
     if (!parsed.ingredients.length && !parsed.steps.length) {
       raw.open = true;
-      label.textContent = 'No ingredients or steps found. Try a sharper, well-lit photo, or copy what you need from the scanned text.';
+      label.textContent = 'No ingredients or steps found. Try a sharper, well-lit photo, or copy what you need from the text below.';
       return;
     }
     if (parsed.title) form.title.value = parsed.title;
     for (const key of ['servings', 'prepTime', 'cookTime', 'source']) if (parsed[key]) form[key].value = parsed[key];
-    form.ingredients.value = parsed.ingredients.join('\n');
-    form.steps.value = parsed.steps.join('\n');
+    setListValues(document.getElementById('ingList'), parsed.ingredients);
+    setListValues(document.getElementById('stepList'), parsed.steps);
     if (parsed.notes && !form.notes.value.trim()) form.notes.value = parsed.notes;
-    label.textContent = `Found ${plural(parsed.ingredients.length, 'ingredient')} and ${plural(parsed.steps.length, 'step')}. Check them below before saving.`;
-    document.getElementById('fields').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    label.textContent = `Found ${plural(parsed.ingredients.length, 'ingredient')} and ${plural(parsed.steps.length, 'step')}. Check them below, then save.`;
+    document.getElementById('fields').scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' });
   } catch (err) {
     console.error(err);
-    label.textContent = err.message || 'Reading the photo failed. Try again.';
+    label.textContent = err.message || 'Reading the photos failed. Try again.';
     fill.style.width = '0%';
   } finally {
     btn.disabled = !state.draft.photos.length;
@@ -1743,15 +2249,15 @@ async function submitForm(form) {
       prepTime: form.prepTime.value.trim(),
       cookTime: form.cookTime.value.trim(),
       source: form.source.value.trim(),
-      ingredients: linesOf(form.ingredients.value),
-      steps: linesOf(form.steps.value).map(s => s.replace(/^(?:step\s*)?\d{1,2}\s*[.):]\s+/i, '')),
+      ingredients: listValues('ingList'),
+      steps: listValues('stepList'),
       notes: form.notes.value.trim(),
       images,
     };
     await saveRecipe(recipe);
     state.draft.photos.forEach(p => p.file && URL.revokeObjectURL(p.src));
     state.draft = null;
-    toast(existing ? 'Recipe saved' : 'Recipe added to your box');
+    toast(existing ? 'Recipe saved' : 'Recipe added');
     location.hash = `#/recipe/${encodeURIComponent(recipe.id)}`;
   } catch (e) {
     console.error(e);
@@ -1794,41 +2300,37 @@ function renderList() {
   const items = state.grocery;
   const remaining = items.filter(i => !i.checked).length;
   view.innerHTML = `
-    <section class="pad">
-      <div class="pad-binding" aria-hidden="true"></div>
-      <div class="pad-body">
-        <h1 class="hand">Grocery list</h1>
-        <form class="add-item" id="addItemForm">
-          <label class="sr-only" for="newItem">Add an item</label>
-          <input id="newItem" placeholder="Add an item" autocomplete="off" enterkeyhint="done">
-          <button class="btn btn-small btn-primary">Add</button>
-        </form>
-        ${items.length ? `
-          <div class="segmented" role="group" aria-label="Group items">
-            <button data-action="group" data-by="aisle" aria-pressed="${state.settings.groupBy === 'aisle'}">By aisle</button>
-            <button data-action="group" data-by="recipe" aria-pressed="${state.settings.groupBy === 'recipe'}">By recipe</button>
-          </div>
-          <div class="groups">
-            ${groupItems(items).map(g => `
-              <section class="group">
-                <h2>${esc(g.name)}</h2>
-                <ul>${g.list.map(i => `
-                  <li class="gitem${i.checked ? ' done' : ''}">
-                    <label><input type="checkbox" data-gid="${i.id}" ${i.checked ? 'checked' : ''}><span>${esc(i.text)}</span></label>
-                    <button class="gdel" data-action="gdel" data-id="${i.id}" aria-label="Remove ${esc(i.text)}">×</button>
-                  </li>`).join('')}
-                </ul>
-              </section>`).join('')}
-          </div>
-          <div class="list-actions">
-            <button class="btn btn-primary" data-action="export-list" ${remaining ? '' : 'disabled'}>Send to Notes</button>
-            <button class="btn btn-secondary" data-action="copy-list" ${remaining ? '' : 'disabled'}>Copy list</button>
-            <button class="btn btn-secondary" data-action="clear-checked" ${items.some(i => i.checked) ? '' : 'disabled'}>Clear checked</button>
-            <button class="btn btn-danger" data-action="clear-list">Clear all</button>
-          </div>
-          <p class="hint">Send to Notes opens the share sheet; pick Notes. To turn the lines into checkboxes, select them in Notes and tap the checklist button.</p>`
-        : `<p class="empty-pad">Your list is empty. Open a recipe and tap Add to grocery list, or add items above.</p>`}
-      </div>
+    <section class="page grocery">
+      <h1 class="page-title">Grocery list</h1>
+      <p class="recipe-meta">${items.length ? `${plural(remaining, 'item')} to buy.` : ''}</p>
+      <form class="add-item" id="addItemForm">
+        <label class="sr-only" for="newItem">Add an item</label>
+        <input id="newItem" placeholder="Add an item" autocomplete="off" enterkeyhint="done">
+        <button class="btn btn-secondary">Add</button>
+      </form>
+      ${items.length ? `
+        <div class="segmented" role="group" aria-label="Group items">
+          <button data-action="group" data-by="aisle" aria-pressed="${state.settings.groupBy === 'aisle'}">By aisle</button>
+          <button data-action="group" data-by="recipe" aria-pressed="${state.settings.groupBy === 'recipe'}">By recipe</button>
+        </div>
+        ${groupItems(items).map(g => `
+          <section class="g-group">
+            <h2 class="g-title">${esc(g.name)}</h2>
+            <ul class="g-list">${g.list.map(i => `
+              <li class="g-item${i.checked ? ' done' : ''}">
+                <label><input type="checkbox" data-gid="${i.id}" ${i.checked ? 'checked' : ''}><span>${esc(i.text)}</span></label>
+                <button class="row-remove" data-action="gdel" data-id="${i.id}" aria-label="Remove ${esc(i.text)}">${ICONS.remove}</button>
+              </li>`).join('')}
+            </ul>
+          </section>`).join('')}
+        <div class="action-row list-actions">
+          <button class="btn btn-primary" data-action="export-list" ${remaining ? '' : 'disabled'}>Send to Notes</button>
+          <button class="btn btn-secondary" data-action="copy-list" ${remaining ? '' : 'disabled'}>Copy</button>
+          <button class="btn btn-secondary" data-action="clear-checked" ${items.some(i => i.checked) ? '' : 'disabled'}>Clear checked</button>
+          <button class="btn btn-quiet" data-action="clear-list">Clear all</button>
+        </div>
+        <p class="hint">Send to Notes opens the share sheet; choose Notes. To turn the lines into checkboxes, select them in Notes and tap the checklist button.</p>`
+      : `<p class="empty-note">Your list is empty. Open a recipe and tap Add to grocery list, or add items above.</p>`}
     </section>`;
 }
 
@@ -1838,34 +2340,40 @@ async function renderSettings() {
   let usage = '';
   try {
     const est = await navigator.storage.estimate();
-    if (est.usage) usage = `Using about ${(est.usage / 1048576).toFixed(1)} MB on this device.`;
+    if (est.usage) usage = ` Using about ${(est.usage / 1048576).toFixed(1)} MB on this device.`;
   } catch { /* ignore */ }
   view.innerHTML = `
-    <div class="topbar"><a class="back" href="#/">Recipes</a></div>
-    <section class="card settings">
-      <h1 class="hand">Backup &amp; settings</h1>
+    <div class="topbar"><a class="back" href="#/">Contents</a></div>
+    <section class="page settings">
+      <h1 class="page-title">Backup &amp; settings</h1>
 
-      <h2>Backups</h2>
-      <p>Recipes are saved on this device only. Save a backup file now and then, so you can restore your recipes on a new phone or after deleting the app.</p>
-      <p class="hint">${plural(state.recipes.length, 'recipe')} in your box. ${usage}</p>
-      <div class="action-row">
-        <button class="btn btn-primary" data-action="backup">Save a backup file</button>
-        <label class="btn btn-secondary file-btn">Restore from backup
-          <input type="file" accept=".json,application/json" id="restoreInput" class="sr-only">
-        </label>
-      </div>
+      <section class="sec">
+        <h2 class="sec-title">Backups</h2>
+        <p>Recipes are saved on this device only. Save a backup file now and then, so you can restore your recipes on a new phone or after deleting the app.</p>
+        <p class="hint">${plural(state.recipes.length, 'recipe')} saved.${usage}</p>
+        <div class="action-row">
+          <button class="btn btn-primary" data-action="backup">Save a backup file</button>
+          <label class="btn btn-secondary file-btn">Restore from backup
+            <input type="file" accept=".json,application/json" id="restoreInput" class="sr-only">
+          </label>
+        </div>
+      </section>
 
-      <h2>Add to your Home Screen</h2>
-      <ol class="install-steps">
-        <li>Open this page in Safari.</li>
-        <li>Tap the Share button.</li>
-        <li>Tap Add to Home Screen, then Add.</li>
-      </ol>
-      <p class="hint">The Home Screen app keeps its own recipes, separate from Safari. Add your recipes from the Home Screen app, or move them over with a backup file.</p>
+      <section class="sec">
+        <h2 class="sec-title">Add to your Home Screen</h2>
+        <ol class="plain-steps">
+          <li>Open this page in Safari.</li>
+          <li>Tap the Share button.</li>
+          <li>Tap Add to Home Screen, then Add.</li>
+        </ol>
+        <p class="hint">The Home Screen app keeps its own recipes, separate from Safari. Add recipes from the Home Screen app, or move them over with a backup file.</p>
+      </section>
 
-      <h2>Start over</h2>
-      <p>Delete every recipe and clear the grocery list.</p>
-      <button class="btn btn-danger" data-action="delete-all">Delete all recipes</button>
+      <section class="sec">
+        <h2 class="sec-title">Start over</h2>
+        <p>Delete every recipe and clear the grocery list.</p>
+        <button class="btn btn-danger" data-action="delete-all">Delete all recipes</button>
+      </section>
     </section>`;
 }
 
@@ -1891,7 +2399,7 @@ async function restoreBackup(file) {
     const recipes = data.recipes.filter(r => r && r.id && r.title).map(r => ({
       ingredients: [], steps: [], images: [], rating: 0, timesMade: 0, createdAt: Date.now(), ...r,
     }));
-    if (!confirm(`Restore ${plural(recipes.length, 'recipe')}? Recipes already in your box are kept; matching ones are replaced by the backup copy.`)) return;
+    if (!confirm(`Restore ${plural(recipes.length, 'recipe')}? Recipes already saved are kept; matching ones are replaced by the backup copy.`)) return;
     await db.putManyRecipes(recipes);
     state.recipes = await db.allRecipes();
     if (Array.isArray(data.grocery) && data.grocery.length && !state.grocery.length) {
@@ -1912,11 +2420,11 @@ function currentRecipe() {
 }
 
 const actions = {
-  'dismiss-install': async () => { state.settings.installTipDismissed = true; await saveSettings(); document.querySelector('.install-tip')?.remove(); },
+  'dismiss-install': async () => { state.settings.installTipDismissed = true; await saveSettings(); document.querySelector('.notice')?.remove(); },
   'filter': el => {
     state.filter.cat = el.dataset.cat;
-    document.querySelectorAll('.divider').forEach(d => d.setAttribute('aria-pressed', d === el));
-    renderCards();
+    document.querySelectorAll('.chapter-link').forEach(d => d.setAttribute('aria-pressed', d === el));
+    renderContents();
   },
   'clear-filters': () => { state.filter.q = ''; state.filter.cat = 'all'; renderHome(); },
 
@@ -1933,14 +2441,18 @@ const actions = {
     r.favorite = !r.favorite;
     await saveRecipe(r);
     el.setAttribute('aria-pressed', r.favorite);
-    el.textContent = r.favorite ? '♥ Favorite' : '♡ Add to favorites';
+    el.textContent = r.favorite ? '♥ Favorite' : '♡ Favorite';
   },
   'scale': el => {
     const r = currentRecipe(); if (!r) return;
     const f = Number(el.dataset.factor);
     state.scale[r.id] = f;
     document.querySelectorAll('.scaler button').forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.factor) === f));
-    document.querySelectorAll('.ing').forEach(b => { b.textContent = scaleIngredient(r.ingredients[Number(b.dataset.index)], f); });
+    document.querySelectorAll('.ing').forEach(b => {
+      const { qty, item } = displayIngredient(r.ingredients[Number(b.dataset.index)], f);
+      b.querySelector('.ing-qty').textContent = qty;
+      b.querySelector('.ing-item').textContent = item;
+    });
   },
   'tick': el => {
     el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') !== 'true');
@@ -1965,8 +2477,8 @@ const actions = {
     r.timesMade = (r.timesMade || 0) + 1;
     r.lastMade = Date.now();
     await saveRecipe(r);
-    document.querySelector('.made-count').textContent = `Made ${plural(r.timesMade, 'time')}, last on ${fmtDate(r.lastMade)}`;
-    toast('Nice work. Noted on the card.');
+    document.querySelector('.made-count').textContent = `Made ${plural(r.timesMade, 'time')}, most recently ${fmtDate(r.lastMade)}.`;
+    toast('Noted');
   },
   'wake': async el => {
     const on = el.getAttribute('aria-pressed') !== 'true';
@@ -1977,7 +2489,7 @@ const actions = {
   },
   'share-recipe': async () => {
     const r = currentRecipe(); if (!r) return;
-    const result = await shareText(recipeToText(r, state.scale[r.id] || 1), r.title);
+    const result = await shareText(recipeToText(r, state.scale[r.id] || 1));
     if (result === 'copied') toast('Recipe copied');
   },
   'delete': async () => {
@@ -1990,9 +2502,8 @@ const actions = {
   },
   'view-photo': el => {
     const r = currentRecipe(); if (!r) return;
-    const dlg = document.getElementById('photoViewer');
     document.getElementById('photoViewerImg').src = r.images[Number(el.dataset.index)];
-    dlg.showModal();
+    document.getElementById('photoViewer').showModal();
   },
 
   'remove-photo': el => {
@@ -2001,13 +2512,23 @@ const actions = {
     renderPhotoTray();
   },
   'scan': () => runScan(),
+  'row-add': el => addRow(document.getElementById(el.dataset.list)),
+  'row-remove': el => {
+    const row = el.closest('.edit-row');
+    const list = row.parentElement;
+    const target = row.nextElementSibling || row.previousElementSibling;
+    row.remove();
+    if (!list.children.length) addRow(list, '', null, false);
+    renumber(list);
+    (target || list.lastElementChild).querySelector('.row-input').focus();
+  },
 
   'group': async el => { state.settings.groupBy = el.dataset.by; await saveSettings(); renderList(); },
   'gdel': async el => { state.grocery = state.grocery.filter(i => i.id !== el.dataset.id); await saveGrocery(); renderList(); },
   'export-list': async () => {
-    const result = await shareText(groceryText(), 'Grocery list');
+    const result = await shareText(groceryText());
     if (result === 'copied') toast('List copied. Paste it into a new note.');
-    if (result === 'failed') toast('Sharing is not available here. Use Copy list instead.');
+    if (result === 'failed') toast('Sharing is not available here. Use Copy instead.');
   },
   'copy-list': async () => toast((await copyText(groceryText())) ? 'List copied. Paste it into a new note.' : 'Copying failed on this device.'),
   'clear-checked': async () => { state.grocery = state.grocery.filter(i => !i.checked); await saveGrocery(); renderList(); },
@@ -2034,8 +2555,49 @@ view.addEventListener('click', e => {
   if (fn) { e.preventDefault(); fn(el, e); }
 });
 
+view.addEventListener('pointerdown', e => {
+  const grip = e.target.closest('[data-grip]');
+  if (grip && (e.button === 0 || e.pointerType !== 'mouse')) startDrag(e, grip);
+});
+
+view.addEventListener('keydown', e => {
+  const grip = e.target.closest('[data-grip]');
+  if (grip) return moveWithKeys(e, grip);
+  const input = e.target.closest('.edit-row .row-input');
+  if (!input) return;
+  const row = input.closest('.edit-row');
+  // Return starts a new row; Backspace in an empty row removes it.
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    addRow(row.parentElement, '', row);
+  } else if (e.key === 'Backspace' && !input.value && row.parentElement.children.length > 1) {
+    e.preventDefault();
+    const prev = row.previousElementSibling || row.nextElementSibling;
+    const list = row.parentElement;
+    row.remove(); renumber(list);
+    const t = prev.querySelector('.row-input');
+    t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+  }
+});
+
+view.addEventListener('paste', e => {
+  const input = e.target.closest('.edit-row .row-input');
+  if (!input) return;
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  const parts = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  if (parts.length < 2) return;
+  e.preventDefault();
+  const row = input.closest('.edit-row');
+  input.value = (input.value + ' ' + parts[0]).trim();
+  autosize(input);
+  let after = row;
+  for (const p of parts.slice(1)) after = addRow(row.parentElement, p, after, false);
+  after.querySelector('.row-input').focus();
+});
+
 view.addEventListener('input', e => {
-  if (e.target.id === 'search') { state.filter.q = e.target.value; renderCards(); }
+  if (e.target.id === 'search') { state.filter.q = e.target.value; renderContents(); }
+  if (e.target.classList.contains('row-input')) autosize(e.target);
 });
 
 let notesTimer;
@@ -2052,10 +2614,12 @@ view.addEventListener('input', e => {
 
 view.addEventListener('change', async e => {
   const t = e.target;
-  if (t.id === 'sort') { state.filter.sort = t.value; renderCards(); }
+  if (t.id === 'sort') { state.filter.sort = t.value; renderContents(); }
   else if (t.id === 'photoInput') {
     const files = [...t.files].filter(f => f.type.startsWith('image/') || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name));
     state.draft.photos.push(...files.map(file => ({ file, src: URL.createObjectURL(file) })));
+    // Number-aware name order (IMG_7945, IMG_7946…) is the fallback when pages don't overlap.
+    state.draft.photos.sort((a, b) => (a.file && b.file) ? a.file.name.localeCompare(b.file.name, undefined, { numeric: true }) : 0);
     t.value = '';
     renderPhotoTray();
   }
@@ -2064,12 +2628,14 @@ view.addEventListener('change', async e => {
     const item = state.grocery.find(i => i.id === t.dataset.gid);
     if (!item) return;
     item.checked = t.checked;
-    t.closest('.gitem').classList.toggle('done', t.checked);
+    t.closest('.g-item').classList.toggle('done', t.checked);
     await saveGrocery();
     document.querySelector('[data-action="clear-checked"]').disabled = !state.grocery.some(i => i.checked);
     const open = state.grocery.some(i => !i.checked);
     document.querySelector('[data-action="export-list"]').disabled = !open;
     document.querySelector('[data-action="copy-list"]').disabled = !open;
+    const meta = document.querySelector('.grocery .recipe-meta');
+    if (meta) meta.textContent = `${plural(state.grocery.filter(i => !i.checked).length, 'item')} to buy.`;
   }
 });
 
@@ -2101,8 +2667,8 @@ async function boot() {
     state.settings = { ...state.settings, ...(settings || {}) };
   } catch (err) {
     console.error(err);
-    view.innerHTML = `<div class="card empty-card"><h1 class="hand">Recipe Box can't open its storage</h1>
-      <p>Private Browsing blocks saved data. Open Recipe Box in a regular Safari tab or from your Home Screen.</p></div>`;
+    view.innerHTML = `<section class="page empty"><h1 class="page-title">Recipe Box can't open its storage</h1>
+      <p>Private Browsing blocks saved data. Open Recipe Box in a regular Safari tab or from your Home Screen.</p></section>`;
     return;
   }
   updateListCount();
