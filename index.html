@@ -174,14 +174,20 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .pill-cherry { background: var(--cherry); color: var(--cherry-ink); }
 .pill-white { background: #FFFFFF; color: #1E2A2A; }
 
-.stars.pill { padding: 0 .25rem; gap: 0; }
-.star {
-  width: 2.1rem; height: 2.4rem; padding: 0; border: 0; background: none; cursor: pointer;
-  font-size: 1.15rem; line-height: 1; color: #E7D8CF;
-  transition: transform .12s ease;
+/* half-star rating: tap position sets the value in half steps */
+.st { display: inline-block; color: var(--star-off); }
+.st.full { color: var(--cherry); }
+.st.half {
+  background: linear-gradient(90deg, var(--cherry) 50%, var(--star-off) 50%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.star[aria-pressed="true"] { color: #C2202A; }
-.star:active { transform: scale(1.2); }
+.rating {
+  display: inline-flex; align-items: center; gap: .15rem;
+  min-height: 2.75rem; padding: 0 .75rem; cursor: pointer;
+  font-size: 1.45rem; letter-spacing: .05em; touch-action: manipulation;
+  --star-off: #E7D8CF; --cherry: #C2202A;
+}
+.rating:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
 
 /* ---------- controls ---------- */
 
@@ -279,8 +285,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .toc-sub { display: block; font-size: .9rem; color: var(--muted); }
 .fav-mark { color: var(--cherry); }
 .new-tag { font-size: .85rem; font-weight: 800; color: var(--heading); }
-.stars-static { color: var(--cherry); letter-spacing: .06em; font-size: .9rem; }
-.stars-static .dim { color: var(--star-off); }
+.stars-static { letter-spacing: .06em; font-size: .9rem; white-space: nowrap; }
 
 /* ---------- recipe ---------- */
 
@@ -530,6 +535,72 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ---------- ingredient sections ---------- */
+.ing-head h3 {
+  margin: 1.1rem 0 .1rem; font: 400 1.25rem/1.2 var(--display); color: var(--heading);
+}
+.ing-list > .ing-head:first-child h3 { margin-top: .25rem; }
+
+/* ---------- recipe list: quick section picker ---------- */
+.menu-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .8rem; }
+.menu-head .menu-title { margin: 0; }
+.quick-cat { display: block; margin: -.2rem 0 .6rem; }
+.quick-cat select {
+  min-height: 2.4rem; padding: .2rem 2rem .2rem .8rem; border-radius: 999px;
+  border: 2px dashed var(--heading); background: var(--cream); color: var(--heading);
+  font: 800 .85rem var(--text); -webkit-appearance: none; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--heading) 50%), linear-gradient(135deg, var(--heading) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size: 5px 5px; background-repeat: no-repeat;
+}
+
+/* ---------- photos of the dish ---------- */
+.dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: .5rem; }
+.dish { padding: 0; border: 0; border-radius: 12px; overflow: hidden; aspect-ratio: 1; cursor: zoom-in; background: var(--cream); }
+.dish img { width: 100%; height: 100%; object-fit: cover; }
+.menu-btn, .fav-btn { color: #FFFFFF; }
+
+/* ---------- options sheet ---------- */
+.sheet {
+  margin: auto auto 0; width: 100%; max-width: 32rem; max-height: 90dvh;
+  border: 0; padding: 0; border-radius: 22px 22px 0 0;
+  background: var(--card); color: var(--ink);
+}
+.sheet::backdrop { background: rgba(10, 18, 18, .55); }
+.sheet-body { padding: 1.1rem 1.1rem calc(var(--safe-bottom) + 1.1rem); }
+.sheet-title { margin: 0 0 .75rem; font: 400 1.5rem/1.2 var(--display); color: var(--heading); text-wrap: balance; }
+.sheet-actions { display: flex; flex-direction: column; margin-bottom: 1rem; border: 2px solid var(--line); border-radius: 16px; overflow: hidden; }
+.sheet-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  min-height: 3.25rem; padding: .5rem 1rem; width: 100%; text-align: left;
+  background: none; border: 0; border-bottom: 2px solid var(--line);
+  font: 800 1rem var(--text); color: var(--ink); text-decoration: none; cursor: pointer;
+}
+.sheet-item:last-child { border-bottom: 0; }
+.sheet-item.danger { color: var(--cherry); }
+.sheet-select select {
+  font: 800 1rem var(--text); color: var(--heading); background: transparent; border: 0;
+  min-height: 2.5rem; text-align: right; cursor: pointer;
+}
+
+/* ---------- needs-attention card and flagged rows ---------- */
+.attention { border-color: var(--cherry); border-style: dashed; }
+.attention[hidden] { display: none; }
+.issue-list { list-style: none; margin: 0; padding: 0; }
+.issue-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem 0; border-top: 2px dashed var(--dash); font-weight: 700; }
+.edit-row.is-header { background: var(--card); border-style: dashed; border-color: var(--heading); }
+.edit-row.is-header .row-input { font: 400 1.2rem/1.5 var(--display); color: var(--heading); }
+.edit-row.needs-check { border-color: var(--cherry); }
+.row-flag { grid-column: 1 / -1; margin: 0; padding: .1rem .75rem .6rem 2.25rem; color: var(--cherry); font-size: .88rem; font-weight: 800; }
+
+/* ---------- photo viewer controls ---------- */
+.photo-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 1rem); display: flex; justify-content: center; gap: .75rem; }
+.photo-nav, .photo-remove {
+  min-width: 2.9rem; min-height: 2.9rem; padding: 0 1.1rem; border: 0; border-radius: 999px; cursor: pointer;
+  background: #FFFFFF; color: #1E2A2A; font: 800 1.1rem var(--text);
+}
+.photo-remove { background: #C2202A; color: #FFFFFF; font-size: .95rem; }
+.photo-nav[hidden], .photo-remove[hidden] { display: none; }
   </style>
 </head>
 <body>
@@ -554,10 +625,17 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <dialog class="photo-viewer" id="photoViewer">
-    <form method="dialog"><button class="photo-close" aria-label="Close photo">Close</button></form>
-    <img id="photoViewerImg" alt="Photo of the original recipe">
+  <dialog class="photo-viewer" id="photoViewer" aria-label="Photo">
+    <form method="dialog"><button class="photo-close">Close</button></form>
+    <img id="photoViewerImg" alt="">
+    <div class="photo-bar">
+      <button class="photo-nav" id="photoPrev" aria-label="Previous photo">‹</button>
+      <button class="photo-remove" id="photoRemove" hidden>Remove photo</button>
+      <button class="photo-nav" id="photoNext" aria-label="Next photo">›</button>
+    </div>
   </dialog>
+
+  <dialog class="sheet" id="sheet" aria-label="Recipe options"></dialog>
 
   <noscript><p class="noscript">Recipe Box needs JavaScript turned on.</p></noscript>
 
@@ -710,7 +788,7 @@ const QTY_START = new RegExp(
   `^(?:\\d|[${FRAC}]|(?:a|an|one|two|three|four|five|six|eight|twelve|half|a few|few|several)\\s|pinch|dash|salt\\b|pepper\\b|juice of|zest of)`, 'i');
 
 const HEADINGS = {
-  ingredients: /^(?:ingredients?|you(?:'| wi)?ll need|what you(?:'ll)? need|shopping list|for the [a-z ]+:?$)\b/i,
+  ingredients: /^(?:ingredients?|you(?:'| wi)?ll need|what you(?:'ll)? need|shopping list)\b/i,
   steps: /^(?:directions?|instructions?|method|preparation|procedure|steps|how to make(?: it)?|to make|to prepare)\b/i,
   notes: /^(?:notes?|tips?|variations?|cook'?s notes?|to serve|storage)\b/i,
 };
@@ -801,8 +879,8 @@ const LOOSE_COOK = new RegExp(`^(?:cook|bake)\\s+${TIME}$`, 'i');
  * @param {string} rawText  full OCR text (pages separated by blank lines)
  * @param {Array<{text:string,height:number}>} [ocrLines] lines with text height, used to find the title
  */
-function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
-  const out = { title: '', servings: '', prepTime: '', cookTime: '', source: '', ingredients: [], steps: [], notes: '' };
+function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
+  const out = { title: '', servings: '', prepTime: '', cookTime: '', source: extra.sourceHint || '', ingredients: [], steps: [], notes: '', issues: [] };
 
   // Keep blank lines as paragraph breaks (null entries).
   let lines = [];
@@ -816,6 +894,12 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
   lines = lines.filter(s => {
     if (s === null) return true;
     if (UI_LINE.test(s)) return false;
+    const by = s.match(/^[Bb][Yy]\s+([A-Z][\w.'’-]+(?:\s+[A-Z][\w.'’-]+){0,3})\s*$/);
+    if (by) { if (!out.source) out.source = by[1]; return false; }
+    if (/\bprep\b/i.test(s) && !out.cookTime) {
+      const c = s.match(/\bcook\s*:?\s*(\d+\s*(?:-|–|to)?\s*\d*\s*(?:min(?:ute)?s?|hours?|hrs?)\.?)/i);
+      if (c) out.cookTime = c[1].trim();
+    }
     // "4 servings" (number first) is checked before "Servings 4" so "4 servings 1x" reads as 4.
     const sv = !out.servings && s.match(SERVINGS_LINE);
     if (sv && s.length < 30) { out.servings = sv[1]; return false; }
@@ -844,11 +928,27 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
     if (m) { out.title = m[1].trim(); lines.splice(i, 1); break; }
   }
 
+  // Social captions often open with the name in capitals, then the description.
+  if (!out.title) {
+    const first = lines.findIndex(Boolean);
+    if (first >= 0 && !headingOf(lines[first])) {
+      const two = [lines[first], lines[first + 1]].filter(Boolean).join(' ');
+      const m = two.match(/^([A-Z0-9][A-Z0-9 &'’,-]{5,}[A-Z0-9])(?=[^A-Za-z0-9]|\s+[a-z]|$)/);
+      if (m && (m[1].match(/[A-Z]{2,}/g) || []).length >= 2) {
+        out.title = m[1];
+        const rest = two.slice(m[1].length).replace(/^[^A-Za-z(]+/, '');
+        const usedSecond = m[1].length > lines[first].length;
+        lines.splice(first, usedSecond ? 2 : 1, ...(rest ? [rest.charAt(0).toUpperCase() + rest.slice(1)] : []));
+      }
+    }
+  }
+
   // Title: tallest text near the top if we have sizes; otherwise the first plausible line.
   if (!out.title) {
     const firstHeading = lines.findIndex(s => s && headingOf(s));
     const topZone = lines.slice(0, firstHeading > 0 ? Math.min(firstHeading, 6) : 6).filter(Boolean);
-    const candidates = topZone.filter(s => /[a-z]{3}/i.test(s) && s.length <= 60 && !looksLikeIngredient(s) && !looksLikeStep(s));
+    const candidates = topZone.filter(s => /[a-z]{3}/i.test(s) && s.length <= 60 && !/^[a-z]/.test(s)
+      && s.split(/\s+/).length <= 9 && !/[.!?,]$/.test(s) && !looksLikeIngredient(s) && !looksLikeStep(s));
     let pick = candidates[0] || '';
     if (ocrLines.length && candidates.length > 1) {
       let best = 0;
@@ -863,6 +963,10 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
     }
   }
   out.title = titleCase(out.title.replace(/[:.]+$/, ''));
+  if (out.title) {
+    const t = out.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    lines = lines.filter(s => { if (s === null) return true; const k = s.toLowerCase().replace(/[^a-z0-9]/g, ''); return !(k.length >= 4 && t.includes(k)); });
+  }
 
   // Split into sections by headings.
   const sections = { intro: [], ingredients: [], steps: [], notes: [] };
@@ -911,7 +1015,8 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '') {
 
   out.ingredients = buildIngredients(ingLines);
   out.steps = buildSteps(stepLines);
-  out.notes = joinParagraphs(noteLines).join('\n');
+  out.notes = joinParagraphs(noteLines).map(tidyNote).filter(Boolean).join('\n');
+  out.issues = findIssues(out, extra);
   return out;
 }
 
@@ -935,38 +1040,86 @@ function splitTwoColumn(s) {
 }
 
 const STARTS_NUM = new RegExp(`^[\\d${FRAC}]`);
+// "For the sauce:", "For serving: peanuts, green onion", "Sauce:", "FOR THE DRESSING"
+const SUBHEAD = /^(?:for (?:the )?([a-z][a-z ]{1,28}?)|([A-Za-z][a-z]+(?: [a-z]+){0,2}))\s*:\s*(.*)$/i;
+const SUBHEAD_BARE = /^(?:for (?:the )?[a-z][a-z ]{1,28}|[A-Z]{3,}(?: [A-Z]{3,}){0,2})$/i;
+const HEADER_MARK = '# ';
+const isHeader = s => typeof s === 'string' && s.startsWith(HEADER_MARK);
+
+function subhead(line) {
+  if (QTY_START.test(line) && !/^for\b/i.test(line)) return null;
+  const m = line.match(SUBHEAD);
+  if (m && (m[1] || /^(?:sauce|dressing|marinade|topping|toppings|filling|glaze|crust|garnish|to serve|for serving|batter|frosting|icing|rub|base|salad|dough)$/i.test(m[2] || ''))) {
+    const label = line.slice(0, line.indexOf(':')).trim().toLowerCase();
+    return { name: label.charAt(0).toUpperCase() + label.slice(1), rest: m[3].trim() };
+  }
+  if (SUBHEAD_BARE.test(line) && line.length < 32 && (/^for /i.test(line) || line === line.toUpperCase())) {
+    const name = line.toLowerCase().replace(/^\w/, c => c.toUpperCase());
+    return { name, rest: '' };
+  }
+  return null;
+}
+
+function splitList(text) {
+  // Commas outside parentheses separate items: "peanuts, sliced green onion, chili oil"
+  const parts = []; let depth = 0, cur = '';
+  for (const ch of text) {
+    if (ch === '(') depth++;
+    if (ch === ')') depth = Math.max(0, depth - 1);
+    if (ch === ',' && depth === 0) { parts.push(cur); cur = ''; } else cur += ch;
+  }
+  parts.push(cur);
+  return parts.map(p => p.replace(/^\s*(?:and|&)\s+/i, '').trim()).filter(Boolean);
+}
+
+const CONTINUES = /[,(+&]$|\b(?:or|and|plus|about|to|of|with|if|for|into|in)$/i;
 
 function buildIngredients(lines) {
-  // Paragraph mode: when blank lines separate most items (common in apps and
-  // cookbooks), each paragraph is one ingredient however many lines it wraps to.
-  const paras = [];
-  let cur = [];
-  for (const s of lines) {
-    if (s === null) { if (cur.length) paras.push(cur); cur = []; } else cur.push(s);
-  }
+  const real = lines.filter(Boolean);
+  const maxLen = Math.max(0, ...real.map(l => l.length));
+  // Blank lines between most items (apps, cookbooks) tell us where each item ends.
+  const paras = []; let cur = [];
+  for (const s of lines) { if (s === null) { if (cur.length) paras.push(cur); cur = []; } else cur.push(s); }
   if (cur.length) paras.push(cur);
-  const multiLine = paras.filter(p => p.length > 1).length;
-  const paragraphMode = paras.length >= 4 && paras.every(p => p.length <= 4) && multiLine <= paras.length * 0.6;
+  const paragraphMode = paras.length >= 4 && paras.filter(p => p.length === 1).length >= paras.length * 0.4;
 
   const items = [];
-  const continues = prev => /[,(]$|\b(?:or|and|plus|about|to|of|with)$/i.test(prev);
-  for (const para of (paragraphMode ? paras : [lines.filter(Boolean)])) {
-    let startNew = true;
-    for (const s of para) {
-      for (const part of splitTwoColumn(s)) {
-        const prev = items[items.length - 1];
+  let inline = null; // an open "For serving: a, b," list still collecting lines
+  const flushInline = () => { if (inline) { items.push(...splitList(inline)); inline = null; } };
+
+  paras.forEach(para => {
+    para.forEach((line, li) => {
+      const head = subhead(line);
+      if (head) {
+        flushInline();
+        items.push(HEADER_MARK + head.name.replace(/:$/, ''));
+        if (head.rest) inline = head.rest;
+        return;
+      }
+      if (inline !== null) {
+        if (/^[a-z(]/.test(line) && !STARTS_NUM.test(line) && (CONTINUES.test(inline) || inline.length >= maxLen * 0.6)) {
+          inline = joinWrapped(inline, line); return;
+        }
+        flushInline();
+      }
+      for (const part of splitTwoColumn(line)) {
+        const prev = items.length && !isHeader(items[items.length - 1]) ? items[items.length - 1] : null;
         const lower = /^[a-z(]/.test(part) && !QTY_START.test(part);
-        const join = prev && !startNew && (paragraphMode
-          ? !(/^[\d${FRAC}]/.test(part) && !continues(prev))
-          : lower && prev.length < 120);
+        let join = false;
+        if (prev) {
+          if (paragraphMode && li > 0) join = (lower || CONTINUES.test(prev)) && !STARTS_NUM.test(part);
+          else if (CONTINUES.test(prev) && !STARTS_NUM.test(part)) join = true;
+          else join = lower && prev.length >= maxLen * 0.75; // a wrapped long line
+        }
         if (join) items[items.length - 1] = joinWrapped(prev, part);
         else items.push(part);
-        startNew = false;
       }
-    }
-    if (!paragraphMode) break;
-  }
-  return items.map(i => i.replace(/[,;]$/, '').trim()).filter(Boolean);
+    });
+  });
+  flushInline();
+  // Drop a header with nothing under it at the very end.
+  while (items.length && isHeader(items[items.length - 1])) items.pop();
+  return items.map(i => (isHeader(i) ? i : i.replace(/[;]$/, '').replace(/,$/, '').trim())).filter(i => i && i !== HEADER_MARK.trim());
 }
 
 function joinWrapped(a, b) {
@@ -985,8 +1138,10 @@ function joinParagraphs(lines) {
   return paras;
 }
 
+let lastStepNumbers = [];
 function buildSteps(lines) {
   const real = lines.filter(Boolean);
+  lastStepNumbers = real.map(s => (s.match(STEP_ONLY) || s.match(NUMBER_MARKER) || [])).map(m => Number(m[1] || m[2])).filter(n => n > 0);
   const markerOnly = real.filter(s => STEP_ONLY.test(s)).length;
   const inline = real.filter(s => NUMBER_MARKER.test(s)).length;
   let steps = [];
@@ -999,6 +1154,7 @@ function buildSteps(lines) {
       else steps.push(s);
     }
   } else {
+    lastStepNumbers = [];
     steps = splitUnnumbered(lines);
     // One long paragraph: split into sentence groups of a readable size.
     if (steps.length === 1 && steps[0].length > 220) steps = sentenceChunks(steps[0]);
@@ -1013,8 +1169,9 @@ function splitUnnumbered(lines) {
   const steps = [];
   let cur = '', prev = '';
   for (const s of lines) {
-    if (s === null) { if (cur) steps.push(cur); cur = ''; prev = ''; continue; }
-    const breakHere = cur && /[.!)]$/.test(prev) && /^[A-Z]/.test(s) &&
+    // A paragraph break ends a step only once the sentence is finished.
+    if (s === null) { if (cur && /[.!?)"”]$/.test(cur)) { steps.push(cur); cur = ''; prev = ''; } continue; }
+    const breakHere = cur && /[.!)]$/.test(prev || cur) && /^[A-Z]/.test(s) &&
       (prev.length < maxLen * 0.8 || STEP_VERBS.test(s));
     if (breakHere) { steps.push(cur); cur = s; }
     else cur = cur ? joinWrapped(cur, s) : s;
@@ -1022,6 +1179,41 @@ function splitUnnumbered(lines) {
   }
   if (cur) steps.push(cur);
   return steps;
+}
+
+// Descriptions cut off by "Read more" or the screen edge: keep the complete sentences.
+function tidyNote(p) {
+  let t = p.replace(/\s*\S?\)?\s*read more\s*$/i, '').trim();
+  if (t && !/[.!?)"”]$/.test(t)) {
+    const end = Math.max(t.lastIndexOf('. '), t.lastIndexOf('! '), t.lastIndexOf('? '));
+    if (end > 20) t = t.slice(0, end + 1);
+    else if (/^[a-z]/.test(t)) t = ''; // a fragment from the middle of a cut-off sentence
+  }
+  return t;
+}
+
+// Things the person should check or fill in before saving.
+function findIssues(r, extra) {
+  const issues = [];
+  if (!r.title) issues.push({ field: 'title', message: 'No recipe name was found. Give it a name.' });
+  const realIngredients = r.ingredients.filter(i => !isHeader(i));
+  if (!realIngredients.length) issues.push({ field: 'ingredients', message: 'No ingredients were found. Add them, or scan the part of the recipe that lists them.' });
+  r.ingredients.forEach((ing, i) => {
+    if (!isHeader(ing) && /(?:\b(?:or|and|plus|with|of)|[,(+])$/i.test(ing)) issues.push({ field: 'ingredients', index: i, message: `“${ing}” looks cut off.` });
+  });
+  if (!r.steps.length) issues.push({ field: 'steps', message: 'No steps were found. Add them, or scan the part of the recipe with the method.' });
+  const nums = [...new Set(lastStepNumbers)].sort((a, b) => a - b);
+  if (nums.length) {
+    const missing = [];
+    for (let n = 1; n < nums[nums.length - 1]; n++) if (!nums.includes(n)) missing.push(n);
+    if (missing.length) issues.push({ field: 'steps', message: `Step${missing.length > 1 ? 's' : ''} ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing. Add ${missing.length > 1 ? 'them' : 'it'}, or scan that part of the recipe.` });
+  }
+  if (r.steps.length) {
+    const last = r.steps[r.steps.length - 1];
+    if (!/[.!?)"”]$/.test(last)) issues.push({ field: 'steps', index: r.steps.length - 1, message: `Step ${r.steps.length} looks cut off. Finish it, and add any steps after it.` });
+  }
+  if (extra.gaps) issues.push({ field: 'steps', message: 'Part of the recipe may be missing between two of your photos. Check where they meet.' });
+  return issues;
 }
 
 function sentenceChunks(text) {
@@ -1071,7 +1263,7 @@ function formatQuantity(n) {
 }
 
 function scaleIngredient(text, factor) {
-  if (factor === 1) return text;
+  if (factor === 1 || isHeader(text)) return text;
   const m = text.match(QTY_RE);
   if (!m) return text;
   const a = toNumber(m[1]);
@@ -1086,7 +1278,7 @@ function scaleIngredient(text, factor) {
 }
 
 // Split an ingredient for display: { qty: "¼ cup", item: "all-purpose flour" }.
-const DISPLAY_UNITS = new RegExp(`^\\s*(?:${UNIT_WORDS.filter(u => !/^eggs/.test(u)).join('|')})\\.?(?=\\s|$)`, 'i');
+const DISPLAY_UNITS = new RegExp(`^\\s*(?:${UNIT_WORDS.filter(u => !/^eggs/.test(u)).join('|')})\\.?(?=[\\s/]|$)`, 'i');
 // Short forms keep the quantity column narrow: "3 tablespoons" shows as "3 tbsp".
 const SHORT_UNITS = [[/^tablespoons?$|^tbsps?\.?$|^tbl$|^tbs$/i, 'tbsp'], [/^teaspoons?$|^tsps?\.?$/i, 'tsp'],
   [/^ounces?$/i, 'oz'], [/^pounds?$|^lbs?\.?$/i, 'lb'], [/^grams?$/i, 'g'], [/^kilograms?$/i, 'kg'],
@@ -1096,6 +1288,7 @@ function shortUnit(u) {
   return u;
 }
 function displayIngredient(text, factor = 1) {
+  if (isHeader(text)) return { qty: '', item: text.slice(HEADER_MARK.length), header: true };
   const m = text.match(QTY_RE);
   if (!m) return { qty: '', item: text };
   const a = toNumber(m[1]);
@@ -1106,8 +1299,16 @@ function displayIngredient(text, factor = 1) {
     if (isFinite(b)) qty += `–${formatQuantity(b * factor)}`;
   }
   let rest = text.slice(m[0].length);
-  const u = rest.match(DISPLAY_UNITS);
+  const u = rest.match(DISPLAY_UNITS) || rest.match(/^\s*(?:inch(?:es)?|bricks?|knobs?)(?=\s|$)/i);
   if (u) { qty += ` ${shortUnit(u[0].trim())}`; rest = rest.slice(u[0].length); }
+  else {
+    // "3 garlic cloves, chopped" -> "3 cloves" + "garlic, chopped"
+    const c = rest.match(/^\s*((?:[a-z-]+\s+){1,2}?)(cloves?|stalks?|sprigs?)\b(.*)$/i);
+    if (c) { qty += ` ${c[2]}`; rest = `${c[1].trim()}${c[3]}`; }
+  }
+  // "4 cups/32 ounces chicken broth" -> "4 cups" + "chicken broth (32 oz)"
+  const alt = rest.match(/^\s*\/\s*([\d.]+\s*[a-z]+)\s+(.*)$/i);
+  if (alt) rest = `${alt[2]} (${alt[1].replace(/ounces?/i, 'oz').replace(/pounds?/i, 'lb').replace(/grams?/i, 'g')})`;
   return { qty, item: rest.trim() };
 }
 
@@ -1129,6 +1330,7 @@ const AISLE_RULES = [
 ];
 
 function aisleFor(text) {
+  if (isHeader(text)) return 'Other';
   const t = text.toLowerCase().replace(QTY_RE, '');
   for (const [aisle, re] of AISLE_RULES) if (re.test(t)) return aisle;
   if (/\b(?:tsp|teaspoons?)\b/.test(t)) return 'Spices';
@@ -1138,6 +1340,31 @@ function aisleFor(text) {
 // Name without the leading quantity, used for sorting.
 function ingredientName(text) {
   return text.replace(QTY_RE, '').replace(UNIT_RE, '').replace(/^[\s.,of]+/i, '').trim().toLowerCase();
+}
+
+// ---------- recipe sections (categories) ----------
+
+const CATEGORY_RULES = [
+  ['Breakfast', /\b(?:pancakes?|waffles?|oatmeal|overnight oats|granola|french toast|omelet(?:te)?|frittata|breakfast|scrambled eggs|crepes?|hash browns?|quiche|shakshuka|smoothie bowl)\b/i],
+  ['Desserts', /\b(?:cakes?|cupcakes?|cookies?|brownies?|blondies?|bars|pies?|tarts?|puddings?|ice cream|cobbler|crisp|crumble|cheesecake|fudge|frosting|dessert|tiramisu|mousse|truffles?|sundae)\b/i],
+  ['Breads', /\b(?:bread|loaf|focaccia|rolls|biscuits|sourdough|buns|bagels?|baguette|brioche|scones?|muffins?|pizza dough|flatbread|naan)\b/i],
+  ['Drinks', /\b(?:smoothie|cocktail|lemonade|latte|punch|margarita|sangria|spritz|mocktail|milkshake|iced tea|hot chocolate)\b/i],
+  ['Soups & salads', /\b(?:soup|stew|chowder|bisque|gazpacho|salad|slaw|pho|ramen soup|chili)\b/i],
+  ['Appetizers', /\b(?:dip|salsa|guacamole|bruschetta|crostini|appetizers?|hummus|deviled eggs|sliders|nachos|wings|meatballs)\b/i],
+  ['Sides', /\b(?:side|roasted (?:vegetables|potatoes|carrots|broccoli)|mashed potatoes|pilaf|green beans|coleslaw|cornbread|fries|risotto)\b/i],
+  ['Mains', /\b(?:chicken|beef|pork|lamb|turkey|salmon|shrimp|fish|tofu|steak|pasta|noodles|ramen|spaghetti|lasagna|tacos?|burritos?|curry|stir[- ]fry|casserole|enchiladas|burgers?|risotto|gnocchi|dinner|skillet|one pot|sheet pan)\b/i],
+];
+
+/** Best-guess section from the title (strong signal), then ingredients and steps. */
+function guessCategory(r) {
+  const title = r.title || '';
+  for (const [cat, re] of CATEGORY_RULES) if (re.test(title)) return cat;
+  const body = [...(r.ingredients || []).filter(i => !isHeader(i)), ...(r.steps || []).slice(0, 2)].join(' ');
+  const scores = CATEGORY_RULES.map(([cat, re]) => [cat, (body.match(new RegExp(re.source, 'gi')) || []).length]);
+  const mains = scores.find(([c]) => c === 'Mains')[1];
+  const best = scores.filter(([c]) => c !== 'Mains').sort((a, b) => b[1] - a[1])[0];
+  if (best && best[1] >= 3 && best[1] > mains) return best[0];
+  return mains ? 'Mains' : '';
 }
 
 // ================================================================
@@ -1271,7 +1498,13 @@ function pageFromOCR(data, width, height) {
   for (const p of paragraphs) {
     let first = true;
     for (const l of p.lines || []) {
-      const words = (l.words || []).filter(w => w.text && w.text.trim());
+      let words = (l.words || []).filter(w => w.text && w.text.trim());
+      // Drop short junk stuck onto a line from a separate column (like/comment counts, icons).
+      words = words.filter((w, i) => {
+        const gapBefore = i > 0 ? w.bbox.x0 - words[i - 1].bbox.x1 : 0;
+        const junk = !/[A-Za-z]{3}/.test(w.text) && w.text.length <= 6;
+        return !(junk && (gapBefore > width * 0.06 || w.bbox.x0 > width * 0.86));
+      });
       const text = words.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim();
       if (!text) continue;
       const conf = words.reduce((a, w) => a + (w.confidence ?? 100), 0) / words.length;
@@ -1282,7 +1515,8 @@ function pageFromOCR(data, width, height) {
   // Drop garbage: very low confidence, or squashed lines (e.g. the edge of a photo).
   const heights = lines.map(l => l.height).sort((a, b) => a - b);
   const median = heights[heights.length >> 1] || 0;
-  const kept = lines.filter(l => l.conf >= 35 && !(l.height < median * 0.6 && l.conf < 70));
+  const kept = lines.filter(l => l.conf >= 35 && !(l.height < median * 0.6 && l.conf < 70)
+    && !(l.conf < 75 && !/[A-Za-z]{4}/.test(l.text))); // shaky read with no real words: "mo are ee. a"
   kept.forEach((l, i) => { if (i && !l.brk && !lines.includes(kept[i - 1])) l.brk = true; });
   return { width, height, lines: kept };
 }
@@ -1298,6 +1532,12 @@ function similar(a, b) {
   if (Math.min(x.length, y.length) < 12) return false;
   if (Math.abs(x.length - y.length) > Math.max(x.length, y.length) * 0.2) return false;
   return 1 - levenshtein(x, y) / Math.max(x.length, y.length) >= 0.85;
+}
+
+// For pinned elements read slightly differently on each screenshot ("TX" vs "™").
+function looselySame(x, y) {
+  if (Math.min(x.length, y.length) < 6) return false;
+  return 1 - levenshtein(x, y) / Math.max(x.length, y.length) >= 0.75;
 }
 
 function levenshtein(a, b) {
@@ -1316,12 +1556,31 @@ const STATUS_BAR = /\b\d{1,2}:\d{2}\b|\b(?:5G|LTE|4G|3G)\b/i;
 const TAB_WORDS = /^(?:(?:home|search|recent|saved|profile|account|recipe box|recipes|inspiration|explore|library|settings|more|shop|for you|cart|menu|favorites|collections|grocery list)\s*)+$/i;
 const CHROME_LINE = new RegExp([
   '^advertisement$', '^sponsored', '^add a note$', '^your (?:private )?notes$', "^you don.?t have any notes",
-  '^cooked(?!\\s+[a-z]{3,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$',
+  '^cooked(?!\\s+[a-z]{3,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$', '^saved\\b',
   '^share(?: recipe)?$', '^rate (?:this|the) recipe', '^leave a (?:review|comment)', '^(?:log|sign) in',
   '^subscribe', '^read (?:more|comments)', '^\\d+ (?:comments|ratings|reviews)$', '^(?:yield|scale|convert)(?:\\s+(?:yield|scale|convert))*$',
+  '^add (?:a )?comment', 'find related content', '^search$', '^(?:less|more|see more|show more|\\.\\.\\. ?more)\\W*\\w?$',
+  '^add to grocery list', 'shop (?:on instacart|ingredients)', '^rating\\b', '^comments\\b', '^time\\s*\\d',
+  '^overview\\b.*\\bcook mode', 'food stylist', 'for the new york times\\.?$', '^photo(?:graph)? by\\b',
+  '^enjoy!*$', '^(?:follow|like|subscribe)\\b.*\\b(?:recipes?|more)\\b',
 ].join('|'), 'i');
 
 function lettersOnly(s) { return s.replace(/^[^A-Za-z]+/, ''); }
+
+// Lines that are mostly hashtags, or have no words at all (like counts, stray marks).
+function isNoiseLine(t) {
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length && words.filter(w => w.startsWith('#')).length / words.length >= 0.5) return true;
+  if (/^(?:(?:step|stage)\s*)?\d{1,2}\s*[.):]?$/i.test(t)) return false; // a step number on its own line
+  if (!/[A-Za-z]{2}/.test(t)) return true;
+  // A row of icons read as letters: "A Pl Q Oy W"
+  return words.length >= 3 && !/\d/.test(t) && words.every(w => w.replace(/\W/g, '').length <= 2);
+}
+// "Austin, TX · Austin" location tags on social posts.
+const LOCATION = /^\W*[A-Z][a-z]+(?: [A-Z][a-z]+)*, (?:[A-Z]{2}\b|\S{1,3}\s*[-–·•])/;
+// "Olivia Adriance · 2024-7-18": a poster's name followed by a date.
+const AUTHOR_DATE = /^\W*([A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){1,2})\s*[-–·•.,‘'’ ]*\d[\d\s\-/.°'’]{3,}\S{0,2}\s*$/;
+const PERSON_NAME = /^\W*([A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){1,2})\W*$/;
 
 /** "< Marry Me Chicken Gi) (4 A" -> "Marry Me Chicken" */
 function cleanTitleLine(s) {
@@ -1331,6 +1590,10 @@ function cleanTitleLine(s) {
     if (/^[A-Za-z][A-Za-z'’&-]*$/.test(w) || (out.length && /^(?:&|and|with|of|the|a)$/i.test(w))) out.push(w);
     else if (out.length) break;
   }
+  while (out.length > 1 && /^[A-Z]{1,2}$/.test(out[out.length - 1])) out.pop(); // trailing icon letters ("GJ")
+  // A real title bar reads like a title: starts with a capital, no stray single lowercase letters.
+  if (!out.length || !/^[A-Z0-9]/.test(out[0]) || out.some(w => /^[a-z]$/.test(w))) return '';
+  if (CHROME_LINE.test(out.join(' '))) return '';
   const t = out.join(' ');
   return t.length >= 3 ? t : '';
 }
@@ -1339,17 +1602,26 @@ function stepNumbers(lines) {
   return lines.map(l => (l.text.match(/^step\s*(\d{1,2})\b/i) || [])[1]).filter(Boolean).map(Number);
 }
 
-/** Where does the start of page B overlap the end of page A? */
+/**
+ * Where does the start of page B overlap the end of page A?
+ * Tolerates a line read on one page but missed on the other.
+ */
 function align(A, B) {
   let best = null;
-  for (let j = 0; j < Math.min(5, B.length); j++) {
-    for (let i = A.length - 1; i >= Math.max(0, A.length - 60); i--) {
+  for (let j = 0; j < Math.min(6, B.length); j++) {
+    for (let i = A.length - 1; i >= Math.max(0, A.length - 80); i--) {
       if (!similar(A[i].text, B[j].text)) continue;
-      let k = 1;
-      while (i + k < A.length && j + k < B.length && similar(A[i + k].text, B[j + k].text)) k++;
-      const reachesEnd = i + k >= A.length - 1; // the last line of A may be cut off
-      const strong = k >= 2 || norm(A[i].text).length >= 25;
-      if (reachesEnd && strong && (!best || k > best.score)) best = { i, j, score: k };
+      let ia = i + 1, jb = j + 1, matched = 1, skips = 0;
+      while (ia < A.length && jb < B.length) {
+        if (similar(A[ia].text, B[jb].text)) { ia++; jb++; matched++; continue; }
+        if (skips >= 3) break;
+        if (ia + 1 < A.length && similar(A[ia + 1].text, B[jb].text)) { ia++; skips++; continue; }
+        if (jb + 1 < B.length && similar(A[ia].text, B[jb + 1].text)) { jb++; skips++; continue; }
+        break;
+      }
+      const reachesEnd = ia >= A.length - 1; // the last line of A may be cut off
+      const strong = matched >= 2 || norm(A[i].text).length >= 25;
+      if (reachesEnd && strong && (!best || matched > best.score)) best = { i, j, score: matched };
     }
     if (best) break;
   }
@@ -1358,7 +1630,7 @@ function align(A, B) {
 
 /**
  * pages: [{ width, height, lines:[{text,y0,y1,brk}] }] in the order the person chose.
- * Returns { lines: [{text, brk}], titleHint }.
+ * Returns { lines: [{text, brk}], titleHint, sourceHint, gaps }.
  */
 function assemblePages(pages) {
   const screenshot = p => p.height / p.width > 1.9;
@@ -1372,7 +1644,15 @@ function assemblePages(pages) {
     for (const l of p.lines.filter(bottomZone(p))) repeatedBottom.set(norm(l.text), (repeatedBottom.get(norm(l.text)) || 0) + 1);
   }
 
-  let titleHint = '';
+  // Pinned elements sit at the same spot on every screenshot (author line, video
+  // caption stickers, like counts); scrolled content moves between screenshots.
+  const placed = pages.map(p => p.lines.map(l => ({ key: norm(l.text), y: l.y0 / p.height })));
+  const pinned = (pi, l) => {
+    const key = norm(l.text), y = l.y0 / pages[pi].height;
+    return key.length > 0 && placed.some((pl, qi) => qi !== pi && pl.some(o => Math.abs(o.y - y) < 0.015 && (o.key === key || looselySame(o.key, key))));
+  };
+
+  let titleHint = '', sourceHint = '';
   const cleaned = pages.map((p, index) => {
     const lines = [];
     let pendingBrk = false;
@@ -1380,12 +1660,20 @@ function assemblePages(pages) {
       const key = norm(l.text);
       const inTop = topZone(p)(l), inBottom = bottomZone(p)(l);
       let drop = false;
-      if (inTop && l.y1 < p.height * 0.06 && STATUS_BAR.test(l.text)) drop = true;
+      const author = l.text.match(AUTHOR_DATE);
+      if (author) { if (!sourceHint) sourceHint = author[1]; drop = true; }
+      else if (inTop && l.y1 < p.height * 0.06 && STATUS_BAR.test(l.text)) drop = true;
+      else if (isNoiseLine(l.text) || LOCATION.test(l.text)) drop = true;
       else if (inTop && pages.length > 1 && repeatedTop.get(key) >= 2) {
         drop = true;
         if (!titleHint) titleHint = cleanTitleLine(lettersOnly(l.text));
       }
       else if (inBottom && pages.length > 1 && repeatedBottom.get(key) >= 2) drop = true;
+      else if (pages.length > 1 && pinned(index, l)) {
+        drop = true;
+        const name = l.text.match(PERSON_NAME);
+        if (name && !sourceHint && l.text.split(/\s+/).length <= 3) sourceHint = name[1];
+      }
       else if (inBottom && TAB_WORDS.test(lettersOnly(l.text))) drop = true;
       else if (CHROME_LINE.test(lettersOnly(l.text).trim()) || CHROME_LINE.test(l.text.replace(/^(?:\S*[^A-Za-z\s]\S*\s+|[A-Za-z]{1,2}\s+)+/, ''))) drop = true;
       else if (screenshot(p) && inTop && pages.length === 1 && !titleHint && l.y1 < p.height * 0.11) {
@@ -1431,11 +1719,24 @@ function assemblePages(pages) {
       const first = { ...B[e.j], brk: merged[cut] ? merged[cut].brk : B[e.j].brk };
       merged = merged.slice(0, cut).concat([first], B.slice(e.j + 1));
     }
+    // Rank: an intro page (title, byline, times) comes first, then ingredients, then steps.
     const hasIngredients = merged.some(l => /^ingredients?\b/i.test(l.text));
     const steps = stepNumbers(merged);
-    chains.push({ merged, key: [hasIngredients ? 0 : 1, steps.length ? Math.min(...steps) : 999, order[0]] });
+    const hasSteps = steps.length > 0 || merged.some(l => /^(?:directions?|instructions?|method|preparation)\b/i.test(l.text));
+    const hasIntro = merged.some(l => /^\(?\s*prep\b|^by [A-Z]|\bservings?\b|^serves\b|^yield/i.test(l.text));
+    const rank = hasIngredients ? 1 : hasSteps ? 2 : hasIntro ? 0 : 1.5;
+    chains.push({ merged, key: [rank, steps.length ? Math.min(...steps) : 999, order[0]] });
   }
   chains.sort((x, y) => x.key[0] - y.key[0] || x.key[1] - y.key[1] || x.key[2] - y.key[2]);
+
+  // Where separate chains meet mid-sentence, something between them is probably missing.
+  let gaps = 0;
+  for (let c = 1; c < chains.length; c++) {
+    const prev = chains[c - 1].merged, next = chains[c].merged;
+    if (!prev.length || !next.length) continue;
+    const end = prev[prev.length - 1].text, start = next[0].text;
+    if (!/[.!?:)"”]$/.test(end) && /^[a-z]/.test(start)) gaps++;
+  }
 
   // Safety net: drop exact repeats of long lines across separate chains.
   const seen = new Set();
@@ -1449,7 +1750,7 @@ function assemblePages(pages) {
     });
   }
   if (lines.length) lines[0].brk = false;
-  return { lines, titleHint };
+  return { lines, titleHint, sourceHint, gaps };
 }
 
 function linesToText(lines) {
@@ -1538,8 +1839,23 @@ async function prepareForOCR(file) {
     const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0;
     gray[j] = g; hist[g]++;
   }
-  // Ignore the darkest/lightest 1% so stray shadows don't flatten the stretch.
   const total = w * h;
+
+  // Mostly-dark page (e.g. white caption text over a video): keep only the bright
+  // text and turn it into black-on-white, which the reader handles far better.
+  let acc0 = 0, median = 0;
+  for (; median < 255; median++) { acc0 += hist[median]; if (acc0 >= total / 2) break; }
+  if (median < 100) {
+    for (let j = 0, i = 0; j < gray.length; j++, i += 4) {
+      const v = gray[j] > 185 ? 0 : 255;
+      gray[j] = v;
+      px[i] = px[i + 1] = px[i + 2] = v;
+    }
+    ctx.putImageData(data, 0, 0);
+    return { canvas, gray, width: w, height: h };
+  }
+
+  // Ignore the darkest/lightest 1% so stray shadows don't flatten the stretch.
   let lo = 0, hi = 255, acc = 0;
   for (; lo < 255; lo++) { acc += hist[lo]; if (acc > total * 0.01) break; }
   acc = 0;
@@ -1629,11 +1945,11 @@ async function readRecipePhotos(files, onProgress = () => {}) {
   }
 
   onProgress({ label: 'Putting the pages together', fraction: 1 });
-  const { lines, titleHint } = assemblePages(pages);
+  const { lines, titleHint, sourceHint, gaps } = assemblePages(pages);
   return {
     text: linesToText(lines),
     lines: pages.flatMap(p => p.lines.map(l => ({ text: l.text, height: l.height }))),
-    titleHint,
+    titleHint, sourceHint, gaps,
   };
 }
 
@@ -1668,6 +1984,7 @@ const view = document.getElementById('view');
 const toastEl = document.getElementById('toast');
 
 const ICONS = {
+  more: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>',
   sun: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   heart: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   search: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
@@ -1692,9 +2009,17 @@ function toast(message) {
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
 }
 
+function starRow(rating) {
+  return [1, 2, 3, 4, 5].map(n => {
+    const fill = rating >= n ? 'full' : rating >= n - 0.5 ? 'half' : 'empty';
+    return `<span class="st ${fill}" aria-hidden="true">★</span>`;
+  }).join('');
+}
+const ratingLabel = r => `${String(r).replace('.5', '½')} star${r === 1 ? '' : 's'}`;
+
 function starsText(rating) {
   if (!rating) return '';
-  return `<span class="stars-static" aria-label="Rated ${rating} out of 5">${'★'.repeat(rating)}<span class="dim">${'★'.repeat(5 - rating)}</span></span>`;
+  return `<span class="stars-static" role="img" aria-label="Rated ${ratingLabel(rating)} out of 5">${starRow(rating)}</span>`;
 }
 
 function metaSentence(r) {
@@ -1884,6 +2209,14 @@ function tocRow(r) {
         </span>
         ${sub ? `<span class="toc-sub">${esc(sub)}</span>` : ''}
       </a>
+      ${!CATEGORIES.includes(r.category) ? `
+        <label class="quick-cat">
+          <span class="sr-only">Section for ${esc(r.title)}</span>
+          <select data-category-for="${esc(r.id)}">
+            <option value="">Choose a section</option>
+            ${CATEGORIES.map(c => `<option>${esc(c)}</option>`).join('')}
+          </select>
+        </label>` : ''}
     </li>`;
 }
 
@@ -1925,7 +2258,10 @@ function renderContents() {
   const order = [...CATEGORIES, 'Uncategorized'].filter(c => groups.has(c));
   box.innerHTML = `<div class="card menu">${order.map(c => `
     <section>
-      <h2 class="menu-title">${esc(c)}</h2>
+      <div class="menu-head">
+        <h2 class="menu-title">${esc(c)}</h2>
+        ${c === 'Uncategorized' && groups.get(c).some(r => guessCategory(r)) ? '<button class="btn btn-chip" data-action="auto-sort">Sort these for me</button>' : ''}
+      </div>
       <ol class="toc">${groups.get(c).map(tocRow).join('')}</ol>
     </section>`).join('')}</div>`;
 }
@@ -1937,39 +2273,40 @@ function renderRecipe(id) {
   if (!r) return notFound();
   const factor = state.scale[id] || 1;
   const canWake = 'wakeLock' in navigator;
+  const itemCount = r.ingredients.filter(i => !isHeader(i)).length;
   const pills = [r.servings && (/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings), r.prepTime && `Prep ${r.prepTime}`, r.cookTime && `Cook ${r.cookTime}`].filter(Boolean);
+  const rating = r.rating || 0;
 
   view.innerHTML = `
     ${band(`
       <div class="band-bar">
         <a class="back" href="#/">Recipes</a>
         <span class="band-actions">
-          <a class="band-link" href="#/edit/${encodeURIComponent(r.id)}">Edit</a>
           <button class="icon-btn fav-btn" data-action="fav" aria-pressed="${!!r.favorite}" aria-label="Favorite">${ICONS.heart}</button>
+          <button class="icon-btn menu-btn" data-action="recipe-menu" aria-label="Recipe options" aria-haspopup="dialog">${ICONS.more}</button>
         </span>
       </div>
       <h1 class="sign sign-title">${esc(r.title)}</h1>
       <div class="band-pills">
         ${pills.map((p, i) => `<span class="pill ${i === 0 ? 'pill-cherry' : 'pill-white'}">${esc(p)}</span>`).join('')}
-        <div class="stars pill pill-white" role="group" aria-label="Your rating">
-          ${[1, 2, 3, 4, 5].map(n => `<button class="star" data-action="rate" data-value="${n}" aria-pressed="${n <= (r.rating || 0)}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}
-        </div>
+        <div class="rating pill pill-white" role="slider" tabindex="0" data-action="rate" aria-label="Your rating"
+          aria-valuemin="0" aria-valuemax="5" aria-valuenow="${rating}" aria-valuetext="${rating ? ratingLabel(rating) : 'Not rated'}">${starRow(rating)}</div>
       </div>
-      ${r.source ? `<p class="band-sub">From ${esc(r.source)}</p>` : ''}`, 'band-recipe')}
+      <p class="band-sub">${[r.category ? `In ${esc(r.category)}` : '', r.source ? `From ${esc(r.source)}` : ''].filter(Boolean).join('. ') || 'Not in a section yet'}</p>`, 'band-recipe')}
 
     <section class="card sec" aria-labelledby="ingHead">
       <div class="sec-head">
         <h2 id="ingHead" class="sec-title">Ingredients</h2>
-        ${r.ingredients.length ? `<div class="scaler" role="group" aria-label="Scale recipe">
+        ${itemCount ? `<div class="scaler" role="group" aria-label="Scale recipe">
           ${SCALES.map(([f, l]) => `<button data-action="scale" data-factor="${f}" aria-pressed="${f === factor}">${l}</button>`).join('')}
         </div>` : ''}
       </div>
-      ${r.ingredients.length ? `
+      ${itemCount ? `
         <ul class="ing-list">
           ${r.ingredients.map((ing, i) => ingredientRow(ing, i, factor)).join('')}
         </ul>
         <p class="hint">Tap anything you already have to cross it off.</p>
-        <button class="btn btn-primary btn-wide" data-action="add-to-list" id="addToList">Add ${plural(r.ingredients.length, 'item')} to grocery list</button>`
+        <button class="btn btn-primary btn-wide" data-action="add-to-list" id="addToList">Add ${plural(itemCount, 'item')} to grocery list</button>`
         : `<p class="hint">No ingredients yet. <a href="#/edit/${encodeURIComponent(r.id)}">Add them</a>.</p>`}
     </section>
 
@@ -1989,31 +2326,56 @@ function renderRecipe(id) {
         : '<p class="hint">No steps yet.</p>'}
     </section>
 
+    ${(r.photos || []).length ? `
+      <section class="card sec" aria-labelledby="dishHead">
+        <div class="sec-head">
+          <h2 id="dishHead" class="sec-title">Photos</h2>
+          <label class="btn btn-chip file-btn">Add more<input type="file" accept="image/*" multiple class="sr-only" data-photo-input></label>
+        </div>
+        <div class="dish-grid">
+          ${r.photos.map((src, i) => `<button class="dish" data-action="view-photo" data-kind="photos" data-index="${i}" aria-label="View photo ${i + 1} of ${r.photos.length}"><img src="${src}" alt=""></button>`).join('')}
+        </div>
+      </section>` : ''}
+
     <section class="card sec" aria-labelledby="notesHead">
       <h2 id="notesHead" class="sec-title"><label for="notes">Notes</label></h2>
       <textarea id="notes" class="notes-input" rows="2" placeholder="Swaps, oven quirks, who loved it">${esc(r.notes)}</textarea>
     </section>
 
-    ${r.images && r.images.length ? `
-      <section class="card sec" aria-labelledby="photoHead">
-        <h2 id="photoHead" class="sec-title">Original</h2>
-        <div class="photo-strip">
-          ${r.images.map((src, i) => `<button class="thumb" data-action="view-photo" data-index="${i}" aria-label="View photo ${i + 1}"><img src="${src}" alt=""></button>`).join('')}
-        </div>
-      </section>` : ''}
-
     <footer class="sec plain recipe-foot">
       <p class="made-count">${r.timesMade ? `Made ${plural(r.timesMade, 'time')}, most recently ${fmtDate(r.lastMade)}.` : 'Not made yet.'}</p>
-      <div class="action-row">
-        <button class="btn btn-secondary" data-action="made">I made this</button>
-        <button class="btn btn-secondary" data-action="share-recipe">Share</button>
-        <button class="btn btn-quiet" data-action="delete">Delete recipe</button>
-      </div>
+      <button class="btn btn-secondary" data-action="made">I made this</button>
     </footer>`;
 }
 
+// Recipe options: a bottom sheet opened from the ⋯ button.
+function openRecipeMenu(r) {
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = `
+    <div class="sheet-body">
+      <h2 class="sheet-title">${esc(r.title)}</h2>
+      <div class="sheet-actions">
+        <a class="sheet-item" href="#/edit/${encodeURIComponent(r.id)}" data-close>Edit recipe</a>
+        <label class="sheet-item file-btn">Add photos of the dish<input type="file" accept="image/*" multiple class="sr-only" data-photo-input></label>
+        <label class="sheet-item sheet-select">
+          <span>Section</span>
+          <select data-category-for="${esc(r.id)}">
+            <option value="">Not in a section</option>
+            ${CATEGORIES.map(c => `<option ${r.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+          </select>
+        </label>
+        <button class="sheet-item" data-sheet-action="share">Share recipe</button>
+        ${(r.images || []).length ? `<button class="sheet-item" data-sheet-action="scans">View scanned pages (${r.images.length})</button>` : ''}
+        <button class="sheet-item danger" data-sheet-action="delete">Delete recipe</button>
+      </div>
+      <button class="btn btn-secondary btn-wide" data-close>Done</button>
+    </div>`;
+  sheet.showModal();
+}
+
 function ingredientRow(ing, i, factor) {
-  const { qty, item } = displayIngredient(ing, factor);
+  const { qty, item, header } = displayIngredient(ing, factor);
+  if (header) return `<li class="ing-head" role="presentation"><h3>${esc(item)}</h3></li>`;
   return `<li><button class="ing" data-action="tick" data-index="${i}" aria-pressed="false"><span class="ing-qty">${esc(qty)}</span><span class="ing-item">${esc(item)}</span></button></li>`;
 }
 
@@ -2022,7 +2384,7 @@ function recipeToText(r, factor = 1) {
   const meta = metaSentence(r);
   if (meta) out.push(meta);
   if (r.source) out.push(`From ${r.source}`);
-  if (r.ingredients.length) out.push('', 'Ingredients', ...r.ingredients.map(i => `- ${scaleIngredient(i, factor)}`));
+  if (r.ingredients.length) out.push('', 'Ingredients', ...r.ingredients.map(i => (isHeader(i) ? `${i.slice(HEADER_MARK.length)}:` : `- ${scaleIngredient(i, factor)}`)));
   if (r.steps.length) out.push('', 'Method', ...r.steps.map((s, i) => `${i + 1}. ${s}`));
   if (r.notes) out.push('', 'Notes', r.notes);
   return out.join('\n');
@@ -2030,20 +2392,28 @@ function recipeToText(r, factor = 1) {
 
 // ---------- add / edit form ----------
 
-function editRow(kind, value, index) {
-  const label = kind === 'step' ? `Step ${index + 1}` : `Ingredient ${index + 1}`;
+function rowLabel(kind, index, header) {
+  return header ? 'Section heading' : kind === 'step' ? `Step ${index + 1}` : `Ingredient ${index + 1}`;
+}
+
+function editRow(kind, value, index, flag = '') {
+  const header = kind === 'ingredient' && isHeader(value);
+  const text = header ? value.slice(HEADER_MARK.length) : value;
+  const label = rowLabel(kind, index, header);
+  const placeholder = header ? 'Section name, e.g. For the sauce' : kind === 'step' ? 'Describe this step' : 'e.g. 1 cup flour';
   return `
-    <li class="edit-row" data-kind="${kind}">
+    <li class="edit-row${header ? ' is-header' : ''}${flag ? ' needs-check' : ''}" data-kind="${kind}"${header ? ' data-header' : ''}>
       <button type="button" class="grip" data-grip aria-label="Move ${label}. Drag, or use the arrow keys.">${ICONS.grip}</button>
       ${kind === 'step' ? `<span class="row-num" aria-hidden="true">${index + 1}</span>` : ''}
-      <textarea class="row-input" rows="${kind === 'step' ? 3 : 1}" aria-label="${label}" enterkeyhint="next" placeholder="${kind === 'step' ? 'Describe this step' : 'e.g. 1 cup flour'}">${esc(value)}</textarea>
+      <textarea class="row-input" rows="${kind === 'step' ? 3 : 1}" aria-label="${label}" enterkeyhint="next" placeholder="${placeholder}">${esc(text)}</textarea>
       <button type="button" class="row-remove" data-action="row-remove" aria-label="Remove ${label}">${ICONS.remove}</button>
+      ${flag ? `<p class="row-flag">${esc(flag)}</p>` : ''}
     </li>`;
 }
 
-function editList(kind, values) {
+function editList(kind, values, flags = {}) {
   const items = values.length ? values : [''];
-  return items.map((v, i) => editRow(kind, v, i)).join('');
+  return items.map((v, i) => editRow(kind, v, i, flags[i] || '')).join('');
 }
 
 function renderForm(id) {
@@ -2073,6 +2443,8 @@ function renderForm(id) {
         <details class="raw" id="rawText" hidden><summary>Show everything the scanner read</summary><pre></pre></details>
       </section>
 
+      <section class="card sec attention" id="issues" aria-labelledby="issuesHead" hidden></section>
+
       <section class="card sec" id="fields" aria-labelledby="detailsHead">
         <h2 id="detailsHead" class="sec-title">Details</h2>
         <div class="field">
@@ -2082,7 +2454,7 @@ function renderForm(id) {
         </div>
         <div class="field-grid">
           <div class="field">
-            <label for="f-category">Chapter</label>
+            <label for="f-category">Section</label>
             <select id="f-category" name="category">
               <option value="">Choose one</option>
               ${CATEGORIES.map(c => `<option ${r.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
@@ -2109,9 +2481,12 @@ function renderForm(id) {
 
       <section class="card sec" aria-labelledby="ingEditHead">
         <h2 id="ingEditHead" class="sec-title">Ingredients</h2>
-        <p class="hint">Drag the handle to reorder. Pasting several lines adds a row for each.</p>
+        <p class="hint">Drag the handle to reorder. Section headings (like “For the sauce”) group the ingredients under them.</p>
         <ol class="edit-list" id="ingList" data-kind="ingredient">${editList('ingredient', r.ingredients)}</ol>
-        <button type="button" class="text-btn add-row" data-action="row-add" data-list="ingList">Add ingredient</button>
+        <div class="action-row">
+          <button type="button" class="text-btn add-row" data-action="row-add" data-list="ingList">Add ingredient</button>
+          <button type="button" class="text-btn add-row" data-action="row-add-header" data-list="ingList">Add section heading</button>
+        </div>
       </section>
 
       <section class="card sec" aria-labelledby="stepEditHead">
@@ -2145,19 +2520,22 @@ function autosize(el) {
 
 function renumber(list) {
   const kind = list.dataset.kind;
-  [...list.children].forEach((row, i) => {
-    const label = kind === 'step' ? `Step ${i + 1}` : `Ingredient ${i + 1}`;
+  let n = 0;
+  [...list.children].forEach(row => {
+    const header = row.hasAttribute('data-header');
+    const label = rowLabel(kind, n, header);
+    if (!header) n++;
     const num = row.querySelector('.row-num');
-    if (num) num.textContent = i + 1;
+    if (num) num.textContent = n;
     row.querySelector('.grip').setAttribute('aria-label', `Move ${label}. Drag, or use the arrow keys.`);
     row.querySelector('.row-input').setAttribute('aria-label', label);
     row.querySelector('.row-remove').setAttribute('aria-label', `Remove ${label}`);
   });
 }
 
-function addRow(list, value = '', after = null, focus = true) {
+function addRow(list, value = '', after = null, focus = true, header = false) {
   const tmp = document.createElement('ol');
-  tmp.innerHTML = editRow(list.dataset.kind, value, 0);
+  tmp.innerHTML = editRow(list.dataset.kind, header ? HEADER_MARK + value : value, 0);
   const row = tmp.firstElementChild;
   list.insertBefore(row, after ? after.nextElementSibling : null);
   renumber(list);
@@ -2167,13 +2545,16 @@ function addRow(list, value = '', after = null, focus = true) {
   return row;
 }
 
-function setListValues(list, values) {
-  list.innerHTML = editList(list.dataset.kind, values);
+function setListValues(list, values, flags = {}) {
+  list.innerHTML = editList(list.dataset.kind, values, flags);
   list.querySelectorAll('.row-input').forEach(autosize);
 }
 
 function listValues(id) {
-  return [...document.querySelectorAll(`#${id} .row-input`)].map(t => t.value.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return [...document.querySelectorAll(`#${id} .edit-row`)].map(row => {
+    const v = row.querySelector('.row-input').value.replace(/\s+/g, ' ').trim();
+    return v && row.hasAttribute('data-header') ? HEADER_MARK + v.replace(/:$/, '') : v;
+  }).filter(Boolean);
 }
 
 // Drag to reorder (edit screen only). Pointer events work for touch and mouse.
@@ -2283,7 +2664,7 @@ async function runScan() {
       label.textContent = l;
       fill.style.width = `${Math.round(fraction * 100)}%`;
     });
-    const parsed = parseRecipeText(result.text, result.lines, result.titleHint);
+    const parsed = parseRecipeText(result.text, result.lines, result.titleHint, { sourceHint: result.sourceHint, gaps: result.gaps });
 
     const raw = document.getElementById('rawText');
     raw.hidden = false;
@@ -2296,11 +2677,16 @@ async function runScan() {
     }
     if (parsed.title) form.title.value = parsed.title;
     for (const key of ['servings', 'prepTime', 'cookTime', 'source']) if (parsed[key]) form[key].value = parsed[key];
-    setListValues(document.getElementById('ingList'), parsed.ingredients);
-    setListValues(document.getElementById('stepList'), parsed.steps);
+    if (!form.category.value) form.category.value = guessCategory(parsed) || '';
+    const flags = kind => Object.fromEntries(parsed.issues.filter(x => x.field === kind && x.index != null).map(x => [x.index, x.message]));
+    setListValues(document.getElementById('ingList'), parsed.ingredients, flags('ingredients'));
+    setListValues(document.getElementById('stepList'), parsed.steps, flags('steps'));
     if (parsed.notes && !form.notes.value.trim()) form.notes.value = parsed.notes;
-    label.textContent = `Found ${plural(parsed.ingredients.length, 'ingredient')} and ${plural(parsed.steps.length, 'step')}. Check them below, then save.`;
-    document.getElementById('fields').scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' });
+    const count = parsed.ingredients.filter(i => !isHeader(i)).length;
+    label.textContent = `Found ${plural(count, 'ingredient')} and ${plural(parsed.steps.length, 'step')}.`;
+    showIssues(parsed.issues);
+    (parsed.issues.length ? document.getElementById('issues') : document.getElementById('fields'))
+      .scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
   } catch (err) {
     console.error(err);
     label.textContent = err.message || 'Reading the photos failed. Try again.';
@@ -2310,11 +2696,46 @@ async function runScan() {
   }
 }
 
+function showIssues(issues) {
+  const box = document.getElementById('issues');
+  if (!issues.length) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = `
+    <h2 id="issuesHead" class="sec-title cherry">Needs your attention</h2>
+    <p class="hint">The scan couldn't fill in everything. Complete these before saving.</p>
+    <ul class="issue-list">
+      ${issues.map((x, i) => `<li><span>${esc(x.message)}</span><button type="button" class="btn btn-chip" data-action="fix-issue" data-issue="${i}">Fix</button></li>`).join('')}
+    </ul>`;
+  box._issues = issues;
+}
+
+function focusIssue(x) {
+  let target;
+  if (x.field === 'title') target = document.getElementById('f-title');
+  else {
+    const list = document.getElementById(x.field === 'steps' ? 'stepList' : 'ingList');
+    const rows = list.querySelectorAll('.edit-row');
+    if (x.index != null && rows[x.index]) target = rows[x.index].querySelector('.row-input');
+    else if (/missing/i.test(x.message) || !list.querySelector('.row-input')?.value) {
+      const empty = [...list.querySelectorAll('.row-input')].find(t => !t.value.trim());
+      target = empty || addRow(list, '', null, false).querySelector('.row-input');
+    } else target = list.querySelector('.row-input');
+  }
+  if (!target) return;
+  target.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+  target.focus({ preventScroll: true });
+  if (target.setSelectionRange) target.setSelectionRange(target.value.length, target.value.length);
+}
+
 async function submitForm(form) {
   const title = form.title.value.trim();
   const err = document.getElementById('titleError');
   if (!title) { err.hidden = false; form.title.focus(); return; }
   err.hidden = true;
+
+  const ingredients = listValues('ingList'), steps = listValues('stepList');
+  const missing = [!ingredients.filter(i => !isHeader(i)).length && 'ingredients', !steps.length && 'steps'].filter(Boolean);
+  if (missing.length && !confirm(`This recipe has no ${missing.join(' or ')} yet. Save it anyway?`)) return;
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -2325,13 +2746,13 @@ async function submitForm(form) {
     const recipe = {
       ...(existing || { id: uid(), createdAt: Date.now(), rating: 0, favorite: false, timesMade: 0 }),
       title,
-      category: form.category.value,
+      category: form.category.value || guessCategory({ title, ingredients, steps }) || '',
       servings: form.servings.value.trim(),
       prepTime: form.prepTime.value.trim(),
       cookTime: form.cookTime.value.trim(),
       source: form.source.value.trim(),
-      ingredients: listValues('ingList'),
-      steps: listValues('stepList'),
+      ingredients,
+      steps,
       notes: form.notes.value.trim(),
       images,
     };
@@ -2493,6 +2914,61 @@ async function restoreBackup(file) {
 
 // ---------- actions ----------
 
+async function setRating(el, v) {
+  const r = currentRecipe(); if (!r) return;
+  r.rating = r.rating === v ? 0 : v;
+  await saveRecipe(r);
+  el.innerHTML = starRow(r.rating);
+  el.setAttribute('aria-valuenow', r.rating);
+  el.setAttribute('aria-valuetext', r.rating ? ratingLabel(r.rating) : 'Not rated');
+  toast(r.rating ? `Rated ${ratingLabel(r.rating)}` : 'Rating cleared');
+}
+
+async function shareRecipe(r) {
+  const result = await shareText(recipeToText(r, state.scale[r.id] || 1));
+  if (result === 'copied') toast('Recipe copied');
+}
+
+async function deleteRecipe(r) {
+  if (!confirm(`Delete “${r.title}”? This can't be undone.`)) return;
+  await db.deleteRecipe(r.id);
+  state.recipes = state.recipes.filter(x => x.id !== r.id);
+  toast('Recipe deleted');
+  location.hash = '#/';
+}
+
+// Photo viewer: scanned pages ("images") or photos of the dish ("photos", removable).
+function openViewer(r, kind, index) {
+  const dlg = document.getElementById('photoViewer');
+  const list = r[kind] || [];
+  if (!list.length) return;
+  const i = Math.min(Math.max(index, 0), list.length - 1);
+  dlg.dataset.kind = kind; dlg.dataset.index = i;
+  document.getElementById('photoViewerImg').src = list[i];
+  document.getElementById('photoViewerImg').alt = kind === 'photos' ? `Photo ${i + 1} of ${r.title}` : `Scanned page ${i + 1}`;
+  document.getElementById('photoRemove').hidden = kind !== 'photos';
+  document.getElementById('photoPrev').hidden = document.getElementById('photoNext').hidden = list.length < 2;
+  if (!dlg.open) dlg.showModal();
+}
+
+async function addDishPhotos(r, files) {
+  const images = [...files].filter(f => f.type.startsWith('image/') || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name));
+  if (!images.length) return;
+  toast(`Adding ${plural(images.length, 'photo')}…`);
+  const added = await Promise.all(images.map(f => compressPhoto(f, 1600, 0.82)));
+  r.photos = [...(r.photos || []), ...added];
+  await saveRecipe(r);
+  toast(`Added ${plural(added.length, 'photo')}`);
+  renderRecipe(r.id);
+}
+
+async function setCategory(id, category) {
+  const r = state.recipes.find(x => x.id === id); if (!r) return;
+  r.category = category;
+  await saveRecipe(r);
+  toast(category ? `Moved to ${category}` : 'Removed from its section');
+}
+
 function currentRecipe() {
   const r = route();
   return r.name === 'recipe' ? state.recipes.find(x => x.id === r.id) : null;
@@ -2507,13 +2983,14 @@ const actions = {
   },
   'clear-filters': () => { state.filter.q = ''; state.filter.cat = 'all'; renderHome(); },
 
-  'rate': async el => {
-    const r = currentRecipe(); if (!r) return;
-    const v = Number(el.dataset.value);
-    r.rating = r.rating === v ? 0 : v; // tap the same star again to clear
-    await saveRecipe(r);
-    document.querySelectorAll('.star').forEach(s => s.setAttribute('aria-pressed', Number(s.dataset.value) <= r.rating));
-    toast(r.rating ? `Rated ${plural(r.rating, 'star')}` : 'Rating cleared');
+  'rate': (el, e) => {
+    // Tap position picks the value in half stars; tapping the current value clears it.
+    const box = el.getBoundingClientRect();
+    if (!box.width || e.detail === 0) return; // keyboard "click" is handled by keydown
+    const pad = 6;
+    const x = Math.min(Math.max(e.clientX - box.left - pad, 0), box.width - 2 * pad);
+    const v = Math.max(0.5, Math.ceil((x / (box.width - 2 * pad)) * 10) / 2);
+    setRating(el, v);
   },
   'fav': async el => {
     const r = currentRecipe(); if (!r) return;
@@ -2566,24 +3043,25 @@ const actions = {
     el.setAttribute('aria-pressed', on);
     toast(on ? 'Screen will stay on while this recipe is open' : 'Screen will sleep as usual');
   },
-  'share-recipe': async () => {
-    const r = currentRecipe(); if (!r) return;
-    const result = await shareText(recipeToText(r, state.scale[r.id] || 1));
-    if (result === 'copied') toast('Recipe copied');
-  },
-  'delete': async () => {
-    const r = currentRecipe(); if (!r) return;
-    if (!confirm(`Delete “${r.title}”? This can't be undone.`)) return;
-    await db.deleteRecipe(r.id);
-    state.recipes = state.recipes.filter(x => x.id !== r.id);
-    toast('Recipe deleted');
-    location.hash = '#/';
-  },
+  'recipe-menu': () => { const r = currentRecipe(); if (r) openRecipeMenu(r); },
   'view-photo': el => {
     const r = currentRecipe(); if (!r) return;
-    document.getElementById('photoViewerImg').src = r.images[Number(el.dataset.index)];
-    document.getElementById('photoViewer').showModal();
+    const kind = el.dataset.kind || 'images';
+    openViewer(r, kind, Number(el.dataset.index));
   },
+  'auto-sort': async () => {
+    const loose = state.recipes.filter(r => !CATEGORIES.includes(r.category));
+    let moved = 0;
+    for (const r of loose) { const c = guessCategory(r); if (c) { r.category = c; await saveRecipe(r); moved++; } }
+    toast(moved ? `Sorted ${plural(moved, 'recipe')}. Change any of them from the recipe's ⋯ menu.` : 'Couldn’t tell where these go; pick a section for each.');
+    renderHome();
+  },
+  'fix-issue': el => {
+    const box = document.getElementById('issues');
+    const x = box && box._issues && box._issues[Number(el.dataset.issue)];
+    if (x) focusIssue(x);
+  },
+  'row-add-header': el => addRow(document.getElementById(el.dataset.list), '', null, true, true),
 
   'remove-photo': el => {
     const [p] = state.draft.photos.splice(Number(el.dataset.index), 1);
@@ -2640,6 +3118,18 @@ view.addEventListener('pointerdown', e => {
 });
 
 view.addEventListener('keydown', e => {
+  const slider = e.target.closest('.rating[role="slider"]');
+  if (slider) {
+    const now = Number(slider.getAttribute('aria-valuenow')) || 0;
+    const next = { ArrowRight: now + 0.5, ArrowUp: now + 0.5, ArrowLeft: now - 0.5, ArrowDown: now - 0.5, Home: 0.5, End: 5 }[e.key];
+    if (next !== undefined) {
+      e.preventDefault();
+      const v = Math.min(5, Math.max(0.5, next));
+      if (v !== now) setRating(slider, v);
+    }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); setRating(slider, now); }
+    return;
+  }
   const grip = e.target.closest('[data-grip]');
   if (grip) return moveWithKeys(e, grip);
   const input = e.target.closest('.edit-row .row-input');
@@ -2676,7 +3166,11 @@ view.addEventListener('paste', e => {
 
 view.addEventListener('input', e => {
   if (e.target.id === 'search') { state.filter.q = e.target.value; renderContents(); }
-  if (e.target.classList.contains('row-input')) autosize(e.target);
+  if (e.target.classList.contains('row-input')) {
+    autosize(e.target);
+    const row = e.target.closest('.needs-check');
+    if (row) { row.classList.remove('needs-check'); row.querySelector('.row-flag')?.remove(); }
+  }
 });
 
 let notesTimer;
@@ -2693,6 +3187,8 @@ view.addEventListener('input', e => {
 
 view.addEventListener('change', async e => {
   const t = e.target;
+  if (t.dataset.categoryFor) { await setCategory(t.dataset.categoryFor, t.value); renderContents(); return; }
+  if (t.hasAttribute('data-photo-input')) { const r = currentRecipe(); if (r) await addDishPhotos(r, t.files); t.value = ''; return; }
   if (t.id === 'sort') { state.filter.sort = t.value; renderContents(); }
   else if (t.id === 'photoInput') {
     const files = [...t.files].filter(f => f.type.startsWith('image/') || /\.(heic|heif|jpe?g|png|webp)$/i.test(f.name));
@@ -2732,8 +3228,38 @@ view.addEventListener('submit', async e => {
   }
 });
 
-document.getElementById('photoViewer').addEventListener('click', e => {
-  if (e.target === e.currentTarget) e.currentTarget.close(); // tap outside the photo
+const viewer = document.getElementById('photoViewer');
+viewer.addEventListener('click', async e => {
+  if (e.target === viewer) return viewer.close(); // tap outside the photo
+  const r = currentRecipe(); if (!r) return;
+  const kind = viewer.dataset.kind, i = Number(viewer.dataset.index);
+  if (e.target.closest('#photoPrev')) openViewer(r, kind, (i - 1 + r[kind].length) % r[kind].length);
+  if (e.target.closest('#photoNext')) openViewer(r, kind, (i + 1) % r[kind].length);
+  if (e.target.closest('#photoRemove') && confirm('Remove this photo?')) {
+    r.photos.splice(i, 1);
+    await saveRecipe(r);
+    viewer.close();
+    toast('Photo removed');
+    renderRecipe(r.id);
+  }
+});
+
+const sheet = document.getElementById('sheet');
+sheet.addEventListener('click', async e => {
+  if (e.target === sheet || e.target.closest('[data-close]')) return sheet.close();
+  const btn = e.target.closest('[data-sheet-action]');
+  if (!btn) return;
+  const r = currentRecipe(); if (!r) return;
+  sheet.close();
+  if (btn.dataset.sheetAction === 'share') shareRecipe(r);
+  if (btn.dataset.sheetAction === 'scans') openViewer(r, 'images', 0);
+  if (btn.dataset.sheetAction === 'delete') deleteRecipe(r);
+});
+sheet.addEventListener('change', async e => {
+  const t = e.target;
+  const r = currentRecipe(); if (!r) return;
+  if (t.dataset.categoryFor) { sheet.close(); await setCategory(r.id, t.value); renderRecipe(r.id); }
+  if (t.hasAttribute('data-photo-input')) { sheet.close(); await addDishPhotos(r, t.files); t.value = ''; }
 });
 
 // ---------- start ----------
