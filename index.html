@@ -182,12 +182,19 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .rating {
-  display: inline-flex; align-items: center; gap: .15rem;
-  min-height: 2.75rem; padding: 0 .75rem; cursor: pointer;
-  font-size: 1.45rem; letter-spacing: .05em; touch-action: manipulation;
+  display: inline-flex; margin-top: .75rem; padding: .15rem .35rem;
+  background: #FFFFFF; border-radius: 999px;
   --star-off: #E7D8CF; --cherry: #C2202A;
 }
-.rating:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.rate-star {
+  display: grid; place-items: center; width: 2.9rem; height: 2.9rem; padding: 0;
+  background: none; border: 0; border-radius: 50%; cursor: pointer;
+  font-size: 1.85rem; line-height: 1; touch-action: manipulation;
+}
+.rate-star:active .st { transform: scale(1.2); }
+.rate-star .st { transition: transform .12s ease; }
+.rate-star:focus-visible { outline: 3px solid #1C6E69; outline-offset: -3px; }
+.rating-hint { margin: .45rem 0 0; font-size: .85rem; font-weight: 700; opacity: .9; }
 
 /* ---------- controls ---------- */
 
@@ -298,18 +305,25 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .scaler button[aria-pressed="true"] { background: var(--cherry); border-color: var(--cherry); color: var(--cherry-ink); }
 
 .ing-list { list-style: none; margin: 0; padding: 0; }
-.ing {
-  display: grid; grid-template-columns: 5.75rem 1fr; gap: .8rem;
-  width: 100%; padding: .6rem 0; text-align: left; cursor: pointer;
-  background: none; border: 0; border-bottom: 2px dashed var(--dash); color: var(--ink);
-  font: 1.0625rem/1.4 var(--text);
+.ing-row {
+  display: grid; grid-template-columns: 5.75rem 1fr; gap: .8rem; align-items: start;
+  border-bottom: 2px dashed var(--dash);
 }
-.ing-qty { font-weight: 800; color: var(--cherry); overflow-wrap: anywhere; }
+.ing-qty {
+  display: flex; flex-direction: column; align-items: flex-start; padding: .6rem 0;
+  font: 800 1.0625rem/1.4 var(--text); color: var(--cherry); text-align: left;
+  background: none; border: 0; overflow-wrap: anywhere;
+}
+.ing-qty.convertible { cursor: pointer; min-height: 2.75rem; }
+.ing-qty.convertible .ing-qty-main { text-decoration: underline dotted 2px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--cherry) 55%, transparent); }
+.ing-alt { font-size: .82rem; font-weight: 700; color: var(--muted); }
+.ing {
+  display: block; width: 100%; padding: .6rem 0; min-height: 2.75rem; text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--ink); font: 1.0625rem/1.4 var(--text);
+}
 .ing-item { min-width: 0; }
-.ing[aria-pressed="true"] { color: var(--muted); }
-.ing[aria-pressed="true"] .ing-item, .ing[aria-pressed="true"] .ing-qty {
-  text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--heading);
-  color: var(--muted);
+.ing-row.crossed .ing-item, .ing-row.crossed .ing-qty-main {
+  color: var(--muted); text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--heading);
 }
 
 /* order tickets */
@@ -334,7 +348,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .ticket.done p { text-decoration: line-through; text-decoration-color: var(--heading); }
 
 .notes-input {
-  display: block; width: 100%; min-height: 4.5rem;
+  display: block; width: 100%; min-height: 4.5rem; overflow: hidden; resize: none;
   font: 1.0625rem/1.5 var(--text); color: var(--ink);
   background: var(--cream); border: 2px solid var(--line); border-radius: 12px;
   padding: .7rem .85rem; resize: vertical;
@@ -601,6 +615,22 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 .photo-remove { background: #C2202A; color: #FFFFFF; font-size: .95rem; }
 .photo-nav[hidden], .photo-remove[hidden] { display: none; }
+
+/* ---------- diet tags ---------- */
+.pill-diet { background: transparent; color: #FFFFFF; border: 2px solid rgba(255, 255, 255, .85); }
+.diet-tag {
+  display: inline-block; margin-left: .3rem; padding: 0 .5rem; border-radius: 999px;
+  border: 1.5px solid var(--heading); color: var(--heading); font-size: .75rem; font-weight: 800; line-height: 1.4rem;
+}
+.diet-field { border: 0; padding: 0; margin: 0 0 1rem; }
+.diet-field legend { padding: 0; margin-bottom: .3rem; font-size: .85rem; font-weight: 800; color: var(--muted); }
+.seg { display: inline-flex; border: 2.5px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.seg label { position: relative; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: flex; align-items: center; min-height: 2.5rem; padding: 0 1rem; font-weight: 800; font-size: .9rem; }
+.seg label + label span { border-left: 2.5px solid var(--ink); }
+.seg input:checked + span { background: var(--cherry); color: var(--cherry-ink); }
+.seg input:focus-visible + span { outline: 3px solid var(--heading); outline-offset: -4px; }
   </style>
 </head>
 <body>
@@ -880,7 +910,7 @@ const LOOSE_COOK = new RegExp(`^(?:cook|bake)\\s+${TIME}$`, 'i');
  * @param {Array<{text:string,height:number}>} [ocrLines] lines with text height, used to find the title
  */
 function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
-  const out = { title: '', servings: '', prepTime: '', cookTime: '', source: extra.sourceHint || '', ingredients: [], steps: [], notes: '', issues: [] };
+  const out = { title: '', servings: '', prepTime: '', cookTime: '', totalTime: '', source: extra.sourceHint || '', ingredients: [], steps: [], notes: '', issues: [] };
 
   // Keep blank lines as paragraph breaks (null entries).
   let lines = [];
@@ -901,8 +931,10 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
       if (c) out.cookTime = c[1].trim();
     }
     // "4 servings" (number first) is checked before "Servings 4" so "4 servings 1x" reads as 4.
-    const sv = !out.servings && s.match(SERVINGS_LINE);
-    if (sv && s.length < 30) { out.servings = sv[1]; return false; }
+    const sv = s.match(SERVINGS_LINE);
+    if (sv && s.length < 30) { if (!out.servings) out.servings = sv[1]; return false; }
+    const total = s.match(/^(?:total\s+)?time\s*:?\s*((?:about\s+)?\d+\s*(?:-|–|to)?\s*\d*\s*(?:min(?:ute)?s?|hours?|hrs?)(?:\s*\d+\s*min(?:ute)?s?)?)\.?$/i);
+    if (total) { if (!out.totalTime) out.totalTime = total[1].trim(); return false; }
     let matched = false;
     for (const [key, re] of Object.entries(META)) {
       const m = s.match(re);
@@ -1015,7 +1047,14 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
 
   out.ingredients = buildIngredients(ingLines);
   out.steps = buildSteps(stepLines);
-  out.notes = joinParagraphs(noteLines).map(tidyNote).filter(Boolean).join('\n');
+  // Rejoin a description the scan split mid-sentence before tidying it.
+  const noteParas = joinParagraphs(noteLines).reduce((acc, p) => {
+    if (acc.length && !/[.!?)"”:]$/.test(acc[acc.length - 1]) && /^[a-z]/.test(p)) acc[acc.length - 1] = joinWrapped(acc[acc.length - 1], p);
+    else acc.push(p);
+    return acc;
+  }, []);
+  out.notes = noteParas.map(tidyNote).filter(Boolean).join('\n');
+  for (const k of ['prepTime', 'cookTime', 'totalTime']) out[k] = out[k].replace(/(\d)(?=[a-z])/gi, '$1 ');
   out.issues = findIssues(out, extra);
   return out;
 }
@@ -1072,7 +1111,7 @@ function splitList(text) {
   return parts.map(p => p.replace(/^\s*(?:and|&)\s+/i, '').trim()).filter(Boolean);
 }
 
-const CONTINUES = /[,(+&]$|\b(?:or|and|plus|about|to|of|with|if|for|into|in)$/i;
+const CONTINUES = /[,(+&]$|\b(?:or|and|plus|about|to|of|with|if|for|into|in|approximately|approx\.?|roughly|around|each|total|such as)$/i;
 
 function buildIngredients(lines) {
   const real = lines.filter(Boolean);
@@ -1107,8 +1146,8 @@ function buildIngredients(lines) {
         const lower = /^[a-z(]/.test(part) && !QTY_START.test(part);
         let join = false;
         if (prev) {
-          if (paragraphMode && li > 0) join = (lower || CONTINUES.test(prev)) && !STARTS_NUM.test(part);
-          else if (CONTINUES.test(prev) && !STARTS_NUM.test(part)) join = true;
+          if (paragraphMode && li > 0) join = CONTINUES.test(prev) || (lower && !STARTS_NUM.test(part));
+          else if (CONTINUES.test(prev) && !/,$/.test(prev)) join = true;
           else join = lower && prev.length >= maxLen * 0.75; // a wrapped long line
         }
         if (join) items[items.length - 1] = joinWrapped(prev, part);
@@ -1123,7 +1162,8 @@ function buildIngredients(lines) {
 }
 
 function joinWrapped(a, b) {
-  if (/[a-z]-$/i.test(a) && /^[a-z]/.test(b)) return a.slice(0, -1) + b;
+  const frag = (a.match(/([a-z]+)-$/i) || [])[1];
+  if (frag && /^[a-z]/.test(b)) return frag.length <= 3 ? a.slice(0, -1) + b : a + b;
   return `${a} ${b}`;
 }
 
@@ -1188,6 +1228,7 @@ function tidyNote(p) {
     const end = Math.max(t.lastIndexOf('. '), t.lastIndexOf('! '), t.lastIndexOf('? '));
     if (end > 20) t = t.slice(0, end + 1);
     else if (/^[a-z]/.test(t)) t = ''; // a fragment from the middle of a cut-off sentence
+    else t = `${t.replace(/[,;:\s]+$/, '')}…`;
   }
   return t;
 }
@@ -1262,23 +1303,120 @@ function formatQuantity(n) {
   return whole ? `${whole}${best[1]}` : best[1];
 }
 
-function scaleIngredient(text, factor) {
-  if (factor === 1 || isHeader(text)) return text;
-  const m = text.match(QTY_RE);
-  if (!m) return text;
+// ---------- amounts: parsing, scaling, unit conversion ----------
+
+// Unit words -> canonical unit, with singular/plural display forms.
+const UNITS = [
+  ['tsp', /^(?:teaspoons?|tsps?\.?|t\.)$/i, 'tsp', 'tsp'],
+  ['tbsp', /^(?:tablespoons?|tbsps?\.?|tbs\.?|tbl\.?|T\.?)$/, 'tbsp', 'tbsp'],
+  ['cup', /^(?:cups?|c\.)$/i, 'cup', 'cups'],
+  ['floz', /^(?:fl\.?\s?oz\.?|fluid ounces?)$/i, 'fl oz', 'fl oz'],
+  ['pint', /^(?:pints?|pts?\.?)$/i, 'pint', 'pints'],
+  ['quart', /^(?:quarts?|qts?\.?)$/i, 'quart', 'quarts'],
+  ['ml', /^(?:ml|milliliters?|millilitres?)$/i, 'ml', 'ml'],
+  ['l', /^(?:l|liters?|litres?)$/i, 'l', 'l'],
+  ['oz', /^(?:ounces?|oz\.?)$/i, 'oz', 'oz'],
+  ['lb', /^(?:pounds?|lbs?\.?)$/i, 'lb', 'lb'],
+  ['g', /^(?:g|grams?)$/i, 'g', 'g'],
+  ['kg', /^(?:kg|kilograms?|kilos?)$/i, 'kg', 'kg'],
+];
+const UNIT_WORD = String.raw`fl\.?\s?oz\.?|fluid ounces?|teaspoons?|tsps?\.?|tablespoons?|tbsps?\.?|tbs\.?|tbl\.?|cups?|pints?|pts?\.?|quarts?|qts?\.?|milliliters?|millilitres?|ml|liters?|litres?|ounces?|oz\.?|pounds?|lbs?\.?|grams?|kilograms?|kg|g|l|c\.|T\.?|t\.`;
+const canonUnit = word => (UNITS.find(([, re]) => re.test(word.trim())) || [null])[0];
+
+const ML = { tsp: 4.929, tbsp: 14.787, cup: 236.59, floz: 29.574, pint: 473.18, quart: 946.35, ml: 1, l: 1000 };
+const G = { oz: 28.35, lb: 453.59, g: 1, kg: 1000 };
+// What tapping an amount cycles through, starting from its own unit.
+const CYCLE = {
+  tsp: ['tsp', 'ml'], tbsp: ['tbsp', 'tsp', 'ml'], cup: ['cup', 'floz', 'ml'], floz: ['floz', 'cup', 'ml'],
+  pint: ['pint', 'cup', 'ml'], quart: ['quart', 'cup', 'l'], ml: ['ml', 'us'], l: ['l', 'cup'],
+  oz: ['oz', 'g'], lb: ['lb', 'oz', 'g'], g: ['g', 'oz'], kg: ['kg', 'lb'],
+};
+
+const AMOUNT = new RegExp(`^(${NUM})(?:\\s*(?:-|–|to)\\s*(${NUM}))?(?:\\s*(${UNIT_WORD}))?(?=[\\s,/()]|$)`, 'i');
+const ALT = new RegExp(`^\\s*(?:\\/\\s*|\\(\\s*)(${NUM})\\s*(${UNIT_WORD})\\s*\\)?`, 'i');
+
+/** "4 cups/32 ounces broth" -> { a: 4, unit: 'cup', alt: { a: 32, unit: 'oz' }, rest: ' broth' } */
+function parseAmount(text) {
+  const m = text.match(AMOUNT);
+  if (!m) return null;
   const a = toNumber(m[1]);
-  if (!isFinite(a)) return text;
-  let qty = formatQuantity(a * factor);
-  if (m[3]) {
-    const b = toNumber(m[3]);
-    if (isFinite(b)) qty += `–${formatQuantity(b * factor)}`;
+  if (!isFinite(a)) return null;
+  const b = m[2] ? toNumber(m[2]) : null;
+  const unitWord = m[3] ? m[3].trim() : '';
+  let rest = text.slice(m[0].length), alt = null, altParen = false;
+  if (unitWord) {
+    const x = rest.match(ALT);
+    if (x && canonUnit(x[2]) && (!x[0].includes('(') || x[0].includes(')'))) {
+      alt = { a: toNumber(x[1]), unit: canonUnit(x[2]), word: x[2] };
+      altParen = x[0].includes('(');
+      rest = rest.slice(x[0].length);
+    }
   }
-  const rest = text.slice(m[0].length);
-  return qty + (rest.startsWith(' ') || !rest ? '' : ' ') + rest;
+  return { a, b, unitWord, unit: unitWord ? canonUnit(unitWord) : null, alt, altParen, rest };
 }
 
-// Split an ingredient for display: { qty: "¼ cup", item: "all-purpose flour" }.
-const DISPLAY_UNITS = new RegExp(`^\\s*(?:${UNIT_WORDS.filter(u => !/^eggs/.test(u)).join('|')})\\.?(?=[\\s/]|$)`, 'i');
+function fmtMetric(v, unit) {
+  if (unit === 'l' || unit === 'kg') return String(Math.round(v * 100) / 100);
+  if (v >= 50) return String(Math.round(v / 5) * 5);
+  if (v >= 10) return String(Math.round(v));
+  return String(Math.round(v * 2) / 2);
+}
+function fmtUnit(unit, v) {
+  const u = UNITS.find(x => x[0] === unit);
+  return v > 1 ? u[3] : u[2];
+}
+// Converted US amounts round to what a cook would measure: eighths, then halves, then wholes.
+function kitchenRound(v) {
+  if (v >= 20) return Math.round(v);
+  if (v >= 10) return Math.round(v * 2) / 2;
+  const third = Math.round(v * 3) / 3;
+  return Math.abs(third - v) < 0.03 ? third : Math.round(v * 8) / 8;
+}
+function fmtAmount(a, b, unit, converted = false) {
+  const metric = ['ml', 'l', 'g', 'kg'].includes(unit);
+  const f = v => (metric ? fmtMetric(v, unit) : formatQuantity(converted ? kitchenRound(v) : v));
+  let out = f(a);
+  if (b != null) out += `–${f(b)}`;
+  return `${out} ${fmtUnit(unit, b != null ? b : a)}`;
+}
+// Bigger units once the number gets large.
+function settle(v, unit) {
+  if (unit === 'ml' && v >= 1000) return [v / 1000, 'l'];
+  if (unit === 'g' && v >= 1000) return [v / 1000, 'kg'];
+  return [v, unit];
+}
+function convertValue(v, from, to) {
+  if (to === 'us') { // pick a sensible US measure for millilitres
+    const ml = v * ML[from];
+    to = ml < 14 ? 'tsp' : ml < 59 ? 'tbsp' : 'cup';
+    return [ml / ML[to], to];
+  }
+  if (ML[from] && ML[to]) return [v * ML[from] / ML[to], to];
+  if (G[from] && G[to]) return [v * G[from] / G[to], to];
+  return [v, from];
+}
+
+/** How many unit views an ingredient can cycle through (1 = not convertible). */
+function unitViews(text) {
+  if (isHeader(text)) return 1;
+  const p = parseAmount(text);
+  return p && p.unit ? CYCLE[p.unit].length : 1;
+}
+
+function scaleIngredient(text, factor) {
+  if (factor === 1 || isHeader(text)) return text;
+  const p = parseAmount(text);
+  if (!p) return text;
+  let out = formatQuantity(p.a * factor);
+  if (p.b != null) out += `–${formatQuantity(p.b * factor)}`;
+  if (p.unitWord) out += ` ${p.unitWord}`;
+  if (p.alt) {
+    const alt = `${formatQuantity(p.alt.a * factor)} ${p.alt.word}`;
+    out += p.altParen ? ` (${alt})` : `/${alt}`;
+  }
+  return out + (p.rest && !/^[\s,]/.test(p.rest) ? ' ' : '') + p.rest;
+}
+
 // Short forms keep the quantity column narrow: "3 tablespoons" shows as "3 tbsp".
 const SHORT_UNITS = [[/^tablespoons?$|^tbsps?\.?$|^tbl$|^tbs$/i, 'tbsp'], [/^teaspoons?$|^tsps?\.?$/i, 'tsp'],
   [/^ounces?$/i, 'oz'], [/^pounds?$|^lbs?\.?$/i, 'lb'], [/^grams?$/i, 'g'], [/^kilograms?$/i, 'kg'],
@@ -1287,29 +1425,53 @@ function shortUnit(u) {
   for (const [re, short] of SHORT_UNITS) if (re.test(u)) return short;
   return u;
 }
-function displayIngredient(text, factor = 1) {
-  if (isHeader(text)) return { qty: '', item: text.slice(HEADER_MARK.length), header: true };
-  const m = text.match(QTY_RE);
-  if (!m) return { qty: '', item: text };
-  const a = toNumber(m[1]);
-  if (!isFinite(a)) return { qty: '', item: text };
-  let qty = formatQuantity(a * factor);
-  if (m[3]) {
-    const b = toNumber(m[3]);
-    if (isFinite(b)) qty += `–${formatQuantity(b * factor)}`;
+const DISPLAY_UNITS = new RegExp(`^\\s*(?:${UNIT_WORDS.filter(u => !/^eggs/.test(u)).join('|')})\\.?(?=[\\s/]|$)`, 'i');
+
+/**
+ * Split an ingredient for display, scaled and optionally converted:
+ * { qty: "4 cups", alt: "32 oz", item: "chicken broth", convertible: true }
+ * view 0 shows the recipe's own units; 1, 2… cycle through conversions.
+ */
+function displayIngredient(text, factor = 1, view = 0) {
+  if (isHeader(text)) return { qty: '', alt: '', item: text.slice(HEADER_MARK.length), header: true };
+  const p = parseAmount(text);
+  if (!p) return { qty: '', alt: '', item: text };
+  const a = p.a * factor, b = p.b != null ? p.b * factor : null;
+
+  if (p.unit) { // a real unit: can be converted
+    const cycle = CYCLE[p.unit];
+    const target = cycle[view % cycle.length];
+    let qty, alt = '';
+    if (view % cycle.length === 0) {
+      qty = fmtAmount(a, b, p.unit);
+      if (p.alt) alt = fmtAmount(p.alt.a * factor, null, p.alt.unit);
+    } else {
+      let [ca, unit] = convertValue(a, p.unit, target);
+      const cb = b != null ? convertValue(b, p.unit, target)[0] : null;
+      if (cb == null) [ca, unit] = settle(ca, unit);
+      qty = fmtAmount(ca, cb, unit, true);
+    }
+    return { qty, alt, item: p.rest.replace(/^[\s,]+/, '').trim(), convertible: true };
   }
-  let rest = text.slice(m[0].length);
+
+  // A count: "3 garlic cloves", "2 bricks", "1 inch knob…", "3 large"
+  let qty = formatQuantity(a);
+  if (b != null) qty += `–${formatQuantity(b)}`;
+  let rest = p.rest;
   const u = rest.match(DISPLAY_UNITS) || rest.match(/^\s*(?:inch(?:es)?|bricks?|knobs?)(?=\s|$)/i);
-  if (u) { qty += ` ${shortUnit(u[0].trim())}`; rest = rest.slice(u[0].length); }
-  else {
-    // "3 garlic cloves, chopped" -> "3 cloves" + "garlic, chopped"
+  let alt = '';
+  if (u) {
+    let word = shortUnit(u[0].trim());
+    if ((b ?? a) > 1 && /^(?:can|jar|package|pkg|bag|box|stick|slice|piece|bunch|head|bottle|envelope|handful|brick|knob|sprig|stalk|clove)$/i.test(word)) word += /(?:ch|sh|x)$/i.test(word) ? 'es' : 's';
+    qty += ` ${word}`; rest = rest.slice(u[0].length);
+    // "1 can (14 oz)": the size of each can, shown underneath and not scaled
+    const size = rest.match(new RegExp(`^\\s*\\(\\s*(${NUM})\\s*(${UNIT_WORD})\\s*\\)`, 'i'));
+    if (size && canonUnit(size[2])) { alt = `${fmtAmount(toNumber(size[1]), null, canonUnit(size[2]))} each`; rest = rest.slice(size[0].length); }
+  } else {
     const c = rest.match(/^\s*((?:[a-z-]+\s+){1,2}?)(cloves?|stalks?|sprigs?)\b(.*)$/i);
     if (c) { qty += ` ${c[2]}`; rest = `${c[1].trim()}${c[3]}`; }
   }
-  // "4 cups/32 ounces chicken broth" -> "4 cups" + "chicken broth (32 oz)"
-  const alt = rest.match(/^\s*\/\s*([\d.]+\s*[a-z]+)\s+(.*)$/i);
-  if (alt) rest = `${alt[2]} (${alt[1].replace(/ounces?/i, 'oz').replace(/pounds?/i, 'lb').replace(/grams?/i, 'g')})`;
-  return { qty, item: rest.trim() };
+  return { qty, alt, item: rest.trim() };
 }
 
 // ---------- grocery aisles ----------
@@ -1367,6 +1529,46 @@ function guessCategory(r) {
   return mains ? 'Mains' : '';
 }
 
+// ---------- diet tags ----------
+// Each tag is '' (not marked), 'optional' (can be made that way), or 'yes'.
+
+const DAIRY = /\b(?:butter|buttermilk|milk|cream|cheeses?|cheddar|parmesan|parmigiano|pecorino|mozzarella|feta|cotija|ricotta|yogh?urt|ghee|half[- ]and[- ]half|cr[eè]me fra[iî]che|mascarpone|gruy[eè]re|brie|paneer|whey|custard|pesto|alfredo|queso|burrata|halloumi)\b/i;
+const DAIRY_OK = /\b(?:coconut|almond|oat|soy|cashew|rice|peanut|nut|apple|cocoa|vegan|plant[- ]based|dairy[- ]free|non[- ]dairy|cream of tartar|sunflower|sesame|seed)\b/i;
+const GLUTEN = /\b(?:flour|breads?|breadcrumbs|bread crumbs|panko|pasta|spaghetti|linguine|penne|fettuccine|macaroni|noodles|ramen|udon|soba|couscous|barley|bulgur|farro|semolina|tortillas?|pita|crackers|croutons|soy sauce|beer|wheat|rye|seitan|orzo|gnocchi|dumplings?|wontons?|pie crust|puff pastry|biscuits?|cake mix|graham|brioche|bagels?|buns|rolls)\b/i;
+const GLUTEN_OK = /\b(?:gluten[- ]free|gf|almond flour|coconut flour|rice flour|tapioca|cassava|corn tortillas?|rice noodles|glass noodles|rice paper|arrowroot|cornstarch|chickpea flour|buckwheat|potato starch|tamari|coconut aminos|quinoa)\b/i;
+
+function dietStatus(ingredients, bad, ok) {
+  let anyHit = false, allSwappable = true;
+  for (const ing of ingredients) {
+    if (isHeader(ing)) continue;
+    // "X or Y": each side is a choice. "store-bought or homemade pesto" is one choice described two ways.
+    const segs = ing.split(/\s+or\s+/i);
+    const isBad = seg => bad.test(seg) && !ok.test(seg);
+    if (!segs.some(isBad)) continue;
+    anyHit = true;
+    const realChoice = seg => {
+      const p = parseAmount(seg);
+      const words = (p ? p.rest : seg).replace(/\(.*?\)/g, '').trim().split(/\s+/).filter(Boolean);
+      return ok.test(seg) || words.length >= 2;
+    };
+    const swappable = /\boptional\b/i.test(ing) || segs.some(seg => !isBad(seg) && realChoice(seg));
+    if (!swappable) allSwappable = false;
+  }
+  if (!anyHit) return 'yes';
+  return allSwappable ? 'optional' : '';
+}
+
+/** Suggested tags from the ingredients, for the person to confirm. */
+function suggestDiet(r) {
+  const ings = r.ingredients || [];
+  if (!ings.filter(i => !isHeader(i)).length) return { gf: '', df: '' };
+  const text = [r.title, r.notes].join(' ');
+  return {
+    gf: /\bgluten[- ]free\b/i.test(text) ? 'yes' : dietStatus(ings, GLUTEN, GLUTEN_OK),
+    df: /\bdairy[- ]free\b/i.test(text) ? 'yes' : dietStatus(ings, DAIRY, DAIRY_OK),
+  };
+}
+
 // ================================================================
 // Scan clean-up: fraction repair, screenshot clutter, overlapping pages
 // ================================================================
@@ -1385,8 +1587,11 @@ const GLYPH = {
 };
 
 function isSuspectToken(t) {
-  if (!t || t.length > 6 || /[A-Za-z]{3}/.test(t)) return false;
-  return /^[([]?\d*(?:[%¥Y¢£€§]|V[a-z2-4]|\/\d)[%¥Y¢£€§\w']*[)\],.;]?$/.test(t);
+  if (!t) return false;
+  const head = t.replace(/-[a-z]{2,}$/i, ''); // "%-inch": judge the part before the hyphen
+  if (head.length > 6 || /[A-Za-z]{3}/.test(head)) return false;
+  // Plain 1-2 digit numbers are checked too: a stacked "¼" is sometimes read as "4".
+  return /^[([]?\d*(?:[%¥Y¢£€§]|V[a-z2-4]|\/\d)[%¥Y¢£€§\w']*[)\],.;]?$/.test(head) || /^[([]?\d{1,2}$/.test(head);
 }
 
 function components(ink, w, h) {
@@ -1474,14 +1679,20 @@ function findFractionGlyph(gray, W, H, bbox) {
 async function repairFractions(words, gray, W, H, readDigit) {
   for (const word of words) {
     if (!isSuspectToken(word.text)) continue;
-    const g = findFractionGlyph(gray, W, H, word.bbox);
+    let box = word.bbox;
+    const suffix = (word.text.match(/-[a-z]{2,}$/i) || [''])[0];
+    if (suffix) { // only look at the glyph before "-inch"
+      const h = box.y1 - box.y0, headLen = word.text.length - suffix.length;
+      box = { ...box, x1: Math.min(box.x1, box.x0 + Math.round(h * 1.25 * headLen)) };
+    }
+    const g = findFractionGlyph(gray, W, H, box);
     if (!g) continue;
     const n = await readDigit(g.num), d = await readDigit(g.den);
     if (!/^[1-9]$/.test(n) || !/^[1-9]$/.test(d) || Number(n) >= Number(d)) continue;
-    const t = word.text;
+    const t = word.text.slice(0, word.text.length - suffix.length);
     const open = /^[([]/.test(t) ? t[0] : '';
-    const close = (t.match(/[)\],.;]$/) || [''])[0];
-    const lead = t.slice(open.length).match(/^\d+/);
+    const close = (t.match(/[)\],.;]$/) || [''])[0] + suffix;
+    const lead = /^[([]?\d{1,2}$/.test(t) ? null : t.slice(open.length).match(/^\d+/); // a lone "4" was the fraction itself
     const tallNeeded = open ? 2 : 1; // an opening paren is also a tall shape
     const whole = lead && g.tallCount >= tallNeeded ? lead[0] : '';
     const frac = GLYPH[`${n}/${d}`] || `${whole ? ' ' : ''}${n}/${d}`;
@@ -1560,12 +1771,21 @@ const CHROME_LINE = new RegExp([
   '^share(?: recipe)?$', '^rate (?:this|the) recipe', '^leave a (?:review|comment)', '^(?:log|sign) in',
   '^subscribe', '^read (?:more|comments)', '^\\d+ (?:comments|ratings|reviews)$', '^(?:yield|scale|convert)(?:\\s+(?:yield|scale|convert))*$',
   '^add (?:a )?comment', 'find related content', '^search$', '^(?:less|more|see more|show more|\\.\\.\\. ?more)\\W*\\w?$',
-  '^add to grocery list', 'shop (?:on instacart|ingredients)', '^rating\\b', '^comments\\b', '^time\\s*\\d',
-  '^overview\\b.*\\bcook mode', 'food stylist', 'for the new york times\\.?$', '^photo(?:graph)? by\\b',
+  '^add to grocery list', 'shop (?:on instacart|ingredients)', '^shop\\s*ingred', '^rating\\b', '^comments\\b', '^ingredient substitution', '^nutrition(?:al)? info', '^cook mode$',
+  '^overview\\b.*\\bcook mode', 'food stylist', 'for the new york times\\b', '^photo(?:graph)? by\\b',
   '^enjoy!*$', '^(?:follow|like|subscribe)\\b.*\\b(?:recipes?|more)\\b',
 ].join('|'), 'i');
 
 function lettersOnly(s) { return s.replace(/^[^A-Za-z]+/, ''); }
+
+const TAB_LABELS = ['home', 'inspiration', 'search', 'recent', 'recipe', 'box', 'saved', 'profile', 'account', 'explore', 'library', 'settings', 'more', 'shop', 'cart', 'menu', 'favorites', 'collections', 'grocery', 'list', 'discover', 'cook', 'plan', 'you'];
+// "Home nspiration Searc Recen Recipe Box": a tab bar read imperfectly.
+function looksLikeTabBar(t) {
+  const words = t.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z]/g, '')).filter(w => w.length >= 3);
+  if (words.length < 3) return false;
+  const hits = words.filter(w => TAB_LABELS.some(l => l.includes(w) || w.includes(l))).length;
+  return hits / words.length >= 0.75;
+}
 
 // Lines that are mostly hashtags, or have no words at all (like counts, stray marks).
 function isNoiseLine(t) {
@@ -1674,7 +1894,7 @@ function assemblePages(pages) {
         const name = l.text.match(PERSON_NAME);
         if (name && !sourceHint && l.text.split(/\s+/).length <= 3) sourceHint = name[1];
       }
-      else if (inBottom && TAB_WORDS.test(lettersOnly(l.text))) drop = true;
+      else if (inBottom && (TAB_WORDS.test(lettersOnly(l.text)) || looksLikeTabBar(l.text))) drop = true;
       else if (CHROME_LINE.test(lettersOnly(l.text).trim()) || CHROME_LINE.test(l.text.replace(/^(?:\S*[^A-Za-z\s]\S*\s+|[A-Za-z]{1,2}\s+)+/, ''))) drop = true;
       else if (screenshot(p) && inTop && pages.length === 1 && !titleHint && l.y1 < p.height * 0.11) {
         const t = cleanTitleLine(lettersOnly(l.text));
@@ -1724,7 +1944,14 @@ function assemblePages(pages) {
     const steps = stepNumbers(merged);
     const hasSteps = steps.length > 0 || merged.some(l => /^(?:directions?|instructions?|method|preparation)\b/i.test(l.text));
     const hasIntro = merged.some(l => /^\(?\s*prep\b|^by [A-Z]|\bservings?\b|^serves\b|^yield/i.test(l.text));
-    const rank = hasIngredients ? 1 : hasSteps ? 2 : hasIntro ? 0 : 1.5;
+    // What a page starts with says where it belongs better than what it contains:
+    // an intro page often ends with the "Ingredients" heading peeking in at the bottom.
+    const head = merged.slice(0, 3).map(l => l.text);
+    const startsIngredients = head.some(t => /^ingredients?\b/i.test(t));
+    const startsSteps = head.some(t => /^(?:step\s*\d|directions?|instructions?|method|preparation)\b/i.test(t));
+    const startsIntro = head.some(t => /^by\s+[A-Z]|^\(?\s*prep\b|^(?:total\s+)?time\b|^rating\b/i.test(t));
+    const rank = startsIngredients ? 1 : startsSteps ? 2 : startsIntro ? 0
+      : hasIngredients ? 1 : hasSteps ? 2 : hasIntro ? 0 : 1.5;
     chains.push({ merged, key: [rank, steps.length ? Math.min(...steps) : 999, order[0]] });
   }
   chains.sort((x, y) => x.key[0] - y.key[0] || x.key[1] - y.key[1] || x.key[2] - y.key[2]);
@@ -1977,6 +2204,7 @@ const state = {
   settings: { groupBy: 'aisle', installTipDismissed: false },
   filter: { q: '', cat: 'all', sort: 'az' },
   scale: {},                   // recipeId -> factor, for this session
+  units: {},                   // recipeId -> { ingredientIndex: unit view }, for this session
   draft: null,                 // photos being added on the form
 };
 
@@ -2017,9 +2245,25 @@ function starRow(rating) {
 }
 const ratingLabel = r => `${String(r).replace('.5', '½')} star${r === 1 ? '' : 's'}`;
 
+// Big star buttons. Tapping a star gives that many; tapping the same star again
+// takes off a half; a third tap clears.
+function ratingButtons(rating) {
+  return [1, 2, 3, 4, 5].map(n => {
+    const fill = rating >= n ? 'full' : rating >= n - 0.5 ? 'half' : 'empty';
+    return `<button class="rate-star" data-action="rate" data-star="${n}" aria-label="${n} star${n > 1 ? 's' : ''}" aria-pressed="${rating >= n - 0.5}"><span class="st ${fill}" aria-hidden="true">★</span></button>`;
+  }).join('');
+}
+
 function starsText(rating) {
   if (!rating) return '';
   return `<span class="stars-static" role="img" aria-label="Rated ${ratingLabel(rating)} out of 5">${starRow(rating)}</span>`;
+}
+
+const DIETS = [['gf', 'Gluten-free', 'GF'], ['df', 'Dairy-free', 'DF']];
+// "Gluten-free", "GF optional"
+function dietTags(r) {
+  const d = r.diet || {};
+  return DIETS.filter(([k]) => d[k]).map(([k, full, short]) => (d[k] === 'yes' ? full : `${short} optional`));
 }
 
 function metaSentence(r) {
@@ -2027,6 +2271,7 @@ function metaSentence(r) {
   if (r.servings) parts.push(/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings);
   if (r.prepTime) parts.push(`Prep ${r.prepTime}`);
   if (r.cookTime) parts.push(`Cook ${r.cookTime}`);
+  if (r.totalTime && !r.prepTime && !r.cookTime) parts.push(`${r.totalTime} total`);
   return parts.join('. ') + (parts.length ? '.' : '');
 }
 
@@ -2100,6 +2345,8 @@ function route() {
 
 function render() {
   if (wantWake) setWakeLock(false);
+  // Leaving a screen closes anything layered over it.
+  for (const id of ['sheet', 'photoViewer']) { const d = document.getElementById(id); if (d && d.open) d.close(); }
   const r = route();
   const tab = { home: 'home', recipe: 'home', settings: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
   document.querySelectorAll('.tab').forEach(t => {
@@ -2139,7 +2386,8 @@ function band(inner, cls = '') {
 
 function renderHome() {
   const used = CATEGORIES.filter(c => state.recipes.some(r => r.category === c));
-  const filters = [['all', 'All'], ['fav', 'Favorites'], ...used.map(c => [c, c])];
+  const dietChips = DIETS.filter(([k]) => state.recipes.some(r => (r.diet || {})[k])).map(([k, full]) => [`diet:${k}`, full]);
+  const filters = [['all', 'All'], ['fav', 'Favorites'], ...dietChips, ...used.map(c => [c, c])];
   if (!filters.some(([k]) => k === state.filter.cat)) state.filter.cat = 'all';
 
   const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -2182,8 +2430,10 @@ function renderHome() {
 function filteredRecipes() {
   const q = state.filter.q.trim().toLowerCase();
   const list = state.recipes.filter(r => {
-    if (state.filter.cat === 'fav' && !r.favorite) return false;
-    if (!['all', 'fav'].includes(state.filter.cat) && r.category !== state.filter.cat) return false;
+    const cat = state.filter.cat;
+    if (cat === 'fav' && !r.favorite) return false;
+    if (cat.startsWith('diet:') && !(r.diet || {})[cat.slice(5)]) return false;
+    if (!['all', 'fav'].includes(cat) && !cat.startsWith('diet:') && r.category !== cat) return false;
     if (!q) return true;
     const hay = [r.title, r.category, r.source, r.notes, ...(r.ingredients || [])].join(' ').toLowerCase();
     return q.split(/\s+/).every(word => hay.includes(word));
@@ -2207,7 +2457,7 @@ function tocRow(r) {
           <span class="toc-leader" aria-hidden="true"></span>
           <span class="toc-meta">${r.rating ? starsText(r.rating) : '<span class="new-tag">new</span>'}</span>
         </span>
-        ${sub ? `<span class="toc-sub">${esc(sub)}</span>` : ''}
+        ${sub || dietTags(r).length ? `<span class="toc-sub">${esc(sub)}${dietTags(r).map(t => ` <span class="diet-tag">${esc(t)}</span>`).join('')}</span>` : ''}
       </a>
       ${!CATEGORIES.includes(r.category) ? `
         <label class="quick-cat">
@@ -2274,7 +2524,8 @@ function renderRecipe(id) {
   const factor = state.scale[id] || 1;
   const canWake = 'wakeLock' in navigator;
   const itemCount = r.ingredients.filter(i => !isHeader(i)).length;
-  const pills = [r.servings && (/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings), r.prepTime && `Prep ${r.prepTime}`, r.cookTime && `Cook ${r.cookTime}`].filter(Boolean);
+  const pills = [r.servings && (/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings), r.prepTime && `Prep ${r.prepTime}`, r.cookTime && `Cook ${r.cookTime}`,
+    r.totalTime && `${r.totalTime} total`].filter(Boolean);
   const rating = r.rating || 0;
 
   view.innerHTML = `
@@ -2289,9 +2540,10 @@ function renderRecipe(id) {
       <h1 class="sign sign-title">${esc(r.title)}</h1>
       <div class="band-pills">
         ${pills.map((p, i) => `<span class="pill ${i === 0 ? 'pill-cherry' : 'pill-white'}">${esc(p)}</span>`).join('')}
-        <div class="rating pill pill-white" role="slider" tabindex="0" data-action="rate" aria-label="Your rating"
-          aria-valuemin="0" aria-valuemax="5" aria-valuenow="${rating}" aria-valuetext="${rating ? ratingLabel(rating) : 'Not rated'}">${starRow(rating)}</div>
+        ${dietTags(r).map(t => `<span class="pill pill-diet">${esc(t)}</span>`).join('')}
       </div>
+      <div class="rating" role="group" aria-label="Your rating: ${rating ? ratingLabel(rating) : 'not rated'}" id="rating">${ratingButtons(rating)}</div>
+      <p class="rating-hint" id="ratingHint">${rating ? `${ratingLabel(rating)}. Tap a star again for a half star.` : 'Tap a star to rate. Tap it again for a half star.'}</p>
       <p class="band-sub">${[r.category ? `In ${esc(r.category)}` : '', r.source ? `From ${esc(r.source)}` : ''].filter(Boolean).join('. ') || 'Not in a section yet'}</p>`, 'band-recipe')}
 
     <section class="card sec" aria-labelledby="ingHead">
@@ -2303,9 +2555,9 @@ function renderRecipe(id) {
       </div>
       ${itemCount ? `
         <ul class="ing-list">
-          ${r.ingredients.map((ing, i) => ingredientRow(ing, i, factor)).join('')}
+          ${r.ingredients.map((ing, i) => ingredientRow(ing, i, factor, (state.units[r.id] || {})[i] || 0)).join('')}
         </ul>
-        <p class="hint">Tap anything you already have to cross it off.</p>
+        <p class="hint">Tap an ingredient you already have to cross it off. Tap an underlined amount to switch units.</p>
         <button class="btn btn-primary btn-wide" data-action="add-to-list" id="addToList">Add ${plural(itemCount, 'item')} to grocery list</button>`
         : `<p class="hint">No ingredients yet. <a href="#/edit/${encodeURIComponent(r.id)}">Add them</a>.</p>`}
     </section>
@@ -2346,6 +2598,7 @@ function renderRecipe(id) {
       <p class="made-count">${r.timesMade ? `Made ${plural(r.timesMade, 'time')}, most recently ${fmtDate(r.lastMade)}.` : 'Not made yet.'}</p>
       <button class="btn btn-secondary" data-action="made">I made this</button>
     </footer>`;
+  fitNotes();
 }
 
 // Recipe options: a bottom sheet opened from the ⋯ button.
@@ -2364,6 +2617,13 @@ function openRecipeMenu(r) {
             ${CATEGORIES.map(c => `<option ${r.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
           </select>
         </label>
+        ${DIETS.map(([k, full]) => `
+          <label class="sheet-item sheet-select">
+            <span>${full}</span>
+            <select data-diet-for="${k}">
+              ${[['', 'No'], ['optional', 'Optional'], ['yes', 'Yes']].map(([v, l]) => `<option value="${v}" ${((r.diet || {})[k] || '') === v ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </label>`).join('')}
         <button class="sheet-item" data-sheet-action="share">Share recipe</button>
         ${(r.images || []).length ? `<button class="sheet-item" data-sheet-action="scans">View scanned pages (${r.images.length})</button>` : ''}
         <button class="sheet-item danger" data-sheet-action="delete">Delete recipe</button>
@@ -2373,10 +2633,16 @@ function openRecipeMenu(r) {
   sheet.showModal();
 }
 
-function ingredientRow(ing, i, factor) {
-  const { qty, item, header } = displayIngredient(ing, factor);
+function ingredientRow(ing, i, factor, view = 0) {
+  const { qty, alt, item, header, convertible } = displayIngredient(ing, factor, view);
   if (header) return `<li class="ing-head" role="presentation"><h3>${esc(item)}</h3></li>`;
-  return `<li><button class="ing" data-action="tick" data-index="${i}" aria-pressed="false"><span class="ing-qty">${esc(qty)}</span><span class="ing-item">${esc(item)}</span></button></li>`;
+  const amount = `<span class="ing-qty-main">${esc(qty)}</span>${alt ? `<span class="ing-alt">${esc(alt)}</span>` : ''}`;
+  return `<li class="ing-row" data-index="${i}">
+    ${convertible
+      ? `<button class="ing-qty convertible" data-action="convert" data-index="${i}" aria-label="${esc(qty)}${alt ? `, or ${esc(alt)}` : ''}. Switch units">${amount}</button>`
+      : `<span class="ing-qty">${amount}</span>`}
+    <button class="ing" data-action="tick" data-index="${i}" aria-pressed="false"><span class="ing-item">${esc(item)}</span></button>
+  </li>`;
 }
 
 function recipeToText(r, factor = 1) {
@@ -2419,7 +2685,7 @@ function editList(kind, values, flags = {}) {
 function renderForm(id) {
   const existing = id ? state.recipes.find(r => r.id === id) : null;
   if (id && !existing) return notFound();
-  const r = existing || { title: '', category: '', servings: '', prepTime: '', cookTime: '', source: '', ingredients: [], steps: [], notes: '' };
+  const r = existing || { title: '', category: '', servings: '', prepTime: '', cookTime: '', totalTime: '', source: '', ingredients: [], steps: [], notes: '', diet: {} };
   state.draft = { id, photos: (r.images || []).map(src => ({ src })) };
 
   view.innerHTML = `
@@ -2472,7 +2738,20 @@ function renderForm(id) {
             <label for="f-cook">Cook time</label>
             <input id="f-cook" name="cookTime" value="${esc(r.cookTime)}" placeholder="1 hour" autocomplete="off">
           </div>
+          <div class="field">
+            <label for="f-total">Total time</label>
+            <input id="f-total" name="totalTime" value="${esc(r.totalTime || '')}" placeholder="45 min" autocomplete="off">
+          </div>
         </div>
+        ${DIETS.map(([k, full]) => `
+          <fieldset class="diet-field">
+            <legend>${full}</legend>
+            <div class="seg">
+              ${[['', 'No'], ['optional', 'Optional'], ['yes', 'Yes']].map(([v, l]) => `
+                <label><input type="radio" name="diet-${k}" value="${v}" ${((r.diet || {})[k] || '') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}
+            </div>
+          </fieldset>`).join('')}
+        <p class="hint" id="dietHint" hidden>Gluten-free and dairy-free were suggested from the ingredients. Check them before saving.</p>
         <div class="field">
           <label for="f-source">From</label>
           <input id="f-source" name="source" value="${esc(r.source)}" placeholder="Grandma, a cookbook, a website" autocomplete="off">
@@ -2511,7 +2790,11 @@ function renderForm(id) {
     </form>`;
   renderPhotoTray();
   view.querySelectorAll('.row-input').forEach(autosize);
+  fitNotes();
 }
+
+// After a screen renders, grow every notes box to show its whole text.
+function fitNotes() { view.querySelectorAll('.notes-input').forEach(autosize); }
 
 function autosize(el) {
   el.style.height = 'auto';
@@ -2676,12 +2959,15 @@ async function runScan() {
       return;
     }
     if (parsed.title) form.title.value = parsed.title;
-    for (const key of ['servings', 'prepTime', 'cookTime', 'source']) if (parsed[key]) form[key].value = parsed[key];
+    for (const key of ['servings', 'prepTime', 'cookTime', 'totalTime', 'source']) if (parsed[key]) form[key].value = parsed[key];
+    const diet = suggestDiet(parsed);
+    for (const [k] of DIETS) { const el = form.querySelector(`input[name="diet-${k}"][value="${diet[k]}"]`); if (el) el.checked = true; }
+    document.getElementById('dietHint').hidden = !(diet.gf || diet.df);
     if (!form.category.value) form.category.value = guessCategory(parsed) || '';
     const flags = kind => Object.fromEntries(parsed.issues.filter(x => x.field === kind && x.index != null).map(x => [x.index, x.message]));
     setListValues(document.getElementById('ingList'), parsed.ingredients, flags('ingredients'));
     setListValues(document.getElementById('stepList'), parsed.steps, flags('steps'));
-    if (parsed.notes && !form.notes.value.trim()) form.notes.value = parsed.notes;
+    if (parsed.notes && !form.notes.value.trim()) { form.notes.value = parsed.notes; autosize(form.notes); }
     const count = parsed.ingredients.filter(i => !isHeader(i)).length;
     label.textContent = `Found ${plural(count, 'ingredient')} and ${plural(parsed.steps.length, 'step')}.`;
     showIssues(parsed.issues);
@@ -2750,6 +3036,8 @@ async function submitForm(form) {
       servings: form.servings.value.trim(),
       prepTime: form.prepTime.value.trim(),
       cookTime: form.cookTime.value.trim(),
+      totalTime: form.totalTime.value.trim(),
+      diet: Object.fromEntries(DIETS.map(([k]) => [k, (form.querySelector(`input[name="diet-${k}"]:checked`) || {}).value || ''])),
       source: form.source.value.trim(),
       ingredients,
       steps,
@@ -2914,14 +3202,28 @@ async function restoreBackup(file) {
 
 // ---------- actions ----------
 
-async function setRating(el, v) {
+async function setRating(v) {
   const r = currentRecipe(); if (!r) return;
-  r.rating = r.rating === v ? 0 : v;
+  r.rating = v;
   await saveRecipe(r);
-  el.innerHTML = starRow(r.rating);
-  el.setAttribute('aria-valuenow', r.rating);
-  el.setAttribute('aria-valuetext', r.rating ? ratingLabel(r.rating) : 'Not rated');
-  toast(r.rating ? `Rated ${ratingLabel(r.rating)}` : 'Rating cleared');
+  const box = document.getElementById('rating');
+  if (box) {
+    box.innerHTML = ratingButtons(v);
+    box.setAttribute('aria-label', `Your rating: ${v ? ratingLabel(v) : 'not rated'}`);
+    const pressed = box.querySelector(`[data-star="${Math.ceil(v) || 1}"]`);
+    if (pressed) pressed.focus({ preventScroll: true });
+  }
+  const hint = document.getElementById('ratingHint');
+  if (hint) hint.textContent = v ? `${ratingLabel(v)}. Tap a star again for a half star.` : 'Rating cleared. Tap a star to rate.';
+}
+
+function redrawIngredients(r, focusIndex = null) {
+  const list = document.querySelector('.ing-list'); if (!list) return;
+  const crossed = new Set([...list.querySelectorAll('.ing[aria-pressed="true"]')].map(b => b.dataset.index));
+  const factor = state.scale[r.id] || 1, units = state.units[r.id] || {};
+  list.innerHTML = r.ingredients.map((ing, i) => ingredientRow(ing, i, factor, units[i] || 0)).join('');
+  crossed.forEach(i => { const b = list.querySelector(`.ing[data-index="${i}"]`); if (b) { b.setAttribute('aria-pressed', 'true'); b.closest('.ing-row').classList.add('crossed'); } });
+  if (focusIndex != null) list.querySelector(`.ing-qty[data-index="${focusIndex}"]`)?.focus({ preventScroll: true });
 }
 
 async function shareRecipe(r) {
@@ -2983,14 +3285,12 @@ const actions = {
   },
   'clear-filters': () => { state.filter.q = ''; state.filter.cat = 'all'; renderHome(); },
 
-  'rate': (el, e) => {
-    // Tap position picks the value in half stars; tapping the current value clears it.
-    const box = el.getBoundingClientRect();
-    if (!box.width || e.detail === 0) return; // keyboard "click" is handled by keydown
-    const pad = 6;
-    const x = Math.min(Math.max(e.clientX - box.left - pad, 0), box.width - 2 * pad);
-    const v = Math.max(0.5, Math.ceil((x / (box.width - 2 * pad)) * 10) / 2);
-    setRating(el, v);
+  'rate': el => {
+    const r = currentRecipe(); if (!r) return;
+    const n = Number(el.dataset.star), cur = r.rating || 0;
+    // n -> n-½ -> cleared -> n
+    const next = cur === n ? n - 0.5 : cur === n - 0.5 ? 0 : n;
+    setRating(next);
   },
   'fav': async el => {
     const r = currentRecipe(); if (!r) return;
@@ -3004,14 +3304,20 @@ const actions = {
     const f = Number(el.dataset.factor);
     state.scale[r.id] = f;
     document.querySelectorAll('.scaler button').forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.factor) === f));
-    document.querySelectorAll('.ing').forEach(b => {
-      const { qty, item } = displayIngredient(r.ingredients[Number(b.dataset.index)], f);
-      b.querySelector('.ing-qty').textContent = qty;
-      b.querySelector('.ing-item').textContent = item;
-    });
+    redrawIngredients(r);
+  },
+  'convert': el => {
+    const r = currentRecipe(); if (!r) return;
+    const i = Number(el.dataset.index);
+    const views = unitViews(r.ingredients[i]);
+    const units = state.units[r.id] || (state.units[r.id] = {});
+    units[i] = ((units[i] || 0) + 1) % views;
+    redrawIngredients(r, i);
   },
   'tick': el => {
-    el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') !== 'true');
+    const on = el.getAttribute('aria-pressed') !== 'true';
+    el.setAttribute('aria-pressed', on);
+    el.closest('.ing-row')?.classList.toggle('crossed', on);
     const left = document.querySelectorAll('.ing[aria-pressed="false"]').length;
     const btn = document.getElementById('addToList');
     btn.disabled = left === 0;
@@ -3118,18 +3424,6 @@ view.addEventListener('pointerdown', e => {
 });
 
 view.addEventListener('keydown', e => {
-  const slider = e.target.closest('.rating[role="slider"]');
-  if (slider) {
-    const now = Number(slider.getAttribute('aria-valuenow')) || 0;
-    const next = { ArrowRight: now + 0.5, ArrowUp: now + 0.5, ArrowLeft: now - 0.5, ArrowDown: now - 0.5, Home: 0.5, End: 5 }[e.key];
-    if (next !== undefined) {
-      e.preventDefault();
-      const v = Math.min(5, Math.max(0.5, next));
-      if (v !== now) setRating(slider, v);
-    }
-    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); setRating(slider, now); }
-    return;
-  }
   const grip = e.target.closest('[data-grip]');
   if (grip) return moveWithKeys(e, grip);
   const input = e.target.closest('.edit-row .row-input');
@@ -3166,6 +3460,7 @@ view.addEventListener('paste', e => {
 
 view.addEventListener('input', e => {
   if (e.target.id === 'search') { state.filter.q = e.target.value; renderContents(); }
+  if (e.target.classList.contains('notes-input')) autosize(e.target);
   if (e.target.classList.contains('row-input')) {
     autosize(e.target);
     const row = e.target.closest('.needs-check');
@@ -3259,6 +3554,12 @@ sheet.addEventListener('change', async e => {
   const t = e.target;
   const r = currentRecipe(); if (!r) return;
   if (t.dataset.categoryFor) { sheet.close(); await setCategory(r.id, t.value); renderRecipe(r.id); }
+  if (t.dataset.dietFor) {
+    r.diet = { ...(r.diet || {}), [t.dataset.dietFor]: t.value };
+    await saveRecipe(r);
+    renderRecipe(r.id);
+    toast(dietTags(r).length ? `Marked ${dietTags(r).join(', ')}` : 'Diet tags cleared');
+  }
   if (t.hasAttribute('data-photo-input')) { sheet.close(); await addDishPhotos(r, t.files); t.value = ''; }
 });
 
