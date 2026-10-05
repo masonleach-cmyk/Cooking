@@ -696,6 +696,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
+const APP_VERSION = 'v6';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -861,13 +862,33 @@ function titleCase(s) {
 
 // ---------- classification ----------
 
+// Heading words, matched approximately so a misread ("ngredients", "lnstructions") still counts.
+const FUZZY_HEADINGS = [['ingredients', 'ingredients'], ['ingredient', 'ingredients'], ['directions', 'steps'], ['instructions', 'steps'],
+  ['preparation', 'steps'], ['method', 'steps'], ['notes', 'notes']];
+function editDistance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
 function headingOf(s) {
   const plain = s.replace(/[:.\-–—]+$/, '').trim();
+  // Allow "Directions: Preheat the oven..." on one line.
+  const restAfterColon = () => { const after = s.includes(':') ? s.slice(s.indexOf(':') + 1).trim() : ''; return after.length > 3 ? after : ''; };
   for (const [kind, re] of Object.entries(HEADINGS)) {
-    if (re.test(plain) && (plain.length < 32 || /:/.test(s))) {
-      // Allow "Directions: Preheat the oven..." on one line.
-      const after = s.includes(':') ? s.slice(s.indexOf(':') + 1).trim() : '';
-      return { kind, rest: after.length > 3 ? after : '' };
+    if (re.test(plain) && (plain.length < 32 || /:/.test(s))) return { kind, rest: restAfterColon() };
+  }
+  // Approximate: the first word alone (optionally with a colon), close to a heading word.
+  const head = s.split(':')[0].trim();
+  const word = head.toLowerCase().replace(/[^a-z]/g, '');
+  if (word.length >= 5 && head.split(/\s+/).length <= 2 && (s.includes(':') || head.length === plain.length)) {
+    for (const [target, kind] of FUZZY_HEADINGS) {
+      const allowed = target.length >= 9 ? 2 : 1;
+      if (Math.abs(word.length - target.length) <= allowed && editDistance(word, target) <= allowed) return { kind, rest: restAfterColon() };
     }
   }
   return null;
@@ -897,7 +918,8 @@ const META = {
   cookTime: new RegExp(`\\b(?:cook(?:ing)?|bake|baking)(?:\\s*time\\s*:?|\\s*:)\\s*${TIME}`, 'i'),
   source: /\b(?:from the kitchen of|recipe from|from)\s*:\s*(.+)$/i,
 };
-const SERVINGS_LINE = /^((?:about\s+)?[\d½¼¾]+(?:\s*(?:-|–|to)\s*\d+)?)\s+(?:servings?|portions?|people)\b/i;
+// Tolerates misreads like "4 servines" / "4 sernings".
+const SERVINGS_LINE = /^((?:about\s+)?[\d½¼¾]+(?:\s*(?:-|–|to)\s*\d+)?)\s+(?:serv\w*|ser\w{2}ngs?|se\w{1,2}ings?|portions?|people)\b/i;
 // App/website labels that aren't part of the recipe.
 const UI_LINE = /^(?:(?:yield|scale|convert|servings|print|share|save|rate|\d?x|ix|ixv)\s*)+$/i;
 // "Bake 30 min" alone on a short line is metadata; inside a sentence it's a step.
@@ -919,6 +941,10 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
     if (!s || isNoise(s)) { if (lines.length && lines[lines.length - 1] !== null) lines.push(null); continue; }
     lines.push(s);
   }
+
+  // Step markers with a misread digit ("STEPS" for "STEP 5", "STEP l" for "STEP 1"):
+  // fix them when the neighbouring step numbers make the intended number clear.
+  lines = fixStepMarkers(lines);
 
   // Pull out metadata lines (serves, times, source) wherever they appear.
   lines = lines.filter(s => {
@@ -1060,6 +1086,26 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
 }
 
 // ---------- section builders ----------
+
+const DIGIT_LOOKALIKE = { S: '5', s: '5', O: '0', o: '0', l: '1', I: '1', i: '1', '|': '1', B: '8', Z: '2', z: '2', G: '6', g: '9', q: '9', A: '4', T: '7' };
+function fixStepMarkers(lines) {
+  const markerNum = s => { const m = s && s.match(/^step\s*(\d{1,2})\s*[.:)]?$/i); return m ? Number(m[1]) : null; };
+  if (lines.filter(markerNum).length < 2) return lines;
+  return lines.map((s, i) => {
+    if (!s || markerNum(s) !== null) return s;
+    const m = s.match(/^(step)\s*([0-9SsOolIi|BZzGgqAT]{1,3})\s*[.:)]?$/i);
+    if (!m || /^\d+$/.test(m[2])) return s;
+    // Readings to try for "5S": "55", "5"; for "S": "5"
+    const mapped = [...m[2]].map(c => DIGIT_LOOKALIKE[c] ?? c).join('');
+    const guesses = [...new Set([mapped, mapped.slice(0, 1), mapped.slice(0, 2), m[2].replace(/\D/g, '')])].map(Number).filter(Boolean);
+    // Accept only a reading that fits the sequence around it.
+    let prev = null, next = null;
+    for (let j = i - 1; j >= 0 && prev === null; j--) prev = markerNum(lines[j]);
+    for (let j = i + 1; j < lines.length && next === null; j++) next = markerNum(lines[j]);
+    const fit = guesses.find(g => (prev !== null && g === prev + 1) || (next !== null && g === next - 1));
+    return fit ? `STEP ${fit}` : s;
+  });
+}
 
 function splitTwoColumn(s) {
   // "2 cups flour 1/2 tsp salt" -> two ingredients (common with two-column cards).
@@ -1719,7 +1765,7 @@ function pageFromOCR(data, width, height) {
       const text = words.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim();
       if (!text) continue;
       const conf = words.reduce((a, w) => a + (w.confidence ?? 100), 0) / words.length;
-      lines.push({ text, y0: l.bbox.y0, y1: l.bbox.y1, height: l.bbox.y1 - l.bbox.y0, conf, brk: first });
+      lines.push({ text, x0: l.bbox.x0, x1: l.bbox.x1, y0: l.bbox.y0, y1: l.bbox.y1, height: l.bbox.y1 - l.bbox.y0, conf, brk: first });
       first = false;
     }
   }
@@ -1730,6 +1776,25 @@ function pageFromOCR(data, width, height) {
     && !(l.conf < 75 && !/[A-Za-z]{4}/.test(l.text))); // shaky read with no real words: "mo are ee. a"
   kept.forEach((l, i) => { if (i && !l.brk && !lines.includes(kept[i - 1])) l.brk = true; });
   return { width, height, lines: kept };
+}
+
+/**
+ * How badly a page's read is broken into fragments (0 = clean). Automatic layout can
+ * mistake a text column for two, splitting "Pour half…" into "Po" + "ur half…".
+ */
+function fragmentation(page) {
+  const lines = page.lines.filter(l => l.text.trim());
+  if (lines.length < 6) return 0;
+  const tiny = lines.filter(l => l.text.replace(/[^A-Za-z]/g, '').length <= 3 && !/^\d|^(?:step|tip)\b/i.test(l.text)).length;
+  // Pieces of text side by side on the same row with almost no gap: a split column.
+  let split = 0;
+  if (lines.every(l => l.x0 != null)) {
+    for (const a of lines) {
+      if (lines.some(b => b !== a && b.x0 >= a.x1 && b.x0 - a.x1 < page.width * 0.03
+        && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 0.5 * Math.min(a.y1 - a.y0, b.y1 - b.y0))) split++;
+    }
+  }
+  return Math.max(tiny, split * 2) / lines.length;
 }
 
 // ---------- 3. Assemble pages ----------
@@ -1770,7 +1835,7 @@ const CHROME_LINE = new RegExp([
   '^cooked(?!\\s+[a-z]{3,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$', '^saved\\b',
   '^share(?: recipe)?$', '^rate (?:this|the) recipe', '^leave a (?:review|comment)', '^(?:log|sign) in',
   '^subscribe', '^read (?:more|comments)', '^\\d+ (?:comments|ratings|reviews)$', '^(?:yield|scale|convert)(?:\\s+(?:yield|scale|convert))*$',
-  '^add (?:a )?comment', 'find related content', '^search$', '^(?:less|more|see more|show more|\\.\\.\\. ?more)\\W*\\w?$',
+  '^add (?:a )?comment', 'find\\s*rel\\w*\\s*(?:con\\w*)?', '\\bfind\\s+\\w{2,9}\\s+cont\\w*', '^search$', '^(?:less|more|see more|show more|\\.\\.\\. ?more)\\W*\\w?$',
   '^add to grocery list', 'shop (?:on instacart|ingredients)', '^shop\\s*ingred', '^rating\\b', '^comments\\b', '^ingredient substitution', '^nutrition(?:al)? info', '^cook mode$',
   '^overview\\b.*\\bcook mode', 'food stylist', 'for the new york times\\b', '^photo(?:graph)? by\\b',
   '^enjoy!*$', '^(?:follow|like|subscribe)\\b.*\\b(?:recipes?|more)\\b',
@@ -1780,11 +1845,15 @@ function lettersOnly(s) { return s.replace(/^[^A-Za-z]+/, ''); }
 
 const TAB_LABELS = ['home', 'inspiration', 'search', 'recent', 'recipe', 'box', 'saved', 'profile', 'account', 'explore', 'library', 'settings', 'more', 'shop', 'cart', 'menu', 'favorites', 'collections', 'grocery', 'list', 'discover', 'cook', 'plan', 'you'];
 // "Home nspiration Searc Recen Recipe Box": a tab bar read imperfectly.
-function looksLikeTabBar(t) {
+function nearLabel(w) {
+  return TAB_LABELS.some(l => l.includes(w) || w.includes(l) || (w.length >= 3 && levenshtein(w, l.slice(0, w.length)) <= 1));
+}
+function looksLikeTabBar(t, atVeryBottom = false) {
   const words = t.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z]/g, '')).filter(w => w.length >= 3);
-  if (words.length < 3) return false;
-  const hits = words.filter(w => TAB_LABELS.some(l => l.includes(w) || w.includes(l))).length;
-  return hits / words.length >= 0.75;
+  if (/recipe\s*box/i.test(t) && atVeryBottom) return true; // the app's own tab label
+  if (words.length < 2) return false;
+  const hits = words.filter(nearLabel).length;
+  return hits / words.length >= 0.75 || (atVeryBottom && hits >= 2 && words.length <= 5);
 }
 
 // Lines that are mostly hashtags, or have no words at all (like counts, stray marks).
@@ -1810,7 +1879,8 @@ function cleanTitleLine(s) {
     if (/^[A-Za-z][A-Za-z'’&-]*$/.test(w) || (out.length && /^(?:&|and|with|of|the|a)$/i.test(w))) out.push(w);
     else if (out.length) break;
   }
-  while (out.length > 1 && /^[A-Z]{1,2}$/.test(out[out.length - 1])) out.pop(); // trailing icon letters ("GJ")
+  // Trailing icon letters ("GJ", "a"): trim them before judging the title.
+  while (out.length > 1 && (/^[A-Z]{1,2}$/.test(out[out.length - 1]) || /^[a-z]$/.test(out[out.length - 1]))) out.pop();
   // A real title bar reads like a title: starts with a capital, no stray single lowercase letters.
   if (!out.length || !/^[A-Z0-9]/.test(out[0]) || out.some(w => /^[a-z]$/.test(w))) return '';
   if (CHROME_LINE.test(out.join(' '))) return '';
@@ -1857,12 +1927,20 @@ function assemblePages(pages) {
   const topZone = p => l => l.y1 < p.height * 0.12;
   const bottomZone = p => l => l.y0 > p.height * 0.88;
 
-  // Text repeated at the top or bottom of several screenshots is app chrome.
-  const repeatedTop = new Map(), repeatedBottom = new Map();
+  // Text repeated at the top or bottom of several screenshots is app chrome. Each read
+  // can pick up different stray marks, so compare loosely, and compare title bars by
+  // their cleaned title ("< Marry Me Chicken (1k" and "Marry Me Chicken @" match).
+  const countLoose = (zone) => {
+    const keys = pages.map(p => p.lines.filter(zone(p)).map(l => norm(l.text)));
+    return key => keys.filter(list => list.some(k => k === key || looselySame(k, key))).length;
+  };
+  const topCount = countLoose(topZone), bottomCount = countLoose(bottomZone);
+  const titleCounts = new Map();
   for (const p of pages) {
-    for (const l of p.lines.filter(topZone(p))) repeatedTop.set(norm(l.text), (repeatedTop.get(norm(l.text)) || 0) + 1);
-    for (const l of p.lines.filter(bottomZone(p))) repeatedBottom.set(norm(l.text), (repeatedBottom.get(norm(l.text)) || 0) + 1);
+    const seen = new Set(p.lines.filter(topZone(p)).map(l => cleanTitleLine(lettersOnly(l.text))).filter(Boolean));
+    for (const t of seen) titleCounts.set(t, (titleCounts.get(t) || 0) + 1);
   }
+  const repeatedTop = { get: key => topCount(key) }, repeatedBottom = { get: key => bottomCount(key) };
 
   // Pinned elements sit at the same spot on every screenshot (author line, video
   // caption stickers, like counts); scrolled content moves between screenshots.
@@ -1884,9 +1962,10 @@ function assemblePages(pages) {
       if (author) { if (!sourceHint) sourceHint = author[1]; drop = true; }
       else if (inTop && l.y1 < p.height * 0.06 && STATUS_BAR.test(l.text)) drop = true;
       else if (isNoiseLine(l.text) || LOCATION.test(l.text)) drop = true;
-      else if (inTop && pages.length > 1 && repeatedTop.get(key) >= 2) {
+      else if (inTop && pages.length > 1 && (repeatedTop.get(key) >= 2 || titleCounts.get(cleanTitleLine(lettersOnly(l.text))) >= 2)) {
         drop = true;
-        if (!titleHint) titleHint = cleanTitleLine(lettersOnly(l.text));
+        const t = cleanTitleLine(lettersOnly(l.text));
+        if (!titleHint && t && titleCounts.get(t) >= 2) titleHint = t;
       }
       else if (inBottom && pages.length > 1 && repeatedBottom.get(key) >= 2) drop = true;
       else if (pages.length > 1 && pinned(index, l)) {
@@ -1894,7 +1973,7 @@ function assemblePages(pages) {
         const name = l.text.match(PERSON_NAME);
         if (name && !sourceHint && l.text.split(/\s+/).length <= 3) sourceHint = name[1];
       }
-      else if (inBottom && (TAB_WORDS.test(lettersOnly(l.text)) || looksLikeTabBar(l.text))) drop = true;
+      else if (inBottom && (TAB_WORDS.test(lettersOnly(l.text)) || looksLikeTabBar(l.text, l.y0 > p.height * 0.9))) drop = true;
       else if (CHROME_LINE.test(lettersOnly(l.text).trim()) || CHROME_LINE.test(l.text.replace(/^(?:\S*[^A-Za-z\s]\S*\s+|[A-Za-z]{1,2}\s+)+/, ''))) drop = true;
       else if (screenshot(p) && inTop && pages.length === 1 && !titleHint && l.y1 < p.height * 0.11) {
         const t = cleanTitleLine(lettersOnly(l.text));
@@ -2143,7 +2222,18 @@ async function readRecipePhotos(files, onProgress = () => {}) {
     for (page = 0; page < count; page++) {
       onProgress({ label: label(), fraction: page / count });
       const prepared = await prepareForOCR(files[page]);
-      const { data } = await worker.recognize(prepared.canvas, {}, { text: true, blocks: true });
+      let { data } = await worker.recognize(prepared.canvas, {}, { text: true, blocks: true });
+
+      // A fragmented read means the automatic layout split a text column: reread the
+      // page as one block of text and keep whichever read is cleaner.
+      const first = fragmentation(pageFromOCR(data, prepared.width, prepared.height));
+      if (first > 0.15) {
+        onProgress({ label: `${label()} (second pass)`, fraction: (page + 0.5) / count });
+        await worker.setParameters({ tessedit_pageseg_mode: '6' });
+        const retry = (await worker.recognize(prepared.canvas, {}, { text: true, blocks: true })).data;
+        await worker.setParameters({ tessedit_pageseg_mode: '3' });
+        if (fragmentation(pageFromOCR(retry, prepared.width, prepared.height)) < first) data = retry;
+      }
 
       // Repair misread fractions (½, ¼, ¾…) by reading their digits one at a time.
       const words = (data.blocks || []).flatMap(b => b.paragraphs.flatMap(p => p.lines.flatMap(l => l.words)));
@@ -2164,7 +2254,9 @@ async function readRecipePhotos(files, onProgress = () => {}) {
       if (digitMode) await worker.setParameters({ tessedit_pageseg_mode: '3', tessedit_char_whitelist: '' });
       quiet = false;
 
-      pages.push(pageFromOCR(data, prepared.width, prepared.height));
+      const pageResult = pageFromOCR(data, prepared.width, prepared.height);
+      pageResult.secondPass = first > 0.15;
+      pages.push(pageResult);
     }
   } finally {
     progressHandler = null;
@@ -2177,6 +2269,9 @@ async function readRecipePhotos(files, onProgress = () => {}) {
     text: linesToText(lines),
     lines: pages.flatMap(p => p.lines.map(l => ({ text: l.text, height: l.height }))),
     titleHint, sourceHint, gaps,
+    // For troubleshooting: what was read on each photo, line by line.
+    report: pages.map((p, i) => `--- Photo ${i + 1} (${p.width}×${p.height}${p.secondPass ? ', reread as one block' : ''}) ---\n`
+      + p.lines.map(l => `${Math.round(l.y0 / p.height * 100)}%  ${l.text}`).join('\n')).join('\n\n'),
   };
 }
 
@@ -2706,7 +2801,10 @@ function renderForm(id) {
           <div class="progress-track"><span class="progress-fill"></span></div>
           <p class="progress-label" aria-live="polite"></p>
         </div>
-        <details class="raw" id="rawText" hidden><summary>Show everything the scanner read</summary><pre></pre></details>
+        <details class="raw" id="rawText" hidden><summary>Show everything the scanner read</summary><pre></pre>
+          <button type="button" class="btn btn-chip" data-action="copy-report">Copy scan report</button>
+          <p class="hint">If a recipe reads in wrong, paste this report to whoever is helping you fix it.</p>
+        </details>
       </section>
 
       <section class="card sec attention" id="issues" aria-labelledby="issuesHead" hidden></section>
@@ -2948,6 +3046,11 @@ async function runScan() {
       fill.style.width = `${Math.round(fraction * 100)}%`;
     });
     const parsed = parseRecipeText(result.text, result.lines, result.titleHint, { sourceHint: result.sourceHint, gaps: result.gaps });
+    state.lastScanReport = [
+      `Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''} scan report, ${new Date().toLocaleString()}`,
+      `Photos (in the order added): ${photos.map((p, i) => (p.file && p.file.name) || `photo ${i + 1}`).join(', ')}`,
+      '', result.report, '', '--- Parsed ---', JSON.stringify({ ...parsed, issues: parsed.issues.map(x => x.message) }, null, 2),
+    ].join('\n');
 
     const raw = document.getElementById('rawText');
     raw.hidden = false;
@@ -3155,6 +3258,11 @@ async function renderSettings() {
           <li>Tap Add to Home Screen, then Add.</li>
         </ol>
         <p class="hint">The Home Screen app keeps its own recipes, separate from Safari. Add recipes from the Home Screen app, or move them over with a backup file.</p>
+      </section>
+
+      <section class="card sec">
+        <h2 class="sec-title">About</h2>
+        <p>Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}. Updates install automatically the next time you open the app while online.</p>
       </section>
 
       <section class="card sec">
@@ -3375,6 +3483,10 @@ const actions = {
     renderPhotoTray();
   },
   'scan': () => runScan(),
+  'copy-report': async () => {
+    if (!state.lastScanReport) return;
+    toast((await copyText(state.lastScanReport)) ? 'Scan report copied' : 'Copying failed on this device');
+  },
   'row-add': el => addRow(document.getElementById(el.dataset.list)),
   'row-remove': el => {
     const row = el.closest('.edit-row');
