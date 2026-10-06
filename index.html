@@ -2808,7 +2808,12 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
   .gx-card.just-chosen { animation: none; }
 }
 
-/* ---------- settings: notes on your kitchen's city, under the globe window ---------- */
+/* ---------- Tastes of the World screen: the globe window, then notes on your kitchen's city ---------- */
+.world p { max-width: 34em; }
+.world .theme-field { margin-top: 0; padding-top: 0; border-top: 0; }
+.nav-right .band-world + .band-settings { margin-left: .15rem; }
+.appearance-world { margin-bottom: 0; }
+.appearance-world svg { width: 1.05em; height: 1.05em; vertical-align: -.17em; }
 .taste-head { margin-bottom: .75rem; }
 .taste-kicker { margin: 0 0 .2rem; font: 800 .7rem/1.2 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--cherry); }
 .taste .sec-title { margin: 0; overflow-wrap: anywhere; }
@@ -3187,7 +3192,7 @@ html.hdr-past body::before { visibility: hidden; }
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v22';
+const APP_VERSION = 'v23';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -5350,6 +5355,7 @@ const ICONS = {
   grip: '<svg viewBox="0 0 16 24" width="14" height="22" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="6" r="1.6"/><circle cx="11" cy="6" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="12" r="1.6"/><circle cx="5" cy="18" r="1.6"/><circle cx="11" cy="18" r="1.6"/></g></svg>',
   remove: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   settings: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.4 12h17.2M12 3.4c2.4 2.4 3.6 5.3 3.6 8.6s-1.2 6.2-3.6 8.6M12 3.4C9.6 5.8 8.4 8.7 8.4 12s1.2 6.2 3.6 8.6M5 7.4h14M5 16.6h14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
   camera: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
 };
 
@@ -5577,7 +5583,7 @@ function renderScreen() {
   closeGlobe(true);
   for (const id of ['sheet', 'photoViewer']) { const d = document.getElementById(id); if (d && d.open) d.close(); }
   const r = route();
-  const tab = { home: 'home', recipe: 'home', settings: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
+  const tab = { home: 'home', recipe: 'home', settings: 'home', world: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
   document.querySelectorAll('.tab').forEach(t => {
     if (t.dataset.tab === tab) t.setAttribute('aria-current', 'page');
     else t.removeAttribute('aria-current');
@@ -5591,6 +5597,7 @@ function renderScreen() {
     case 'edit': renderForm(r.id); break;
     case 'list': renderList(); break;
     case 'settings': renderSettings(); break;
+    case 'world': renderWorld(); break;
     default: location.replace('#/'); return;
   }
   window.scrollTo(0, 0);
@@ -5640,7 +5647,7 @@ function renderHome() {
     ${band(`
       <div class="sign-plate"><h1 class="sign">Recipe Box</h1></div>
       <p class="band-sub" id="bookCount"></p>`, 'band-home',
-      { title: 'Recipe Box', right: `<a class="icon-btn band-settings" href="#/settings" aria-label="Settings">${ICONS.settings}</a>` })}
+      { title: 'Recipe Box', right: `<a class="icon-btn band-settings band-world" href="#/world" aria-label="Tastes of the World: themes and the places they come from">${ICONS.globe}</a><a class="icon-btn band-settings" href="#/settings" aria-label="Settings">${ICONS.settings}</a>` })}
     ${showInstall ? `
       <aside class="card notice">
         <p>Keep Recipe Box on your Home Screen: tap Share in Safari, then Add to Home Screen.</p>
@@ -8361,9 +8368,8 @@ async function renderSettings() {
           </div>
           <p class="hint">Automatic follows your iPhone’s Light and Dark setting.</p>
         </fieldset>
-        ${themeWindowMarkup()}
+        <p class="hint appearance-world">Kitchen themes are on the globe now: tap ${ICONS.globe} beside Settings, or open <a href="#/world">Tastes of the World</a>.</p>
       </section>
-${tasteMarkup()}
 
       <section class="card sec" aria-labelledby="webSetupHead">
         <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking</h2>
@@ -8420,6 +8426,18 @@ ${tasteMarkup()}
         <p>Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}. Updates install on their own when you're online.</p>
         <button class="text-btn danger" data-action="delete-all">Delete all recipes</button>
       </footer>
+    </section>`;
+}
+
+// ---------- Tastes of the World: the theme globe and notes on your kitchen's city ----------
+// Opened from the globe beside Settings on the contents page.
+function renderWorld() {
+  view.innerHTML = `
+    ${band(`<h1 class="sign">Tastes of the World</h1>`, 'band-form', { left: backTo('#/', 'Recipes'), title: 'Tastes of the World' })}
+    <section class="world">
+      <section class="card sec" aria-label="Theme">${themeWindowMarkup()}
+      </section>
+${tasteMarkup()}
     </section>`;
   mountThemeWindow();
 }
