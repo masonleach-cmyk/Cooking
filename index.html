@@ -1461,85 +1461,53 @@ html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
 .theme-folder .theme-group:last-child { margin-bottom: .6rem; }
 
 /* ================================================================
-   Edge-to-edge header with a pinned bar.
-   The header runs up behind the status bar. Its top row (back link, title, buttons)
-   is fixed: see-through while the header is in view, then it fills in with the
-   theme's pattern and trim once the header has scrolled away, so the theme stays on screen.
+   Top of the screen.
+   The app draws behind the status bar (black-translucent + viewport-fit=cover), so each
+   header's pattern runs all the way up behind the clock. iOS shows the clock in white
+   there, so a soft shade sits under it to keep it readable on the paler headers.
+   html's color and theme-color also follow the header, for anywhere iOS paints its own strip.
    ================================================================ */
-.band { padding-top: calc(var(--safe-top) + 3.15rem); }
-.band-home { padding-top: calc(var(--safe-top) + 3rem); }
+html { background-color: var(--aqua); }
+html[data-view="page"] { background-color: var(--aqua-deep); }
+
+.band::after, .pinband::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; pointer-events: none;
+  height: calc(var(--safe-top) * 1.35);
+  background: linear-gradient(rgba(0, 0, 0, .24), rgba(0, 0, 0, .1) 60%, rgba(0, 0, 0, 0));
+}
+.band > * { position: relative; z-index: 1; }
+.band > .band-settings { position: absolute; }
 /* pulling down past the top shows more header, not a gap */
 .band::before {
   content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh;
   background: inherit;
 }
-/* a soft shade under the clock and battery so they stay legible on the pale headers */
-.band::after, .band-bar > .bar-shade {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--safe-top) + .75rem);
-  background: linear-gradient(rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)); pointer-events: none;
-}
 
-.band-bar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 12;
-  display: flex; justify-content: space-between; align-items: center;
-  margin: 0; min-height: calc(var(--safe-top) + 3rem);
-  padding: var(--safe-top) max(.5rem, calc(50vw - var(--measure) / 2 - .5rem)) 0;
-  color: var(--band-ink);
+/* ---------- the pinned theme band: pattern and trim only, once the header has scrolled away ---------- */
+.pinband {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 12; pointer-events: none;
+  height: calc(var(--safe-top) + 1.25rem);
+  background: var(--band-bg); background-color: var(--aqua-deep);
+  opacity: 0; transition: opacity .15s ease;
 }
-.band-home .band-bar { color: var(--band-home-ink); }
-.band-bar > * { position: relative; z-index: 1; }
-.band-bar::before, .band-bar::after {
-  content: ''; position: absolute; left: 0; right: 0; opacity: 0; pointer-events: none;
-  transition: opacity .18s ease;
-}
-/* the bar's own piece of header */
-.band-bar::before { top: 0; bottom: 0; z-index: 0; background: var(--band-bg); }
-.band-home .band-bar::before { background: var(--band-home-bg); }
-/* and the theme's trim hanging below it */
-.band-bar::after {
-  top: 100%; height: var(--trim-h);
+html[data-view="home"] .pinband { background: var(--band-home-bg); background-color: var(--aqua); }
+.pinband::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: var(--trim-h);
   background: var(--trim-bar, var(--trim));
   -webkit-mask: var(--trim-mask); mask: var(--trim-mask);
 }
-.band-home .band-bar::after { background: var(--trim-home-bar, var(--trim-home)); }
-.band-bar.stuck::before, .band-bar.stuck::after { opacity: 1; }
-.band-bar > .bar-shade { z-index: 0; opacity: 0; transition: opacity .18s ease; }
-.band-bar.stuck > .bar-shade { opacity: 1; }
+html[data-view="home"] .pinband::after { background: var(--trim-home-bar, var(--trim-home)); }
+html.pinned .pinband { opacity: 1; }
 
-.bar-title {
-  position: absolute !important; left: 3.25rem; right: 3.25rem; top: var(--safe-top); height: 3rem;
-  display: flex; align-items: center; justify-content: center;
-  font: var(--display-style) var(--display-weight) 1.25rem/1.1 var(--display); letter-spacing: var(--sign-spacing);
-  color: var(--sign-ink); text-shadow: var(--sign-shadow);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  opacity: 0; transform: translateY(.35rem); transition: opacity .18s ease, transform .18s ease;
-  pointer-events: none;
-}
-.bar-title > span { overflow: hidden; text-overflow: ellipsis; padding: .2rem .15rem; }
-.band-home .bar-title { color: var(--band-home-ink); text-shadow: none; }
-.band-bar.stuck .bar-title { opacity: 1; transform: none; }
-
-/* the settings button now lives in the bar */
-.band-settings { position: static; margin-left: auto; color: inherit; }
-
-/* the trim only hangs on the shade when the theme's trim is see-through */
+/* see-through trims get the page color behind them when pinned over content */
 [data-theme="herbarium"], [data-theme="jaipur"], [data-theme="mercado"] {
   --trim-bar: var(--trim), var(--cream);
   --trim-home-bar: var(--trim-home), var(--cream);
 }
-/* Kente's busy weave: keep the pinned title on a cloth label */
-[data-theme="kente"] .band-home .bar-title > span { background: #17140F; color: #FFF6E0; border-radius: 4px; padding: .15rem .6rem; }
-[data-theme="kente"] .band-home { padding-top: calc(var(--safe-top) + 3.3rem); }
 
 /* allergy tags: just GF / DF; optional ones get a dashed outline */
 .diet-tag { text-transform: uppercase; letter-spacing: .04em; }
 .diet-tag.opt, .pill-diet.opt { border-style: dashed; }
-
-/* on a recipe the bar also holds the heart and ⋯ buttons: tuck the back label to its chevron
-   once pinned, and give the title the middle */
-.band-bar .back { transition: font-size .18s ease; }
-.band-bar.stuck:has(.band-actions) .back { font-size: 0; gap: 0; padding-right: .9rem; }
-.band-bar:has(.band-actions) .bar-title { left: 3.4rem; right: 5.9rem; justify-content: flex-start; }
   </style>
 
   <script>
@@ -1586,16 +1554,16 @@ html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
   function recall(key, fallback) {
     try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; }
   }
-  // The browser bar and status bar take the header color, light or dark to match.
+  // The strip behind the clock takes the color of the header you're looking at.
+  // (iOS 26 picks it from the page itself; older iOS reads theme-color.)
   function paintBars() {
-    var t = T[root.getAttribute('data-theme')] || T.diner;
-    var m = root.getAttribute('data-mode') || 'auto';
+    var css = getComputedStyle(root);
+    var c = (css.getPropertyValue(root.getAttribute('data-view') === 'page' ? '--aqua-deep' : '--aqua') || '').trim();
+    if (!c) return;
     var metas = document.querySelectorAll('meta[name="theme-color"]');
-    var light = m === 'dark' ? t.color[1] : t.color[0];
-    var dark = m === 'light' ? t.color[0] : t.color[1];
-    if (metas[0]) metas[0].setAttribute('content', light);
-    if (metas[1]) metas[1].setAttribute('content', dark);
+    for (var i = 0; i < metas.length; i++) metas[i].setAttribute('content', c);
   }
+  window.rbPaintBars = paintBars;
   window.rbLoadThemeFonts = function (ids) {
     ids.forEach(function (id) {
       var t = T[id];
@@ -1630,6 +1598,7 @@ html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
 </head>
 <body>
   <a class="skip-link" href="#view">Skip to content</a>
+  <div class="pinband" id="pinband" aria-hidden="true"></div>
 
   <main id="view" tabindex="-1" aria-live="polite"></main>
 
@@ -1729,7 +1698,7 @@ html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v17';
+const APP_VERSION = 'v19';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -4048,41 +4017,25 @@ function settleSoon() {
 document.addEventListener('focusout', e => { if (e.target.matches && e.target.matches(TYPING)) settleSoon(); });
 window.visualViewport?.addEventListener('resize', settleSoon);
 
-// ---------- pinned header bar ----------
-// Each screen's header has a top row (back link, buttons). It's fixed to the top of the
-// display: clear over the header, then filled with the theme's pattern and trim, plus a
-// small title, once the header has scrolled up under it.
-function setupBar() {
+// ---------- pinned theme band ----------
+// Once a screen's header scrolls away, a slim band of the theme's pattern and trim stays
+// pinned at the top (no text, no buttons). It also tells iOS which color to paint behind
+// the clock, so that strip always matches the header of the screen you're on.
+const pinband = document.getElementById('pinband');
+function updatePin() {
+  const root = document.documentElement;
   const head = view.querySelector('.band');
-  if (!head) return;
-  let bar = head.querySelector('.band-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.className = 'band-bar';
-    head.prepend(bar);
+  const home = !head || head.classList.contains('band-home');
+  if (root.dataset.view !== (home ? 'home' : 'page')) {
+    root.dataset.view = home ? 'home' : 'page';
+    window.rbPaintBars();
   }
-  if (!bar.querySelector('.bar-shade')) bar.insertAdjacentHTML('afterbegin', '<span class="bar-shade" aria-hidden="true"></span>');
-  const sign = head.querySelector('.sign');
-  let title = bar.querySelector('.bar-title');
-  if (sign && !title) {
-    title = document.createElement('span');
-    title.className = 'bar-title';
-    title.setAttribute('aria-hidden', 'true');
-    title.innerHTML = '<span></span>';
-    bar.appendChild(title);
-  }
-  if (title) title.firstChild.textContent = sign.textContent.trim();
-  updateBar();
+  root.classList.toggle('pinned', !!head && head.getBoundingClientRect().bottom <= pinband.offsetHeight + 1);
 }
-function updateBar() {
-  const head = view.querySelector('.band');
-  const bar = head && head.querySelector('.band-bar');
-  if (!bar) return;
-  bar.classList.toggle('stuck', head.getBoundingClientRect().bottom <= bar.offsetHeight + 1);
-}
-new MutationObserver(setupBar).observe(view, { childList: true });
-window.addEventListener('scroll', updateBar, { passive: true });
-window.addEventListener('resize', updateBar);
+new MutationObserver(updatePin).observe(view, { childList: true });
+window.addEventListener('scroll', updatePin, { passive: true });
+window.addEventListener('resize', updatePin);
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => window.rbPaintBars());
 
 // ---------- routing ----------
 
@@ -4157,7 +4110,7 @@ function renderHome() {
 
   view.innerHTML = `
     ${band(`
-      <div class="band-bar"><a class="icon-btn band-settings" href="#/settings" aria-label="Settings">${ICONS.settings}</a></div>
+      <a class="icon-btn band-settings" href="#/settings" aria-label="Settings">${ICONS.settings}</a>
       <div class="sign-plate"><h1 class="sign">Recipe Box</h1></div>
       <p class="band-sub" id="bookCount"></p>`, 'band-home')}
     ${showInstall ? `
