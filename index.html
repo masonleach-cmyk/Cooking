@@ -2808,6 +2808,47 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
   .gx-card.just-chosen { animation: none; }
 }
 
+/* ---------- settings: notes on your kitchen's city, under the globe window ---------- */
+.taste-head { margin-bottom: .75rem; }
+.taste-kicker { margin: 0 0 .2rem; font: 800 .7rem/1.2 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--cherry); }
+.taste .sec-title { margin: 0; overflow-wrap: anywhere; }
+.taste-where { margin: .3rem 0 0; font-size: .85rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.taste-intro { margin: 0 0 .9rem; }
+.taste-facts { margin: 0; border-top: 2px dashed var(--dash); }
+.taste-facts > div {
+  display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: .75rem; align-items: baseline;
+  padding: .55rem 0; border-bottom: 2px dashed var(--dash);
+}
+.taste-facts dt { font: 800 .68rem/1.2 var(--text); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.taste-facts dd { margin: 0; font-size: .95rem; font-weight: 700; line-height: 1.4; }
+.taste-h {
+  margin: 1.3rem 0 .6rem; font: var(--display-style) var(--display-weight) 1.25rem/1.2 var(--display);
+  letter-spacing: var(--sign-spacing); color: var(--heading);
+}
+.taste-dishes { list-style: none; margin: 0; padding: 0; }
+.taste-dishes li { padding: .6rem 0; border-top: 2px dashed var(--dash); }
+.taste-dishes li:first-child { padding-top: 0; border-top: 0; }
+.taste-dishes li:last-child { padding-bottom: 0; }
+.taste-dishes b { display: block; font-weight: 800; line-height: 1.3; }
+.taste-dishes span { display: block; margin-top: .15rem; font-size: .93rem; line-height: 1.45; color: var(--muted); }
+.taste-pantry { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+.taste-pantry li {
+  padding: .3rem .75rem; border-radius: var(--pill-r); border: 2px solid var(--line);
+  background: var(--cream); font-size: .85rem; font-weight: 800; line-height: 1.3;
+}
+.taste-history { list-style: none; margin: 0; padding: 0; }
+.taste-history li { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: .75rem; }
+.taste-when { padding-top: .05rem; font: var(--display-style) var(--display-weight) 1rem/1.35 var(--display); letter-spacing: var(--sign-spacing); color: var(--cherry); overflow-wrap: anywhere; }
+.taste-history p { position: relative; margin: 0; padding: 0 0 1rem 1rem; border-left: 2px solid var(--line); font-size: .95rem; line-height: 1.45; }
+.taste-history li:last-child p { padding-bottom: 0; border-left-color: transparent; }
+.taste-history p::before {
+  content: ''; position: absolute; left: -6px; top: .42em; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cherry); box-shadow: 0 0 0 3px var(--card);
+}
+.taste.taste-in > * { animation: taste-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes taste-in { from { opacity: 0; transform: translateY(.4rem); } }
+@media (prefers-reduced-motion: reduce) { .taste.taste-in > * { animation: none; } }
+
 /* ================================================================
    Top of the screen: a bar with a large title, the way iOS does it.
    The header's pattern is painted once, pinned to the screen and behind everything
@@ -3146,7 +3187,7 @@ html.hdr-past body::before { visibility: hidden; }
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v21';
+const APP_VERSION = 'v22';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -7407,7 +7448,7 @@ function openGlobe() {
     <canvas class="gx-canvas" aria-hidden="true"></canvas>
     <header class="gx-head">
       <button class="gx-close" aria-label="Close the globe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-      <div class="gx-titles"><h2 id="gxTitle">Kitchens of the world</h2><p>Swipe the cards or spin the globe</p></div>
+      <div class="gx-titles"><h2 id="gxTitle">Tastes of the World</h2><p>Swipe the cards or spin the globe</p></div>
       <span class="gx-count" aria-hidden="true"><b>01</b><i> / ${String(PLACE_ORDER.length).padStart(2, '0')}</i></span>
     </header>
     <div class="gx-rail" role="group" aria-label="Themes">${PLACE_ORDER.map(globeCard).join('')}</div>`;
@@ -7750,6 +7791,7 @@ async function setTheme(id, { quiet = false } = {}) {
   const now = document.getElementById('themeNow');
   if (now) now.textContent = THEMES[id].name;
   document.getElementById('themeDots')?.setAttribute('data-theme', id);
+  updateTaste();
   if (!globeUI.open) updateThemeWindow(); // with the globe open, the window catches up as it closes
   await saveSettings();
   if (!quiet) toast(`${THEMES[id].name} theme on`);
@@ -7769,6 +7811,530 @@ async function setMode(mode) {
   state.settings.mode = window.rbApplyMode(mode);
   await saveSettings();
   toast({ light: 'Light mode on', dark: 'Dark mode on', auto: 'Following your phone’s light and dark' }[state.settings.mode]);
+}
+
+// ---------- Tastes of the World: notes on each kitchen's city ----------
+// Shown in Settings, under the window onto the globe, for the kitchen you're cooking in.
+// Each place: a short intro, three quick facts, four dishes, a pantry, and a few dates.
+const TASTES = {
+  diner: {
+    intro: 'New York spreads across five boroughs where the Hudson River meets the Atlantic. Generations of arrivals through its harbor made it one of the world’s great eating cities, where a deli, a pizza counter and an all-night diner can share a single block.',
+    facts: [['Where', 'Mouth of the Hudson River, on the Atlantic'], ['Founded', '1624, as the Dutch colony of New Amsterdam'], ['Spoken', 'English, Spanish and hundreds more']],
+    dishes: [
+      ['Bagel', 'Boiled, then baked. Eastern European Jewish bakers brought it to the Lower East Side.'],
+      ['A slice', 'Wide, thin and foldable. Lombardi’s, licensed in 1905, is often called America’s first pizzeria.'],
+      ['Pastrami on rye', 'Brined, smoked and steamed beef, piled high with mustard in the delis of the Lower East Side.'],
+      ['Egg cream', 'A soda-fountain drink of milk, seltzer and chocolate syrup. It has neither egg nor cream in it.'],
+    ],
+    pantry: ['Cream cheese', 'Rye bread', 'Pastrami', 'Seltzer', 'Chocolate syrup', 'Half-sour pickles'],
+    history: [
+      ['1827', 'The Swiss-born Delmonico brothers opened a café that grew into Delmonico’s, often called the first fine-dining restaurant in the United States. Its kitchen is credited with naming baked Alaska.'],
+      ['1872', 'The diner began as a lunch wagon: Walter Scott sold sandwiches and coffee from a horse-drawn cart in Providence, Rhode Island. Later diners were built in factories and delivered whole, which is why so many look like railroad dining cars.'],
+      ['1892', 'Ellis Island opened. Over the next 62 years more than 12 million immigrants passed through it, and their kitchens shaped what New York eats.'],
+    ],
+  },
+  mercado: {
+    intro: 'Mexico City fills a high valley in central Mexico, built on the drained lakebed where the Mexica raised their island capital, Tenochtitlan. Its markets, street stands and family fondas make it one of the great street-food cities anywhere.',
+    facts: [['Where', 'Valley of Mexico, about 7,350 ft (2,240 m) up'], ['Founded', 'c. 1325, as Tenochtitlan'], ['Spoken', 'Spanish, plus Nahuatl and other Indigenous languages']],
+    dishes: [
+      ['Tacos al pastor', 'Pork marinated in chiles and achiote and carved from a vertical spit, a technique that arrived with Lebanese immigrants’ shawarma.'],
+      ['Tlacoyos', 'Oval masa cakes stuffed with beans or fava paste, topped with nopales and cheese and toasted on a comal. They are older than the Spanish conquest.'],
+      ['Quesadillas', 'In Mexico City the cheese is optional: ask for one con queso if you want it.'],
+      ['Esquites', 'Corn kernels simmered with epazote and served in a cup with lime, chile and mayonnaise.'],
+    ],
+    pantry: ['Masa', 'Guajillo chiles', 'Epazote', 'Nopales', 'Limes', 'Queso Oaxaca'],
+    history: [
+      ['Ancient', 'Mesoamerican cooks learned to nixtamalize corn, simmering it with lime, thousands of years ago. It softens the kernels for masa and frees their niacin.'],
+      ['c. 1325', 'Tenochtitlan was founded on an island in Lake Texcoco. Its farmers built chinampas, garden plots raised from lakebed mud, and some are still farmed in Xochimilco.'],
+      ['1519', 'Spanish soldiers who had seen Rome and Constantinople wrote that they had never seen a market as large or as orderly as Tlatelolco’s, which drew tens of thousands of people a day.'],
+    ],
+  },
+  speakeasy: {
+    intro: 'Chicago stands on the southwest shore of Lake Michigan, where a short portage once linked the Great Lakes to the Mississippi. Railroads and stockyards made it the crossroads of American food, and its neighborhoods still cook with Polish, Mexican, Greek and Italian accents.',
+    facts: [['Where', 'Southwest shore of Lake Michigan'], ['Founded', '1837, incorporated as a city'], ['Spoken', 'English, Spanish, Polish and more']],
+    dishes: [
+      ['Deep-dish pizza', 'Baked in a high-sided pan with the cheese under the sauce. Pizzeria Uno says it invented the style in 1943.'],
+      ['Italian beef', 'Thin-sliced roast beef dunked in its juices, on a roll with hot giardiniera or sweet peppers.'],
+      ['Chicago-style hot dog', 'All-beef on a poppy-seed bun, “dragged through the garden”: mustard, onion, green relish, tomato, a pickle spear, sport peppers and celery salt. Never ketchup.'],
+      ['Brownie', 'Created at the Palmer House hotel for the 1893 World’s Columbian Exposition.'],
+    ],
+    pantry: ['Giardiniera', 'Sport peppers', 'Celery salt', 'Poppy seeds', 'Mozzarella', 'Italian sausage'],
+    history: [
+      ['1865', 'The Union Stock Yards opened. Within decades Chicago packed more meat than anywhere else on Earth, and refrigerated rail cars from the late 1870s carried its beef across the country.'],
+      ['1871', 'The Great Chicago Fire burned more than three square miles of the city. The rebuilding gave the world the Home Insurance Building of 1885, often called the first skyscraper.'],
+      ['1920', 'Prohibition began, and Chicago filled with speakeasies supplied by gangsters like Al Capone. The Art Deco lounges of those years inspired this theme.'],
+    ],
+  },
+  patisserie: {
+    intro: 'Paris straddles the Seine in northern France, a city of markets, bakeries and cafés where the modern restaurant was born. A morning baguette and an afternoon pastry still set the rhythm of its streets.',
+    facts: [['Where', 'On the Seine, in the Île-de-France region'], ['Founded', '3rd century BCE, by the Parisii'], ['Spoken', 'French']],
+    dishes: [
+      ['Baguette', 'By a 1993 decree, a “baguette de tradition” may contain only flour, water, salt and yeast or leaven. Its craft joined UNESCO’s heritage list in 2022.'],
+      ['Croissant', 'It descends from the Viennese kipferl, which an Austrian baker, August Zang, sold in Paris from the late 1830s.'],
+      ['Macaron', 'Two almond-meringue shells filled with ganache or buttercream. Ladurée helped make the sandwiched version famous in the early 1900s.'],
+      ['Onion soup', 'Topped with bread and broiled cheese, it was the late-night bowl of the porters at the old Les Halles market.'],
+    ],
+    pantry: ['Butter', 'Crème fraîche', 'Shallots', 'Tarragon', 'Almond flour', 'Comté'],
+    history: [
+      ['1183', 'King Philip II built halls for the central market, Les Halles, which Émile Zola later called “the belly of Paris.” It fed the city for nearly 800 years before moving out to Rungis in 1969.'],
+      ['1760s', 'Paris shops began selling “restaurants,” restorative broths, at small private tables. After the Revolution, cooks who had worked for aristocrats opened dining rooms to the public.'],
+      ['1800s', 'Antonin Carême, often called the first celebrity chef, built towering sugar centerpieces and sorted French sauces into families built on a few “mother sauces.”'],
+    ],
+  },
+  cabin: {
+    intro: 'Bergen sits between seven mountains on Norway’s west coast, at the gateway to the fjords. For centuries it traded dried cod from the north for grain from the rest of Europe, and it’s known for its fish market and its rain.',
+    facts: [['Where', 'West coast of Norway, gateway to the fjords'], ['Founded', 'c. 1070, by King Olav Kyrre'], ['Spoken', 'Norwegian, in the Bergen dialect']],
+    dishes: [
+      ['Bergen fish soup', 'Bergensk fiskesuppe: creamy and gently sweet-sour, with white fish, root vegetables and fish dumplings.'],
+      ['Skillingsboller', 'Big cinnamon buns that once cost a skilling, a Bergen bakery classic.'],
+      ['Raspeballer', 'Potato dumplings with salted meat, bacon and mashed rutabaga, a west-coast Thursday dinner.'],
+      ['Pinnekjøtt', 'Salted, dried lamb ribs steamed over birch sticks, western Norway’s Christmas dinner.'],
+    ],
+    pantry: ['Stockfish', 'Lingonberries', 'Brown cheese', 'Rutabaga', 'Potatoes', 'Cardamom'],
+    history: [
+      ['c. 1070', 'King Olav Kyrre founded Bergen as a market town. It served as Norway’s capital for much of the 1200s.'],
+      ['1100s', 'Stockfish, cod air-dried on wooden racks in the Lofoten Islands, came south to Bergen and on across Europe, where it kept through Lent and long voyages.'],
+      ['1360', 'The German Hanseatic League set up a trading office on the wharf at Bryggen and ran it until 1754. Its wooden warehouses are now a UNESCO World Heritage Site.'],
+    ],
+  },
+  herbarium: {
+    intro: 'London grew up on the tidal Thames, where the Romans first bridged the river nearly two thousand years ago. As a port at the center of a global trading empire, it took in the world’s flavors alongside its own pies, roasts and tea.',
+    facts: [['Where', 'On the tidal Thames, in southeast England'], ['Founded', 'c. AD 47, as Roman Londinium'], ['Spoken', 'English, and hundreds more']],
+    dishes: [
+      ['Fish and chips', 'Fried fish, a Sephardic Jewish tradition, met fried potatoes in the 1860s. Joseph Malin’s shop in the East End is often called the first chippy.'],
+      ['Pie and mash', 'Minced-beef pie with mashed potato and a green parsley “liquor,” an East End staple once sold alongside jellied eels.'],
+      ['Sunday roast', 'Roast beef, Yorkshire pudding, roast potatoes and gravy, the long lunch of the week.'],
+      ['Afternoon tea', 'Credited to Anna, Duchess of Bedford, who in the 1840s took tea and cakes to bridge the long gap before dinner.'],
+    ],
+    pantry: ['Black tea', 'Malt vinegar', 'English mustard', 'Clotted cream', 'Parsley', 'Marmalade'],
+    history: [
+      ['1658', 'A London coffee house printed one of England’s first advertisements for tea. Catherine of Braganza made the drink fashionable at court after marrying Charles II in 1662.'],
+      ['1670', 'Charles II granted a charter for a fruit and vegetable market at Covent Garden, which traded there for three centuries, until 1974.'],
+      ['1759', 'Kew Gardens was founded. Its herbarium now holds around seven million pressed plant specimens, the inspiration for this theme.'],
+    ],
+  },
+  riad: {
+    intro: 'Marrakech spreads across a plain at the foot of the High Atlas, a red-walled city gathered around the vast square of Jemaa el-Fnaa. At dusk the square fills with food stalls, storytellers and the smoke of grills.',
+    facts: [['Where', 'Haouz plain, at the foot of the High Atlas'], ['Founded', 'c. 1070, by the Almoravids'], ['Spoken', 'Moroccan Arabic, Tashelhit and French']],
+    dishes: [
+      ['Tanjia', 'Marrakech’s own: beef or lamb with preserved lemon, cumin and saffron, sealed in a clay urn and left to cook in the embers of a hammam furnace.'],
+      ['Tagine', 'Named for its cone-lidded clay pot. Chicken with preserved lemon and olives is a classic.'],
+      ['Couscous', 'Steamed semolina with vegetables and meat, traditionally served for Friday lunch.'],
+      ['Harira', 'Tomato, lentil and chickpea soup, the bowl that breaks the fast in Ramadan.'],
+    ],
+    pantry: ['Preserved lemons', 'Ras el hanout', 'Saffron', 'Cumin', 'Argan oil', 'Fresh mint'],
+    history: [
+      ['1800s', 'Mint tea, green tea brewed with fresh spearmint and plenty of sugar, became an everyday drink as British merchants brought green tea into Moroccan ports.'],
+      ['1923', 'Painter Jacques Majorelle began his garden in the city and painted its walls the cobalt now called Majorelle blue, the color of this theme. Yves Saint Laurent and Pierre Bergé bought it in 1980.'],
+      ['2001', 'UNESCO honored Jemaa el-Fnaa as a masterpiece of humanity’s oral heritage. The campaign to protect the square helped create the list.'],
+    ],
+  },
+  kente: {
+    intro: 'Kumasi lies in the forest belt of south-central Ghana. Capital of the Asante Empire since the 1600s, it is still the seat of the Asantehene, the Asante king, and its Kejetia Market is among the largest in West Africa.',
+    facts: [['Where', 'Ashanti Region, in Ghana’s forest belt'], ['Founded', '1680s, by Osei Tutu I'], ['Spoken', 'Twi and English']],
+    dishes: [
+      ['Fufu and light soup', 'Cassava and plantain pounded into a smooth, stretchy dough, eaten with a peppery tomato soup or palm-nut soup.'],
+      ['Ampesi and kontomire', 'Boiled yam, plantain or cocoyam with a stew of cocoyam leaves cooked in palm oil.'],
+      ['Jollof rice', 'Rice cooked in one pot with tomatoes, peppers and spice, and the subject of a friendly rivalry with Nigeria.'],
+      ['Kelewele', 'Cubes of ripe plantain tossed with ginger and chili and fried, a favorite evening street snack.'],
+    ],
+    pantry: ['Plantain', 'Cassava', 'Palm oil', 'Cocoyam leaves', 'Scotch bonnet', 'Groundnuts'],
+    history: [
+      ['1600s', 'Weavers in Bonwire, a village near Kumasi, are said to have begun weaving kente, narrow strips sewn together into cloth for Asante royalty.'],
+      ['c. 1700', 'By tradition, the priest Okomfo Anokye called the Golden Stool down from the sky onto the lap of Osei Tutu. It holds the soul of the Asante nation, and no one sits on it.'],
+      ['1879', 'Tetteh Quarshie brought cocoa beans home from the island of Fernando Po. Ghana became one of the world’s biggest cocoa growers, and the Ashanti Region grows much of it.'],
+    ],
+  },
+  izakaya: {
+    intro: 'Tokyo spreads around Tokyo Bay on the Kantō Plain, one of the largest cities on Earth. Some of its best eating happens at standing noodle counters, department-store food halls and lantern-lit izakaya tucked under the train tracks.',
+    facts: [['Where', 'Kantō Plain, on Tokyo Bay'], ['Founded', '1457, when Edo Castle was built'], ['Spoken', 'Japanese']],
+    dishes: [
+      ['Edomae sushi', 'Nigiri was Edo’s fast food: in the 1820s, street stalls pressed vinegared rice by hand and topped it with fish from the bay.'],
+      ['Soba', 'Buckwheat noodles dipped in a strong, dark tsuyu. Edo had thousands of soba shops.'],
+      ['Yakitori', 'Chicken on skewers, grilled over binchōtan charcoal and brushed with tare, the backbone of the izakaya.'],
+      ['Monjayaki', 'Tsukishima’s runny cousin of okonomiyaki, scraped off the griddle with tiny spatulas.'],
+    ],
+    pantry: ['Soy sauce', 'Mirin', 'Kombu', 'Katsuobushi', 'Rice vinegar', 'Wasabi'],
+    history: [
+      ['1700s', 'Edo grew past a million people, among the largest cities in the world. Its many workers living alone fed a boom in quick street food: sushi, tempura and soba.'],
+      ['1908', 'Chemist Kikunae Ikeda isolated glutamate from kombu dashi at Tokyo Imperial University and named its taste umami.'],
+      ['1935', 'Tsukiji fish market opened and served as Tokyo’s kitchen until it moved to Toyosu in 2018. The outer market still sells knives, tea and street snacks.'],
+    ],
+  },
+  jaipur: {
+    intro: 'Jaipur, the capital of Rajasthan, lies on the eastern edge of the Thar Desert, ringed by hills crowned with forts. Desert kitchens here favor what keeps with little water: lentils, gram flour, ghee, buttermilk, and dried ker berries and sangri beans.',
+    facts: [['Where', 'Eastern Rajasthan, edge of the Thar Desert'], ['Founded', '1727, by Maharaja Sawai Jai Singh II'], ['Spoken', 'Hindi and Rajasthani']],
+    dishes: [
+      ['Dal baati churma', 'Hard wheat rolls baked in embers, broken into lentils and ghee, with sweet crumbled churma on the side.'],
+      ['Laal maas', 'A fiery mutton curry, red with Mathania chilies, from the Rajput hunting kitchens.'],
+      ['Pyaaz kachori', 'Flaky fried pastry stuffed with spiced onion, a Jaipur breakfast.'],
+      ['Ghewar', 'A honeycombed disc of fried batter soaked in syrup, made for the monsoon festival of Teej.'],
+    ],
+    pantry: ['Ghee', 'Mathania chilies', 'Gram flour', 'Ker sangri', 'Yogurt', 'Cardamom'],
+    history: [
+      ['1727', 'Jai Singh II laid out Jaipur on a grid of wide streets and blocks, with the architect Vidyadhar Bhattacharya, following the principles of Vastu Shastra.'],
+      ['1734', 'Jai Singh, a keen astronomer, finished the Jantar Mantar observatory. Its stone sundial is among the largest in the world.'],
+      ['1876', 'The old city was painted terracotta pink to welcome the Prince of Wales, the future Edward VII, and it has been the Pink City ever since.'],
+    ],
+  },
+  cabane: {
+    intro: 'Québec City rises from cliffs above the St. Lawrence River, its old town still enclosed by stone walls, the only fortified city left in North America north of Mexico. Each spring the sugar shacks in the countryside around it fill with steam from boiling maple sap.',
+    facts: [['Where', 'Cliffs above the St. Lawrence River'], ['Founded', '1608, by Samuel de Champlain'], ['Spoken', 'French']],
+    dishes: [
+      ['Tourtière', 'A spiced meat pie, the centerpiece of the Christmas Eve réveillon.'],
+      ['Poutine', 'Fries, squeaky cheese curds and gravy, born in rural Québec in the 1950s.'],
+      ['Tire sur la neige', 'Hot maple syrup poured onto snow and rolled up on a stick, the sugar shack’s signature treat.'],
+      ['Pouding chômeur', '“Unemployed man’s pudding”: plain cake baked in syrup, invented in Québec during the Depression.'],
+    ],
+    pantry: ['Maple syrup', 'Cheese curds', 'Salt pork', 'Yellow split peas', 'Wild blueberries', 'Ice cider'],
+    history: [
+      ['1608', 'Samuel de Champlain founded Québec, one of the oldest European settlements in North America. Indigenous peoples had long tapped maple trees for their sap, and taught the newcomers how.'],
+      ['1955', 'The modern Winter Carnival began, led by Bonhomme, who wears a ceinture fléchée, the arrow-woven sash in this theme.'],
+      ['2012', 'Inspectors found that thieves had siphoned nearly 3,000 tonnes of syrup, worth C$18.7 million, from Québec’s strategic maple syrup reserve. The province makes about 70 percent of the world’s supply.'],
+    ],
+  },
+  paladar: {
+    intro: 'Havana curves around a deep, sheltered harbor on Cuba’s north coast, about 100 miles south of Key West. Its colonial heart, La Habana Vieja, is a maze of plazas, arcades and pastel façades.',
+    facts: [['Where', 'North coast of Cuba, on a deep natural harbor'], ['Founded', '1519, on its present site'], ['Spoken', 'Spanish']],
+    dishes: [
+      ['Ropa vieja', '“Old clothes”: shredded beef stewed with peppers, onion and tomato, often called the national dish.'],
+      ['Moros y cristianos', 'Black beans and rice cooked together in one pot.'],
+      ['Lechón asado', 'Pork marinated in sour-orange and garlic mojo and slow-roasted, the heart of Christmas Eve.'],
+      ['Tostones', 'Green plantain slices fried, smashed flat and fried again.'],
+    ],
+    pantry: ['Sour oranges', 'Garlic', 'Black beans', 'Green plantains', 'Cumin', 'Oregano'],
+    history: [
+      ['1589', 'Work began on El Morro castle at the harbor mouth. Havana was where Spain’s treasure fleets gathered before crossing the Atlantic.'],
+      ['1930s', 'The bar at El Floridita perfected the frozen daiquiri, and Ernest Hemingway became a regular.'],
+      ['1990s', 'Cubans were allowed to open paladares, small restaurants in their own homes. The name comes from a restaurant chain in a Brazilian telenovela that was popular in Cuba.'],
+    ],
+  },
+  sacred: {
+    intro: 'Cusco sits high in the Andes of southern Peru. Once the capital of the Inca Empire, it’s now the gateway to the Sacred Valley and Machu Picchu, with Spanish churches built on top of Inca stone walls.',
+    facts: [['Where', 'Andes of southern Peru, about 11,150 ft (3,400 m) up'], ['Founded', 'Inca capital, rebuilt by Pachacuti in the 1400s'], ['Spoken', 'Spanish and Quechua']],
+    dishes: [
+      ['Cuy al horno', 'Roast guinea pig, an Andean feast dish since long before the Inca.'],
+      ['Chiri uchu', '“Cold chili”: a Corpus Christi platter of roast guinea pig, chicken, sausage, cheese, seaweed, fish roe and corn cakes.'],
+      ['Pachamanca', 'Meat, potatoes and fava beans cooked under hot stones in an earth oven.'],
+      ['Chicha morada', 'A purple-corn drink spiced with cinnamon and clove.'],
+    ],
+    pantry: ['Native potatoes', 'Quinoa', 'Purple corn', 'Ají amarillo', 'Chuño', 'Huacatay'],
+    history: [
+      ['Ancient', 'The potato was domesticated in the Andes thousands of years ago. Peru still grows thousands of native varieties, and the Potato Park near Pisac protects more than a thousand of them.'],
+      ['1400s', 'Under Pachacuti, Inca masons fitted stones so tightly without mortar that a blade won’t slip between them. The twelve-angled stone on Hatun Rumiyoc street is the most famous.'],
+      ['1944', 'Inti Raymi, the Inca festival of the sun, was revived. It is staged every June 24 at the fortress of Sacsayhuamán above the city.'],
+    ],
+  },
+  copacabana: {
+    intro: 'Rio de Janeiro wraps around Guanabara Bay between granite peaks and Atlantic beaches. Its food is a crossroads of Portuguese, African and Indigenous cooking, eaten everywhere from beach kiosks to corner botecos.',
+    facts: [['Where', 'Guanabara Bay, on Brazil’s southeast coast'], ['Founded', '1565, by Estácio de Sá'], ['Spoken', 'Portuguese']],
+    dishes: [
+      ['Feijoada', 'Black beans stewed with cuts of pork, served with rice, collards, orange slices and farofa. Saturday lunch in Rio.'],
+      ['Biscoito Globo', 'Airy, crunchy rings of manioc starch, sold by vendors up and down the beach since the 1950s.'],
+      ['Pastel', 'Crisp fried pastry pockets from the street market, best with a glass of sugarcane juice.'],
+      ['Açaí na tigela', 'Frozen Amazonian açaí topped with granola and banana, made popular by Rio’s surfers and fighters in the 1980s.'],
+    ],
+    pantry: ['Black beans', 'Manioc flour', 'Collard greens', 'Cachaça', 'Limes', 'Hearts of palm'],
+    history: [
+      ['1808', 'Fleeing Napoleon, the Portuguese royal court sailed to Rio and ruled its empire from here until 1821.'],
+      ['1888', 'Brazil became the last country in the Americas to abolish slavery. African cooks shaped the country’s food, from its stews to its sweets.'],
+      ['1970', 'Landscape architect Roberto Burle Marx redesigned the Copacabana promenade, widening the black-and-white wave mosaic that first came from Lisbon.'],
+    ],
+  },
+  azulejo: {
+    intro: 'Lisbon climbs its hills above the wide Tagus estuary, where the river meets the Atlantic. Ships from here opened the sea routes that carried pepper, cinnamon and chilies into kitchens around the world.',
+    facts: [['Where', 'On the Tagus estuary, at the Atlantic'], ['Founded', 'Pre-Roman; the Romans called it Olisipo'], ['Spoken', 'Portuguese']],
+    dishes: [
+      ['Pastel de nata', 'Custard tarts first made by the monks of the Jerónimos Monastery. The bakery next door in Belém has used their recipe since 1837.'],
+      ['Bacalhau', 'Salt cod, said to be cooked a different way for every day of the year.'],
+      ['Grilled sardines', 'Charred on street grills and eaten on bread, the smell of the June festival of Santo António.'],
+      ['Bifana', 'A garlicky pork cutlet simmered in wine and tucked into a soft roll.'],
+    ],
+    pantry: ['Salt cod', 'Olive oil', 'Piri-piri', 'Cilantro', 'Cinnamon', 'Sweet paprika'],
+    history: [
+      ['1497', 'Vasco da Gama sailed from Lisbon and reached India the next year, opening the sea route for spices that made the city one of Europe’s richest ports.'],
+      ['1500s', 'Portuguese traders carried chilies from the Americas to Africa and Asia. Piri-piri, Goan vindaloo and Japanese tempura all trace back to them.'],
+      ['1755', 'An earthquake, tsunami and fires destroyed much of the city on All Saints’ Day. The Baixa was rebuilt on a grid, with some of the first earthquake-resistant buildings anywhere.'],
+    ],
+  },
+  limonaia: {
+    intro: 'Amalfi is a small town tucked into a ravine on the coast south of Naples, where terraced lemon groves step down the cliffs to the sea. A thousand years ago it was one of Italy’s great maritime republics.',
+    facts: [['Where', 'Amalfi Coast, on the Gulf of Salerno'], ['Founded', 'First recorded in 596'], ['Spoken', 'Italian and Neapolitan']],
+    dishes: [
+      ['Scialatielli ai frutti di mare', 'Short, thick ribbons of fresh pasta with seafood. Chef Enrico Cosentino created the shape in Amalfi in the late 1960s.'],
+      ['Delizia al limone', 'A small sponge dome filled and glazed with lemon cream, created in 1978 by Sorrento pastry chef Carmine Marzuillo.'],
+      ['Colatura di alici', 'Amber anchovy sauce from nearby Cetara, a descendant of the Romans’ garum.'],
+      ['Limoncello', 'Lemon peel steeped in alcohol and sweetened, served ice-cold after dinner.'],
+    ],
+    pantry: ['Sfusato lemons', 'Anchovies', 'Fior di latte', 'San Marzano tomatoes', 'Olive oil', 'Capers'],
+    history: [
+      ['800s–1000s', 'The Republic of Amalfi traded across the Mediterranean with Byzantium and the Arab world. Its maritime code, the Tabula Amalphitana, governed sea trade for centuries.'],
+      ['1200s', 'Amalfi’s mills began making bambagina, paper from cotton and linen rags, and a few still do.'],
+      ['2001', 'The local Sfusato Amalfitano lemon, long said to have kept the republic’s sailors free of scurvy, won protected IGP status.'],
+    ],
+  },
+  vyshyvanka: {
+    intro: 'Kyiv rises from the high right bank of the Dnipro River, its golden domes visible from across the water. One of Eastern Europe’s oldest cities, it sits at the edge of the black-earth farmland that made Ukraine a breadbasket.',
+    facts: [['Where', 'Right bank of the Dnipro River'], ['Founded', 'Traditionally dated to 482'], ['Spoken', 'Ukrainian']],
+    dishes: [
+      ['Borshch', 'Beet soup with cabbage, potato and beans, served with sour cream and garlicky pampushky buns.'],
+      ['Varenyky', 'Dumplings filled with potato, farmer’s cheese, cabbage or sour cherries.'],
+      ['Chicken Kyiv', 'A breaded chicken breast filled with herb butter. Its origin is debated, but the name is the city’s.'],
+      ['Kyiv cake', 'Hazelnut meringue layers with buttercream and chocolate, first made at the city’s Karl Marx confectionery factory in 1956.'],
+    ],
+    pantry: ['Beets', 'Sour cream', 'Dill', 'Buckwheat', 'Salo', 'Sunflower oil'],
+    history: [
+      ['1000s', 'Under Yaroslav the Wise, Kyiv built St. Sophia’s Cathedral, which still has its original mosaics. It and the Kyiv Pechersk Lavra are a UNESCO World Heritage Site.'],
+      ['2006', 'Students in Chernivtsi started Vyshyvanka Day, now celebrated across Ukraine on the third Thursday of May by wearing embroidered shirts like those in this theme.'],
+      ['2022', 'UNESCO inscribed the culture of Ukrainian borshch cooking on its list of heritage in need of urgent safeguarding.'],
+    ],
+  },
+  iznik: {
+    intro: 'Istanbul spans the Bosphorus, the strait between Europe and Asia, and was capital of the Byzantine and Ottoman empires for more than 1,500 years. Its palace kitchens and spice markets shaped cooking from the Balkans to the Levant.',
+    facts: [['Where', 'Both shores of the Bosphorus'], ['Founded', 'c. 660 BCE, as Greek Byzantion'], ['Spoken', 'Turkish']],
+    dishes: [
+      ['Simit', 'Sesame-crusted bread rings sold from street carts every morning.'],
+      ['Balık ekmek', 'Grilled mackerel in bread with onion and lettuce, sold by the water at Eminönü.'],
+      ['Midye dolma', 'Mussels stuffed with spiced rice and currants, eaten with a squeeze of lemon.'],
+      ['Baklava', 'Paper-thin pastry layered with pistachios or walnuts and soaked in syrup, refined in the Ottoman palace kitchens.'],
+    ],
+    pantry: ['Pul biber', 'Sumac', 'Yogurt', 'Pomegranate molasses', 'Pistachios', 'Yufka'],
+    history: [
+      ['1550s', 'Coffee reached Istanbul, and the city’s first coffeehouses opened. Turkish coffee culture joined UNESCO’s heritage list in 2013.'],
+      ['1664', 'The Spice Bazaar, called the Egyptian Bazaar for goods shipped from Cairo, was completed near the tiled Rüstem Pasha Mosque.'],
+      ['1777', 'Hacı Bekir opened a confectionery that made lokum, Turkish delight, famous. The family firm still sells it.'],
+    ],
+  },
+  bogolan: {
+    intro: 'Bamako lies on the Niger River in southwestern Mali, and has grown from a small river town into the country’s capital and largest city. The river is its pantry, bringing fish, rice and trade.',
+    facts: [['Where', 'On the Niger River, southwestern Mali'], ['Founded', '1600s, by the Niaré family'], ['Spoken', 'Bambara and French']],
+    dishes: [
+      ['Tigadèguèna', 'Meat stewed in a peanut and tomato sauce and served over rice. The name is Bambara for peanut sauce.'],
+      ['Tô', 'A stiff porridge of millet or sorghum, eaten by hand with okra or baobab-leaf sauce.'],
+      ['Grilled capitaine', 'Nile perch from the Niger, grilled or fried and served with fried plantains.'],
+      ['Dégué', 'Little pearls of millet stirred into sweetened yogurt, a cool snack in the heat.'],
+    ],
+    pantry: ['Peanuts', 'Millet', 'Fonio', 'Baobab leaves', 'Shea butter', 'Hibiscus'],
+    history: [
+      ['Ancient', 'Fonio has been grown in West Africa for thousands of years and may be the region’s oldest cultivated grain.'],
+      ['1324', 'Mansa Musa, ruler of the Mali Empire, passed through Cairo on pilgrimage to Mecca with so much gold that its value there fell for years.'],
+      ['1600s', 'The Niaré family settled by the river, founding the town that became Bamako. The name is usually translated as “crocodile river.”'],
+    ],
+  },
+  tibeb: {
+    intro: 'Addis Ababa, “new flower” in Amharic, sits on a highland plateau and is among the highest capitals in the world. It is home to the African Union, and to a coffee culture that starts by roasting the beans at the table.',
+    facts: [['Where', 'Ethiopian Highlands, about 7,700 ft (2,355 m) up'], ['Founded', '1886, by Menelik II and Empress Taytu'], ['Spoken', 'Amharic']],
+    dishes: [
+      ['Injera', 'A spongy, sour flatbread of fermented teff that serves as plate, spoon and side all at once.'],
+      ['Doro wat', 'Chicken simmered for hours with berbere and spiced butter, with hard-boiled eggs. The festive dish.'],
+      ['Kitfo', 'Minced beef dressed with mitmita and spiced butter, served raw or just warmed.'],
+      ['Shiro', 'A silky stew of spiced chickpea flour, a staple on the many fasting days when Orthodox Christians eat no animal products.'],
+    ],
+    pantry: ['Teff', 'Berbere', 'Niter kibbeh', 'Mitmita', 'Shiro powder', 'Coffee beans'],
+    history: [
+      ['Legend', 'Coffee grows wild in southwestern Ethiopia. Legend credits a goatherd named Kaldi, who noticed his goats dancing after eating the red berries.'],
+      ['1886', 'Empress Taytu chose the site for its hot springs, and Menelik II founded his new capital there.'],
+      ['1890s', 'Fast-growing eucalyptus from Australia was planted for firewood, which helped keep the young capital from being moved.'],
+    ],
+  },
+  shuka: {
+    intro: 'Nairobi grew from a railway depot on a cool highland plateau into Kenya’s capital. Its name comes from the Maasai Enkare Nairobi, “cool water,” and giraffes graze in the national park at the edge of the city.',
+    facts: [['Where', 'Highland plateau, about 5,900 ft (1,795 m) up'], ['Founded', '1899, as a depot on the Uganda Railway'], ['Spoken', 'Swahili and English']],
+    dishes: [
+      ['Nyama choma', 'Goat or beef roasted slowly over charcoal and eaten with kachumbari, a fresh tomato-onion salad.'],
+      ['Ugali', 'Stiff white-maize porridge, Kenya’s everyday staple, pinched into bites by hand.'],
+      ['Sukuma wiki', 'Collard greens cooked with onion and tomato. The name means “push the week,” as they stretch the food budget.'],
+      ['Mandazi', 'Lightly sweet fried dough, often scented with cardamom and coconut milk.'],
+    ],
+    pantry: ['Maize flour', 'Collard greens', 'Tomatoes', 'Coconut milk', 'Cardamom', 'Black tea'],
+    history: [
+      ['1896', 'Work began on the Uganda Railway from Mombasa. Tens of thousands of laborers came from British India, and chapati and samosas became everyday Kenyan food.'],
+      ['1903', 'Tea was first planted at Limuru, just outside Nairobi. Kenya is now one of the world’s biggest black-tea exporters.'],
+      ['1946', 'Nairobi National Park opened as Kenya’s first national park, with the city skyline on its horizon.'],
+    ],
+  },
+  ndebele: {
+    intro: 'Pretoria lies in a warm valley in Gauteng, north of Johannesburg, and is South Africa’s administrative capital. Each October its streets turn purple as tens of thousands of jacaranda trees bloom.',
+    facts: [['Where', 'Gauteng, about 35 miles (55 km) north of Johannesburg'], ['Founded', '1855, by Marthinus Pretorius'], ['Spoken', 'Sepedi, Setswana, Afrikaans, English and more']],
+    dishes: [
+      ['Boerewors and pap', 'A coil of coriander-spiced “farmer’s sausage” grilled on the braai, with stiff maize porridge.'],
+      ['Bobotie', 'Spiced minced meat with dried fruit, baked under an egg custard, a Cape Malay classic.'],
+      ['Biltong', 'Strips of beef seasoned with vinegar, salt and coriander, then air-dried.'],
+      ['Melktert', 'Milk tart: a silky custard tart dusted with cinnamon.'],
+    ],
+    pantry: ['Maize meal', 'Coriander seed', 'Rooibos', 'Fruit chutney', 'Chakalaka', 'Amasi'],
+    history: [
+      ['1888', 'Jacob Celliers bought two jacaranda seedlings from a traveling nurseryman, the city’s first. Thousands more were planted along its streets in the early 1900s.'],
+      ['1913', 'The Union Buildings were completed on Meintjieskop. Nelson Mandela was inaugurated there as president in 1994.'],
+      ['1991', 'Ndebele artist Esther Mahlangu painted a BMW Art Car in the bold geometric house painting of her people, the style of this theme.'],
+    ],
+  },
+  isfahan: {
+    intro: 'Isfahan sits on the central Iranian plateau beside the Zayandeh River, its arched bridges and blue-tiled domes gathered around one of the largest city squares in the world. An old rhyme says “Esfahan nesf-e jahan”: Isfahan is half the world.',
+    facts: [['Where', 'Central Iranian plateau, on the Zayandeh River'], ['Founded', 'Ancient; Safavid capital from 1598'], ['Spoken', 'Persian']],
+    dishes: [
+      ['Beryani', 'Isfahan’s own: minced lamb seared flat and served on bread with cinnamon and almonds.'],
+      ['Khoresh mast', 'A cold “stew” of yogurt, lamb, saffron and sugar, served as a dessert and made almost nowhere else.'],
+      ['Gaz', 'Nougat made with the manna of the tamarisk and studded with pistachios, the city’s signature sweet.'],
+      ['Tahdig', 'The crisp golden crust at the bottom of the rice pot, the most prized part of any Persian meal.'],
+    ],
+    pantry: ['Saffron', 'Barberries', 'Rosewater', 'Pistachios', 'Dried limes', 'Basmati rice'],
+    history: [
+      ['1598', 'Shah Abbas I made Isfahan the Safavid capital and built Naqsh-e Jahan Square, about 560 by 160 meters, now a UNESCO World Heritage Site.'],
+      ['c. 1602', 'The Si-o-se-pol, the bridge of 33 arches, was built across the Zayandeh River.'],
+      ['c. 1650', 'Shah Abbas II built the Khaju Bridge, which doubles as a dam and has long been a place to linger over tea.'],
+    ],
+  },
+  ikat: {
+    intro: 'Samarkand lies in the fertile Zarafshan valley of Uzbekistan, a stop on the Silk Road for some two thousand years. Its Registan square, framed by three tiled madrasas, is one of the great sights of Central Asia.',
+    facts: [['Where', 'Zarafshan River valley, Uzbekistan'], ['Founded', 'c. 700 BCE, as Afrasiab'], ['Spoken', 'Uzbek and Tajik']],
+    dishes: [
+      ['Plov', 'Rice cooked in a kazan with lamb, yellow carrots, cumin and whole garlic. Samarkand cooks layer it and serve it unstirred.'],
+      ['Samarkand non', 'Dense, glossy round bread stamped with patterns, famous for staying fresh for days.'],
+      ['Samsa', 'Flaky pastries filled with lamb and onion, baked against the hot wall of a tandir.'],
+      ['Shashlik', 'Lamb skewers grilled over charcoal, served with raw onion and vinegar.'],
+    ],
+    pantry: ['Cumin', 'Yellow carrots', 'Chickpeas', 'Barberries', 'Raisins', 'Green tea'],
+    history: [
+      ['751', 'According to tradition, Chinese prisoners taken at the Battle of Talas taught Samarkand to make paper, the first papermaking outside China.'],
+      ['1370', 'Timur made Samarkand his capital and filled it with artisans brought from the lands he conquered.'],
+      ['1420s', 'Timur’s grandson Ulugh Beg built an observatory that measured the length of the year to within about a minute.'],
+    ],
+  },
+  bojagi: {
+    intro: 'Seoul straddles the Han River in a ring of granite mountains and has been Korea’s capital for more than 600 years. Palaces and hanok alleys sit between the towers, and its markets stay busy long after dark.',
+    facts: [['Where', 'On the Han River, northwestern South Korea'], ['Founded', '1394, as the capital of Joseon'], ['Spoken', 'Korean']],
+    dishes: [
+      ['Kimchi', 'Cabbage fermented with chili, garlic and salted seafood. Making it together each autumn, called gimjang, is on UNESCO’s heritage list.'],
+      ['Bindaetteok', 'Crisp mung-bean pancakes, fried to order at Gwangjang Market.'],
+      ['Tteokbokki', 'Chewy rice cakes in a sweet-spicy gochujang sauce. The red version took off in Seoul’s Sindang-dong in the 1950s.'],
+      ['Seolleongtang', 'Milky ox-bone soup simmered for hours and salted at the table, a Seoul specialty.'],
+    ],
+    pantry: ['Gochujang', 'Doenjang', 'Gochugaru', 'Sesame oil', 'Napa cabbage', 'Perilla leaves'],
+    history: [
+      ['1395', 'Gyeongbokgung, the main royal palace, was completed a year after Seoul became the Joseon capital.'],
+      ['1446', 'King Sejong published Hangul, the Korean alphabet, so that ordinary people could learn to read and write.'],
+      ['1905', 'Gwangjang Market opened, one of Korea’s first permanent markets. Its food alley is famous today.'],
+    ],
+  },
+  shu: {
+    intro: 'Chengdu lies on the fertile Sichuan Basin in southwest China, famous for giant pandas, unhurried teahouses and food that is both fiery and numbing. In 2010 it became Asia’s first UNESCO City of Gastronomy.',
+    facts: [['Where', 'Western Sichuan Basin, southwest China'], ['Founded', 'c. 311 BCE, walled under the Qin'], ['Spoken', 'Mandarin, in the Sichuanese dialect']],
+    dishes: [
+      ['Mapo tofu', 'Tofu in a red, numbing sauce of broad-bean paste and Sichuan pepper, named for the pockmarked grandmother who served it in the 1860s.'],
+      ['Kung pao chicken', 'Diced chicken with peanuts and dried chilies, named for Ding Baozhen, a 19th-century governor of Sichuan whose title was Gongbao.'],
+      ['Dan dan noodles', 'Named for the shoulder pole street vendors used to carry their stove and noodles.'],
+      ['Hot pot', 'A bubbling pot of chili-and-pepper broth in the middle of the table, for cooking everything from tripe to lotus root.'],
+    ],
+    pantry: ['Sichuan pepper', 'Pixian doubanjiang', 'Dried chilies', 'Chili oil', 'Baoning vinegar', 'Fermented black beans'],
+    history: [
+      ['c. 256 BCE', 'Li Bing built the Dujiangyan irrigation system, which still waters the Chengdu plain and made it a land of plenty.'],
+      ['c. 1024', 'Chengdu saw the first government-issued paper money in the world, the jiaozi.'],
+      ['Late 1500s', 'Chili peppers reached China from the Americas. Before them, Sichuan’s heat came from Sichuan pepper, ginger and mustard.'],
+    ],
+  },
+  lanterns: {
+    intro: 'Hội An sits on the Thu Bồn River near the coast of central Vietnam, a former trading port whose old town of wooden shophouses and merchant assembly halls has barely changed in two centuries. Each month on the full moon, the electric lights go off and silk lanterns take over.',
+    facts: [['Where', 'Thu Bồn River, central Vietnam'], ['Founded', 'Trading port of Faifo from the 1500s'], ['Spoken', 'Vietnamese']],
+    dishes: [
+      ['Cao lầu', 'Chewy noodles with pork, herbs and crisp crackers. Tradition says the dough needs water from the old Bá Lễ well.'],
+      ['Mì Quảng', 'Turmeric-yellow rice noodles in a little rich broth, from Quảng Nam province.'],
+      ['Cơm gà', 'Rice cooked in chicken stock with turmeric, topped with shredded chicken and herbs.'],
+      ['White rose dumplings', 'Translucent shrimp dumplings pinched into rose shapes, made by one family for the whole town.'],
+    ],
+    pantry: ['Fish sauce', 'Turmeric', 'Rice paper', 'Fresh herbs', 'Limes', 'Chili'],
+    history: [
+      ['1590s', 'Japanese merchants built the covered bridge linking their quarter to the Chinese one across the stream.'],
+      ['1600s', 'Chinese traders settled in Faifo in growing numbers. Their clan assembly halls still line Trần Phú Street.'],
+      ['1999', 'Bypassed when the river silted up and trade moved to Đà Nẵng, the preserved old town became a UNESCO World Heritage Site.'],
+    ],
+  },
+  batik: {
+    intro: 'Yogyakarta lies in central Java between the volcano Mount Merapi and the Indian Ocean. A sultan still lives in the kraton, the palace at its heart, and its students, artists and batik workshops make it Java’s cultural capital.',
+    facts: [['Where', 'Central Java, between Mount Merapi and the sea'], ['Founded', '1755, by Sultan Hamengkubuwono I'], ['Spoken', 'Javanese and Indonesian']],
+    dishes: [
+      ['Gudeg', 'Young jackfruit simmered for hours with palm sugar and coconut milk until brown and sweet, the city’s signature.'],
+      ['Sate klathak', 'Goat skewered on iron bicycle spokes and seasoned with little more than salt.'],
+      ['Bakpia pathok', 'Little pastries filled with sweet mung-bean paste, named for the neighborhood that made them famous.'],
+      ['Nasi kucing', '“Cat rice”: tiny bundles of rice and sambal sold from angkringan carts late into the night.'],
+    ],
+    pantry: ['Palm sugar', 'Coconut milk', 'Young jackfruit', 'Tempeh', 'Kecap manis', 'Galangal'],
+    history: [
+      ['c. 800', 'Borobudur, about 25 miles northwest, was built. It is the largest Buddhist temple in the world.'],
+      ['1755', 'The Treaty of Giyanti split the Mataram kingdom, and Hamengkubuwono I founded Yogyakarta and its kraton.'],
+      ['2009', 'UNESCO recognized Indonesian batik, whose wax lines are drawn by hand with a small copper pen called a canting.'],
+    ],
+  },
+  masi: {
+    intro: 'Suva, Fiji’s capital, sits on a peninsula on the southeast coast of Viti Levu, the largest island. It’s a green, rainy harbor city whose big municipal market overflows with taro, cassava, kava root and fish.',
+    facts: [['Where', 'Southeast coast of Viti Levu'], ['Founded', 'Capital since 1882'], ['Spoken', 'English, Fijian and Fiji Hindi']],
+    dishes: [
+      ['Kokoda', 'Fiji’s ceviche: raw fish cured in lime juice, then dressed with coconut cream, chili and onion.'],
+      ['Lovo', 'A feast cooked under hot stones in an earth oven: pork, fish, root crops and palusami.'],
+      ['Palusami', 'Taro leaves wrapped around coconut cream and onion, baked until silky.'],
+      ['Roti and curry', 'Brought by Indian laborers, and now everyday food across the islands.'],
+    ],
+    pantry: ['Coconut cream', 'Taro', 'Cassava', 'Limes', 'Breadfruit', 'Kava root'],
+    history: [
+      ['Ancient', 'Kava, called yaqona, has long been drunk in ceremony. Visitors to a village still present the root to the chief in a sevusevu.'],
+      ['1879', 'The first indentured laborers arrived from India to work Fiji’s sugar plantations. More than 60,000 had come by 1916.'],
+      ['1970', 'Fiji became independent from Britain on October 10, with Suva as its capital.'],
+    ],
+  },
+  aloha: {
+    intro: 'Honolulu stretches along the south shore of Oʻahu, from Pearl Harbor past Waikīkī to Diamond Head. Its food tells the islands’ story: Native Hawaiian staples mixed with the cooking of workers who came from China, Japan, Portugal, Korea and the Philippines.',
+    facts: [['Where', 'South shore of Oʻahu, Hawaiʻi'], ['Founded', 'Capital of the Hawaiian Kingdom from 1845'], ['Spoken', 'English, Hawaiian and Pidgin']],
+    dishes: [
+      ['Poke', 'Cubed raw fish with sea salt, limu seaweed and roasted kukui nut, or with shoyu and sesame.'],
+      ['Plate lunch', 'Two scoops rice, a scoop of mac salad and a main like kalua pork or teriyaki beef.'],
+      ['Spam musubi', 'Seared Spam on rice, wrapped in nori. Hawaiʻi eats more Spam per person than any other state.'],
+      ['Malasadas', 'Portuguese sugar-dusted doughnuts. Leonard’s Bakery has fried them since 1952.'],
+    ],
+    pantry: ['Taro', 'Shoyu', 'ʻAlaea salt', 'Limu', 'Macadamia nuts', 'Pineapple'],
+    history: [
+      ['Legend', 'In Hawaiian tradition the first taro plant is the elder brother of the Hawaiian people. Pounded into poi, it was the islands’ staple food.'],
+      ['1850s', 'Sugar plantations began recruiting workers from China, then Japan, Portugal, Korea and the Philippines. Sharing lunch pails in the fields gave rise to the plate lunch.'],
+      ['1882', 'ʻIolani Palace was finished for King Kalākaua. It had electric lights a few years before the White House did.'],
+    ],
+  },
+};
+
+function tasteBody(id) {
+  const p = place(id), t = TASTES[id] || TASTES.diner;
+  return `
+    <header class="taste-head">
+      <p class="taste-kicker">A taste of</p>
+      <h2 class="sec-title" id="tasteHead">${esc(p.city)}</h2>
+      <p class="taste-where">${esc(p.country)} <span aria-hidden="true">·</span> ${esc(coords(p))}</p>
+    </header>
+    <p class="taste-intro">${esc(t.intro)}</p>
+    <dl class="taste-facts">${t.facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+    <h3 class="taste-h">On the table</h3>
+    <ul class="taste-dishes">${t.dishes.map(([name, about]) => `<li><b>${esc(name)}</b><span>${esc(about)}</span></li>`).join('')}</ul>
+    <h3 class="taste-h">In the pantry</h3>
+    <ul class="taste-pantry">${t.pantry.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    <h3 class="taste-h">Through the years</h3>
+    <ol class="taste-history">${t.history.map(([when, what]) => `<li><span class="taste-when">${esc(when)}</span><p>${esc(what)}</p></li>`).join('')}</ol>`;
+}
+
+function tasteMarkup() {
+  const id = state.settings.theme;
+  return `
+      <section class="card sec taste" id="tasteCard" data-place="${esc(id)}" aria-labelledby="tasteHead">${tasteBody(id)}
+      </section>`;
+}
+
+// Swap in the notes for a newly chosen kitchen (the globe may still be open over Settings).
+function updateTaste() {
+  const el = document.getElementById('tasteCard');
+  const id = state.settings.theme;
+  if (!el || el.dataset.place === id) return;
+  el.dataset.place = id;
+  el.innerHTML = tasteBody(id);
+  if (reducedMotion()) return;
+  el.classList.remove('taste-in');
+  void el.offsetWidth; // restart the fade
+  el.classList.add('taste-in');
 }
 
 async function renderSettings() {
@@ -7797,6 +8363,7 @@ async function renderSettings() {
         </fieldset>
         ${themeWindowMarkup()}
       </section>
+${tasteMarkup()}
 
       <section class="card sec" aria-labelledby="webSetupHead">
         <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking</h2>
