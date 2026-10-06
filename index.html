@@ -494,6 +494,23 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 
 .settings p { max-width: 34em; }
 .plain-steps { margin: 0 0 .75rem; padding-left: 1.3rem; }
+.plain-steps li { margin-bottom: .45rem; }
+.plain-steps b { font-weight: 800; }
+
+/* ---------- website import ---------- */
+.quick-row { display: flex; justify-content: center; margin: -.25rem var(--gutter) 1rem; }
+.code {
+  display: block; white-space: pre-wrap; word-break: break-all; font: .78rem/1.45 ui-monospace, Menlo, monospace;
+  background: var(--cream); border: 2px dashed var(--dash); border-radius: 10px; padding: .65rem .75rem; margin: .4rem 0 .6rem;
+  user-select: all; -webkit-user-select: all;
+}
+.paste-box {
+  width: 100%; min-height: 7rem; resize: vertical; padding: .6rem .75rem; margin: .25rem 0 .75rem;
+  font: .95rem/1.4 var(--text); color: var(--ink); background: var(--cream);
+  border: 2px solid var(--line); border-radius: 12px;
+}
+.paste-box:focus { outline: none; border-color: var(--heading); }
+.source-link { color: inherit; font-weight: 800; }
 
 /* ---------- bottom tabs ---------- */
 
@@ -712,7 +729,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v10';
+const APP_VERSION = 'v11';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -1783,6 +1800,154 @@ function suggestDiet(r) {
 }
 
 // ================================================================
+// Website import: recipe data a web page carries for search engines
+// ================================================================
+
+// Recipe sites (NYT Cooking included) describe each recipe in a block of schema.org data
+// for search engines. The "Add to Recipe Box" shortcut copies that block (or the whole
+// page) to the clipboard; this turns it into a recipe. Pure, so it can be tested anywhere.
+
+const WEB_SITES = { 'cooking.nytimes.com': 'NYT Cooking', 'nytimes.com': 'The New York Times', 'seriouseats.com': 'Serious Eats',
+  'bonappetit.com': 'Bon Appétit', 'epicurious.com': 'Epicurious', 'allrecipes.com': 'Allrecipes', 'foodnetwork.com': 'Food Network',
+  'smittenkitchen.com': 'Smitten Kitchen', 'budgetbytes.com': 'Budget Bytes', 'food52.com': 'Food52', 'thekitchn.com': 'The Kitchn' };
+
+function decodeEntities(t) {
+  const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', hellip: '…', rsquo: '’', lsquo: '‘',
+    rdquo: '”', ldquo: '“', deg: '°', frac12: '½', frac14: '¼', frac34: '¾', eacute: 'é', egrave: 'è', ntilde: 'ñ', uuml: 'ü', ouml: 'ö', auml: 'ä', ccedil: 'ç', times: '×' };
+  return String(t).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+\d*);/gi, (m, e) => {
+    if (e[0] === '#') { const n = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : Number(e.slice(1)); return n ? String.fromCodePoint(n) : m; }
+    return named[e.toLowerCase()] ?? m;
+  });
+}
+// Text from the page: drop tags, decode entities, tidy spaces.
+const webText = t => decodeEntities(decodeEntities(String(t ?? '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ''))).replace(/\s+/g, ' ').trim();
+
+// "PT1H20M" -> "1 hr 20 min"
+function isoDuration(d) {
+  const m = String(d || '').match(/^P(?:(\d+)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:\d+(?:\.\d+)?S)?)?$/i);
+  if (!m) return '';
+  let h = Number(m[2] || 0) + Number(m[1] || 0) * 24, min = Math.round(Number(m[3] || 0));
+  h += Math.floor(min / 60); min %= 60;
+  return [h ? `${h} hr` : '', min ? `${min} min` : ''].filter(Boolean).join(' ');
+}
+
+function findRecipeNode(node, depth = 0) {
+  if (!node || depth > 8) return null;
+  if (Array.isArray(node)) { for (const n of node) { const r = findRecipeNode(n, depth + 1); if (r) return r; } return null; }
+  if (typeof node !== 'object') return null;
+  const type = [].concat(node['@type'] || []).map(String);
+  if (type.some(t => /(^|\/)Recipe$/i.test(t))) return node;
+  for (const key of ['@graph', 'mainEntity', 'mainEntityOfPage', 'itemListElement', 'item']) {
+    const r = findRecipeNode(node[key], depth + 1); if (r) return r;
+  }
+  return null;
+}
+
+function webSteps(ins) {
+  const out = [];
+  const walk = (n, depth = 0) => {
+    if (!n || depth > 6) return;
+    if (Array.isArray(n)) return n.forEach(x => walk(x, depth + 1));
+    if (typeof n === 'string') {
+      // One block of text: split on line breaks, then numbered lines.
+      const t = n.replace(/<\/(?:p|li)>|<br\s*\/?>/gi, '\n');
+      for (const part of t.split(/\n+/)) { const s = webText(part).replace(/^(?:step\s*)?\d{1,2}[.)]\s+/i, ''); if (s) out.push(s); }
+      return;
+    }
+    const type = [].concat(n['@type'] || []).join(' ');
+    if (/HowToSection/i.test(type) || (n.itemListElement && !n.text)) return walk(n.itemListElement, depth + 1);
+    const s = webText(n.text || n.name || n.description || '');
+    if (s) out.push(s);
+  };
+  walk(ins);
+  return out;
+}
+
+function webAuthor(a) {
+  const names = [].concat(a || []).map(x => webText(typeof x === 'string' ? x : x && x.name)).filter(Boolean);
+  return [...new Set(names)].join(' and ');
+}
+
+function webYield(y) {
+  const all = [].concat(y || []).map(v => webText(v)).filter(Boolean);
+  const pick = all.find(v => /[a-z]/i.test(v) && /\d/.test(v)) || all[0] || '';
+  const serv = pick.match(/^(?:serves\s+|makes\s+)?(\d+(?:\s*(?:-|–|to)\s*\d+)?)(?:\s+(?:servings?|people|portions?))?$/i);
+  if (serv) return serv[1].replace(/\s*[-–]\s*/, ' to ');
+  return pick && /^\d/.test(pick) ? `Makes ${pick}` : pick;
+}
+
+function webImage(img) {
+  const first = [].concat(img || [])[0];
+  const url = typeof first === 'string' ? first : first && (first.url || first.contentUrl);
+  return /^https:\/\//.test(url || '') ? url : '';
+}
+
+function siteName(url, fallback = '') {
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./, ''); } catch { return fallback; }
+  return WEB_SITES[host] || fallback || host;
+}
+
+// Parse JSON-LD text that may be wrapped in comments or CDATA, or several blocks run together.
+function parseLd(text) {
+  const t = String(text).trim().replace(/^<!--|-->$/g, '').replace(/^\s*\/\/\s*<!\[CDATA\[|\/\/\s*\]\]>\s*$/g, '').trim();
+  try { return JSON.parse(t); } catch { /* try stripping control characters */ }
+  try { return JSON.parse(t.replace(/[\u0000-\u001f]+/g, ' ')); } catch { return null; }
+}
+
+/**
+ * Turn what the shortcut copied into a recipe, or null if there's no recipe in it.
+ * Accepts the shortcut's payload ({"recipeBox":1,"url":…,"ld":[…]}), a whole web page's
+ * HTML, the page's script blocks, or bare JSON-LD.
+ */
+function recipeFromWebText(input) {
+  const text = String(input || '').trim();
+  if (!text) return null;
+  let url = '', site = '', blocks = [];
+  const payload = text.startsWith('{') ? parseLd(text) : null;
+  if (payload && payload.recipeBox) {
+    url = payload.url || ''; site = payload.site || '';
+    blocks = [].concat(payload.ld || []).map(parseLd);
+  } else {
+    for (const m of text.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) blocks.push(parseLd(m[1]));
+    if (!blocks.length) blocks.push(parseLd(text));
+    const meta = (prop) => (text.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]*content=["']([^"']+)`, 'i'))
+      || text.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["']${prop}["']`, 'i')) || [])[1];
+    url = meta('og:url') || (text.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)/i) || [])[1] || '';
+    site = meta('og:site_name') || '';
+  }
+  const node = findRecipeNode(blocks.filter(Boolean));
+  if (!node) return null;
+  const title = webText(node.name || node.headline);
+  const ingredients = [].concat(node.recipeIngredient || node.ingredients || []).map(webText).filter(Boolean);
+  const steps = webSteps(node.recipeInstructions);
+  if (!title || (!ingredients.length && !steps.length)) return null;
+  url = webText(node.url || (typeof node.mainEntityOfPage === 'string' ? node.mainEntityOfPage : node.mainEntityOfPage && node.mainEntityOfPage['@id']) || url);
+  if (!/^https?:\/\//.test(url)) url = '';
+  const author = webAuthor(node.author);
+  const name = siteName(url, webText(site));
+  return {
+    title: titleCase(title),
+    servings: webYield(node.recipeYield),
+    prepTime: isoDuration(node.prepTime),
+    cookTime: isoDuration(node.cookTime),
+    totalTime: isoDuration(node.totalTime),
+    source: author || name,
+    sourceUrl: url,
+    sourceSite: name,
+    ingredients,
+    steps,
+    image: webImage(node.image),
+  };
+}
+
+// The same recipe page with or without tracking bits ("?smid=ck-recipe-iOS-share").
+function sameRecipeUrl(a, b) {
+  const k = u => { try { const x = new URL(u); return (x.hostname.replace(/^www\./, '') + x.pathname.replace(/\/$/, '')).toLowerCase(); } catch { return ''; } };
+  return !!a && !!b && k(a) === k(b);
+}
+
+// ================================================================
 // Scan clean-up: fraction repair, screenshot clutter, overlapping pages
 // ================================================================
 
@@ -2712,6 +2877,7 @@ const view = document.getElementById('view');
 const toastEl = document.getElementById('toast');
 
 const ICONS = {
+  paste: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="4.5" width="14" height="16" rx="2.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4.5V3.6c0-.6.4-1.1 1-1.1h4c.6 0 1 .5 1 1.1v.9M9 11h6M9 15h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   more: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>',
   sun: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   heart: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
@@ -2942,6 +3108,9 @@ function renderHome() {
         <p>Keep Recipe Box on your Home Screen: tap Share in Safari, then Add to Home Screen.</p>
         <button class="text-btn" data-action="dismiss-install">Dismiss</button>
       </aside>` : ''}
+    <div class="quick-row">
+      <button class="btn btn-chip" data-action="paste-recipe">${ICONS.paste}Paste a web recipe</button>
+    </div>
     ${state.recipes.length ? `
       <div class="finder">
         <label class="search">
@@ -2973,7 +3142,7 @@ function filteredRecipes() {
     if (cat.startsWith('diet:') && !(r.diet || {})[cat.slice(5)]) return false;
     if (!['all', 'fav'].includes(cat) && !cat.startsWith('diet:') && r.category !== cat) return false;
     if (!q) return true;
-    const hay = [r.title, r.category, r.source, r.notes, ...(r.ingredients || [])].join(' ').toLowerCase();
+    const hay = [r.title, r.category, r.source, r.sourceSite, r.notes, ...(r.ingredients || [])].join(' ').toLowerCase();
     return q.split(/\s+/).every(word => hay.includes(word));
   });
   const by = {
@@ -3082,7 +3251,8 @@ function renderRecipe(id) {
       </div>
       <div class="rating" role="group" aria-label="Your rating: ${rating ? ratingLabel(rating) : 'not rated'}" id="rating">${ratingButtons(rating)}</div>
       <p class="rating-hint" id="ratingHint">${rating ? `${ratingLabel(rating)}. Tap a star again for a half star.` : 'Tap a star to rate. Tap it again for a half star.'}</p>
-      <p class="band-sub">${[r.category ? `In ${esc(r.category)}` : '', r.source ? `From ${esc(r.source)}` : ''].filter(Boolean).join('. ') || 'Not in a section yet'}</p>`, 'band-recipe')}
+      <p class="band-sub">${[r.category ? `In ${esc(r.category)}` : '', r.source ? `From ${esc(r.source)}` : '',
+        r.sourceUrl ? `<a class="source-link" href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">View on ${esc(r.sourceSite || 'the web')}</a>` : ''].filter(Boolean).join('. ') || 'Not in a section yet'}</p>`, 'band-recipe')}
 
     <section class="card sec" aria-labelledby="ingHead">
       <div class="sec-head">
@@ -3241,6 +3411,12 @@ function renderForm(id) {
     ${band(`<div class="band-bar"><a class="back" href="${id ? `#/recipe/${encodeURIComponent(id)}` : '#/'}">Cancel</a></div>
       <h1 class="sign">${id ? 'Edit recipe' : 'New recipe'}</h1>`, 'band-form')}
     <form class="form" id="recipeForm" novalidate>
+      ${id ? '' : `
+      <section class="card sec" aria-labelledby="webHead">
+        <h2 id="webHead" class="sec-title">From a website</h2>
+        <p class="hint">Share a recipe from Safari or the NYT Cooking app to <b>Add to Recipe Box</b>, then paste it here. <a href="#/settings">Set up the shortcut</a></p>
+        <button type="button" class="btn btn-primary" data-action="paste-recipe">${ICONS.paste}Paste recipe</button>
+      </section>`}
       <section class="card sec scan" aria-labelledby="scanHead">
         <h2 id="scanHead" class="sec-title">Scan</h2>
         <p class="hint">Add photos of a recipe card or cookbook page, or screenshots from a recipe app or website. Use as many as you need; they can overlap and be in any order.</p>
@@ -3732,6 +3908,29 @@ async function renderSettings() {
     ${band(`<div class="band-bar"><a class="back" href="#/">Recipes</a></div><h1 class="sign">Backup &amp; settings</h1>`, 'band-form')}
     <section class="settings">
 
+      <section class="card sec" aria-labelledby="webSetupHead">
+        <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking and other sites</h2>
+        <p>A Shortcut copies the recipe from the page you're looking at. Make it once, in the Shortcuts app:</p>
+        <ol class="plain-steps">
+          <li>Tap <b>+</b> to make a new shortcut and name it <b>Add to Recipe Box</b>.</li>
+          <li>Tap the <b>ⓘ</b> button (or the name at the top, then Settings) and turn on <b>Show in Share Sheet</b>. Set it to receive <b>URLs</b> and <b>Safari web pages</b> only.</li>
+          <li>Add <b>Get Type</b>, set to the Shortcut Input.</li>
+          <li>Add <b>If</b>: Type <b>is</b> <b>Safari web page</b>.</li>
+          <li>Inside the If, add <b>Run JavaScript on Web Page</b> (input: Shortcut Input) and replace its script with this:
+            <code class="code" id="webScript">${esc(WEB_SHORTCUT_JS)}</code>
+            <button class="btn btn-chip" data-action="copy-web-script">Copy the script</button>
+          </li>
+          <li>Under <b>Otherwise</b>, add <b>Get URLs from Input</b> (Shortcut Input), then <b>Get Contents of URL</b>, then <b>Match Text</b> with this pattern:
+            <code class="code" id="webPattern">${esc(WEB_SHORTCUT_PATTERN)}</code>
+            <button class="btn btn-chip" data-action="copy-web-pattern">Copy the pattern</button>
+            <p>Then add <b>Combine Text</b> (Matches, separated by New Lines).</p>
+          </li>
+          <li>After <b>End If</b>, add <b>Copy to Clipboard</b> (input: If Result), then <b>Show Notification</b>: “Recipe copied. Open Recipe Box and tap Paste.”</li>
+        </ol>
+        <p>To import: on a recipe in Safari or the NYT Cooking app, tap Share, then <b>Add to Recipe Box</b>. Open Recipe Box and tap <b>Paste a web recipe</b>, then Paste.</p>
+        <p class="hint">Also turn on Settings › Apps › Shortcuts › Advanced › <b>Allow Running Scripts</b>. The first time you use it, Shortcuts asks to let it read the site; choose Always Allow.</p>
+      </section>
+
       <section class="card sec">
         <h2 class="sec-title">Backups</h2>
         <p>Recipes are saved on this device only. Save a backup file now and then, so you can restore your recipes on a new phone or after deleting the app.</p>
@@ -3765,6 +3964,93 @@ async function renderSettings() {
         <button class="btn btn-danger" data-action="delete-all">Delete all recipes</button>
       </section>
     </section>`;
+}
+
+// ---------- website import ----------
+
+// What the shortcut runs inside Safari: copy the page's recipe data blocks.
+const WEB_SHORTCUT_JS = `var ld = Array.prototype.map.call(document.querySelectorAll('script[type="application/ld+json"]'), function (s) { return s.textContent; });
+var site = (document.querySelector('meta[property="og:site_name"]') || {}).content || '';
+completion(JSON.stringify({ recipeBox: 1, url: location.href, site: site, ld: ld }));`;
+// What it matches in a downloaded page (shares from the NYT Cooking app arrive as a link).
+const WEB_SHORTCUT_PATTERN = '(?s)<script[^>]*application/ld\\+json[^>]*>.*?<\/script>'; // "<\/" keeps this page's own script tag intact
+
+// Reading the clipboard has to start inside the tap itself, so this runs straight from the click.
+function readClipboardNow() {
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) return navigator.clipboard.readText();
+  } catch (err) { return Promise.reject(err); }
+  return Promise.reject(new Error('Clipboard unavailable'));
+}
+
+async function pasteRecipe(reading) {
+  let text;
+  try { text = await reading; } catch { return openPasteBox(); } // no clipboard access: paste by hand
+  return importWebRecipe(text);
+}
+
+function openPasteBox(problem = '') {
+  const dlg = document.getElementById('sheet');
+  dlg.innerHTML = `
+    <div class="sheet-body">
+      <h2 class="sheet-title">${problem ? 'No recipe found' : 'Paste a web recipe'}</h2>
+      ${problem ? `<p>${esc(problem)}</p>` : ''}
+      <p class="hint">Share a recipe page to <b>Add to Recipe Box</b>, then touch and hold the box below and tap Paste.</p>
+      <textarea class="paste-box" id="pasteBox" aria-label="Paste the recipe here" placeholder="Paste here"></textarea>
+      <button class="btn btn-secondary btn-wide" data-close>Close</button>
+    </div>`;
+  if (!dlg.open) dlg.showModal();
+}
+
+async function importWebRecipe(text) {
+  const found = recipeFromWebText(text);
+  if (!found) {
+    const t = String(text || '').trim();
+    const problem = !t ? 'The clipboard is empty.'
+      : /^https?:\/\/\S+$/.test(t) ? 'That’s a link, not the recipe. Share the page to Add to Recipe Box instead of copying the link; the shortcut copies the recipe itself.'
+      : /<html|<script/i.test(t) ? 'That page doesn’t include recipe data. Open the recipe in Safari and share it from there.'
+      : 'The clipboard doesn’t hold a recipe. Share a recipe page to Add to Recipe Box first.';
+    openPasteBox(problem);
+    return;
+  }
+  const dlg = document.getElementById('sheet');
+  if (dlg.open) dlg.close();
+
+  const existing = found.sourceUrl && state.recipes.find(r => sameRecipeUrl(r.sourceUrl, found.sourceUrl));
+  if (existing && !confirm(`“${existing.title}” is already in your Recipe Box. Replace it with this copy? Your rating, notes and photos stay.`)) {
+    location.hash = `#/recipe/${encodeURIComponent(existing.id)}`;
+    return;
+  }
+  toast(`Adding ${found.title}…`);
+  const { image, ...fields } = found;
+  const photo = existing && (existing.photos || []).length ? null : await keepWebPhoto(image);
+  const recipe = {
+    ...(existing || { id: uid(), createdAt: Date.now(), rating: 0, favorite: false, timesMade: 0, notes: '', images: [] }),
+    ...fields,
+    category: (existing && existing.category) || guessCategory(fields) || '',
+    diet: (existing && existing.diet) || suggestDiet(fields),
+    photos: photo ? [photo] : ((existing && existing.photos) || []),
+  };
+  try {
+    await saveRecipe(recipe);
+  } catch (e) {
+    console.error(e);
+    toast(/quota/i.test(e && e.name) ? 'This device is out of storage.' : 'Saving failed. Try again.');
+    return;
+  }
+  toast(existing ? `Updated from ${found.sourceSite || 'the web'}` : `Added from ${found.sourceSite || 'the web'}`);
+  if (location.hash === `#/recipe/${encodeURIComponent(recipe.id)}`) render();
+  else location.hash = `#/recipe/${encodeURIComponent(recipe.id)}`;
+}
+
+// Keep the recipe's photo on this device when the site allows it; otherwise link to it.
+async function keepWebPhoto(url) {
+  if (!url) return '';
+  try {
+    const res = await within(fetch(url, { mode: 'cors' }), 8000);
+    if (!res.ok) throw new Error(String(res.status));
+    return await within(compressPhoto(await res.blob(), 1400, 0.8), 8000);
+  } catch { return url; }
 }
 
 async function makeBackup() {
@@ -3977,6 +4263,8 @@ const actions = {
     renderPhotoTray();
   },
   'scan': () => runScan(),
+  'copy-web-script': async () => toast((await copyText(WEB_SHORTCUT_JS)) ? 'Script copied' : 'Copying failed on this device'),
+  'copy-web-pattern': async () => toast((await copyText(WEB_SHORTCUT_PATTERN)) ? 'Pattern copied' : 'Copying failed on this device'),
   'copy-report': async () => {
     if (!state.lastScanReport) return;
     toast((await copyText(state.lastScanReport)) ? 'Scan report copied' : 'Copying failed on this device');
@@ -4020,6 +4308,7 @@ const actions = {
 view.addEventListener('click', e => {
   const el = e.target.closest('[data-action]');
   if (!el || !view.contains(el)) return;
+  if (el.dataset.action === 'paste-recipe') { e.preventDefault(); pasteRecipe(readClipboardNow()); return; }
   const fn = actions[el.dataset.action];
   if (!fn) return;
   e.preventDefault();
@@ -4166,6 +4455,12 @@ sheet.addEventListener('click', async e => {
   if (btn.dataset.sheetAction === 'share') shareRecipe(r);
   if (btn.dataset.sheetAction === 'scans') openViewer(r, 'images', 0);
   if (btn.dataset.sheetAction === 'delete') deleteRecipe(r);
+});
+// The paste box: import as soon as something is pasted into it.
+sheet.addEventListener('input', e => {
+  if (e.target.id !== 'pasteBox') return;
+  const text = e.target.value;
+  if (text.trim().length > 20) importWebRecipe(text);
 });
 sheet.addEventListener('change', async e => {
   const t = e.target;
