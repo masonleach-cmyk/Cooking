@@ -13,8 +13,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#8FD3CC" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#24524E" media="(prefers-color-scheme: dark)">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 
   <!-- Fonts: Lilita One (diner signage) + Nunito Sans (everything else) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -619,9 +619,35 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 
 /* ---------- photos of the dish ---------- */
-.dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: .5rem; }
-.dish { padding: 0; border: 0; border-radius: 12px; overflow: hidden; aspect-ratio: 1; cursor: zoom-in; background: var(--cream); }
+/* Photos tab: the first photo large, the rest two across, then the add tile. */
+.dish-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.dish { padding: 0; border: 0; border-radius: 12px; overflow: hidden; aspect-ratio: 1; max-width: 100%; cursor: zoom-in; background: var(--cream); }
+.dish:first-child { grid-column: 1 / -1; aspect-ratio: 4 / 3; }
 .dish img { width: 100%; height: 100%; object-fit: cover; }
+.dish-add {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem;
+  aspect-ratio: 1; max-width: 100%; border: 2.5px dashed var(--heading); border-radius: 12px;
+  color: var(--heading); font: 800 .95rem var(--text); text-align: center; cursor: pointer;
+}
+.dish-add:focus-within { outline: 3px solid var(--cherry); outline-offset: 2px; }
+.dish-empty { text-align: center; padding-block: 1.75rem; }
+.dish-empty p { color: var(--muted); margin: 0 auto 1rem; max-width: 22em; }
+.dish-empty .btn { width: 100%; }
+
+/* Recipe / Photos / Notes switcher under the header */
+.rtabs { display: flex; gap: .4rem; margin: 0 0 1rem; }
+.rtab {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  min-height: 2.75rem; padding: 0 .5rem; border-radius: 999px; cursor: pointer;
+  border: 2.5px solid var(--ink); background: var(--card); color: var(--ink); font: 800 .95rem var(--text);
+  touch-action: manipulation;
+}
+.rtab[aria-selected="true"] { background: var(--ink); color: var(--cream); }
+.rtab-count {
+  min-width: 1.35rem; padding: 0 .4rem; border-radius: 999px;
+  background: var(--cherry); color: var(--cherry-ink); font-size: .75rem; line-height: 1.35rem;
+}
+.rpanel[hidden] { display: none; }
 .menu-btn, .fav-btn { color: #FFFFFF; }
 
 /* ---------- options sheet ---------- */
@@ -787,9 +813,9 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
     start_url: base, scope: base, display: 'standalone', orientation: 'portrait',
     background_color: '#FFF8EC', theme_color: '#8FD3CC',
     icons: [
-      { src: base + 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: base + 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: base + 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: base + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: base + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: base + 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
   const link = document.createElement('link');
@@ -798,7 +824,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v13';
+const APP_VERSION = 'v14';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -2931,6 +2957,7 @@ async function compressPhoto(file, maxSide = 1400, quality = 0.8) {
 
 const CATEGORIES = ['Breakfast', 'Appetizers', 'Soups & salads', 'Mains', 'Sides', 'Breads', 'Desserts', 'Drinks', 'Other'];
 const SCALES = [[0.5, '½×'], [1, '1×'], [2, '2×'], [3, '3×']];
+const RECIPE_TABS = [['recipe', 'Recipe'], ['photos', 'Photos'], ['notes', 'Notes']];
 
 const state = {
   recipes: [],
@@ -2939,6 +2966,7 @@ const state = {
   filter: { q: '', cat: 'all', sort: 'az' },
   scale: {},                   // recipeId -> factor, for this session
   units: {},                   // recipeId -> { ingredientIndex: unit view }, for this session
+  recipeTab: { id: null, tab: 'recipe' }, // which tab of the open recipe is showing
   draft: null,                 // photos being added on the form
 };
 
@@ -2954,6 +2982,7 @@ const ICONS = {
   grip: '<svg viewBox="0 0 16 24" width="14" height="22" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="6" r="1.6"/><circle cx="11" cy="6" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="12" r="1.6"/><circle cx="5" cy="18" r="1.6"/><circle cx="11" cy="18" r="1.6"/></g></svg>',
   remove: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   settings: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
 };
 
 // ---------- helpers ----------
@@ -3130,7 +3159,7 @@ function renderScreen() {
 
   switch (r.name) {
     case 'home': renderHome(); break;
-    case 'recipe': renderRecipe(r.id); break;
+    case 'recipe': state.recipeTab = { id: r.id, tab: 'recipe' }; renderRecipe(r.id); break; // opening a recipe starts on the recipe itself
     case 'new': renderForm(null); break;
     case 'edit': renderForm(r.id); break;
     case 'list': renderList(); break;
@@ -3303,6 +3332,10 @@ function renderRecipe(id) {
   const pills = [r.servings && (/^\d/.test(r.servings) ? `Serves ${r.servings}` : r.servings), r.prepTime && `Prep ${r.prepTime}`, r.cookTime && `Cook ${r.cookTime}`,
     r.totalTime && `${r.totalTime} total`].filter(Boolean);
   const rating = r.rating || 0;
+  const photos = r.photos || [];
+  const scans = (r.images || []).length;
+  const tab = state.recipeTab.id === id ? state.recipeTab.tab : 'recipe';
+  state.recipeTab = { id, tab };
 
   view.innerHTML = `
     ${band(`
@@ -3323,6 +3356,14 @@ function renderRecipe(id) {
       <p class="band-sub">${[r.category ? `In ${esc(r.category)}` : '', r.source ? `From ${esc(r.source)}` : '',
         r.sourceUrl ? `<a class="source-link" href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">View on ${esc(r.sourceSite || 'the web')}</a>` : ''].filter(Boolean).join('. ') || 'Not in a section yet'}</p>`, 'band-recipe')}
 
+    <div class="rtabs" role="tablist" aria-label="Recipe sections">
+      ${RECIPE_TABS.map(([key, label]) => `
+        <button class="rtab" role="tab" id="rtab-${key}" aria-controls="rpanel-${key}" data-action="recipe-tab" data-rtab="${key}"
+          aria-selected="${key === tab}" tabindex="${key === tab ? 0 : -1}">${label}${key === 'photos' && photos.length
+            ? `<span class="rtab-count"><span class="sr-only">, </span>${photos.length}</span>` : ''}</button>`).join('')}
+    </div>
+
+    <div class="rpanel" role="tabpanel" id="rpanel-recipe" aria-labelledby="rtab-recipe" ${tab === 'recipe' ? '' : 'hidden'}>
     <section class="card sec" aria-labelledby="ingHead">
       <div class="sec-head">
         <h2 id="ingHead" class="sec-title">Ingredients</h2>
@@ -3354,22 +3395,34 @@ function renderRecipe(id) {
         <p class="hint">Tap a ticket when that step is done.</p>`
         : '<p class="hint">No steps yet.</p>'}
     </section>
+    </div>
 
-    ${(r.photos || []).length ? `
-      <section class="card sec" aria-labelledby="dishHead">
-        <div class="sec-head">
-          <h2 id="dishHead" class="sec-title">Photos</h2>
-          <label class="btn btn-chip file-btn">Add more<input type="file" accept="image/*" multiple class="sr-only" data-photo-input></label>
-        </div>
-        <div class="dish-grid">
-          ${r.photos.map((src, i) => `<button class="dish" data-action="view-photo" data-kind="photos" data-index="${i}" aria-label="View photo ${i + 1} of ${r.photos.length}"><img src="${src}" alt=""></button>`).join('')}
-        </div>
-      </section>` : ''}
+    <div class="rpanel" role="tabpanel" id="rpanel-photos" aria-labelledby="rtab-photos" ${tab === 'photos' ? '' : 'hidden'}>
+      ${photos.length ? `
+        <section class="card sec" aria-labelledby="dishHead">
+          <h2 id="dishHead" class="sec-title">Photos of the dish</h2>
+          <div class="dish-grid">
+            ${photos.map((src, i) => `<button class="dish" data-action="view-photo" data-kind="photos" data-index="${i}" aria-label="Photo ${i + 1} of ${photos.length} of ${esc(r.title)}. Opens full screen."><img src="${src}" alt=""></button>`).join('')}
+            <label class="dish-add file-btn">${ICONS.camera}Add photos<input type="file" accept="image/*" multiple class="sr-only" data-photo-input></label>
+          </div>
+          <p class="hint">Tap a photo to see it full screen. You can remove it from there.</p>
+          ${scans ? `<button class="btn btn-chip" data-action="view-scans">View scanned pages (${scans})</button>` : ''}
+        </section>`
+      : `
+        <section class="card sec dish-empty" aria-labelledby="dishHead">
+          <h2 id="dishHead" class="sec-title">No photos yet</h2>
+          <p>Add a photo of the dish so you can spot this recipe at a glance.</p>
+          <label class="btn btn-primary file-btn">${ICONS.camera}Add a photo of the dish<input type="file" accept="image/*" multiple class="sr-only" data-photo-input></label>
+          ${scans ? `<p class="hint">Looking for the pages you scanned? <button class="text-btn" data-action="view-scans">View scanned pages (${scans})</button></p>` : ''}
+        </section>`}
+    </div>
 
-    <section class="card sec" aria-labelledby="notesHead">
-      <h2 id="notesHead" class="sec-title"><label for="notes">Notes</label></h2>
-      <textarea id="notes" class="notes-input" rows="2" placeholder="Swaps, oven quirks, who loved it">${esc(r.notes)}</textarea>
-    </section>
+    <div class="rpanel" role="tabpanel" id="rpanel-notes" aria-labelledby="rtab-notes" ${tab === 'notes' ? '' : 'hidden'}>
+      <section class="card sec" aria-labelledby="notesHead">
+        <h2 id="notesHead" class="sec-title"><label for="notes">Notes</label></h2>
+        <textarea id="notes" class="notes-input" rows="2" placeholder="Swaps, oven quirks, who loved it">${esc(r.notes)}</textarea>
+      </section>
+    </div>
 
     <footer class="sec plain recipe-foot">
       <p class="made-count">${r.timesMade ? `Made ${plural(r.timesMade, 'time')}, most recently ${fmtDate(r.lastMade)}.` : 'Not made yet.'}</p>
@@ -4225,7 +4278,23 @@ async function addDishPhotos(r, files) {
   r.photos = [...(r.photos || []), ...added];
   await saveRecipe(r);
   toast(`Added ${plural(added.length, 'photo')}`);
+  state.recipeTab = { id: r.id, tab: 'photos' }; // show the photos that were just added
   renderRecipe(r.id);
+}
+
+// Recipe / Photos / Notes: switch panels in place, so crossed-off
+// ingredients, finished steps and a half-typed note all survive the switch.
+function showRecipeTab(key, focus = false) {
+  if (!RECIPE_TABS.some(([k]) => k === key)) return;
+  state.recipeTab.tab = key;
+  view.querySelectorAll('.rtab').forEach(t => {
+    const on = t.dataset.rtab === key;
+    t.setAttribute('aria-selected', on);
+    t.tabIndex = on ? 0 : -1;
+    if (on && focus) t.focus();
+  });
+  view.querySelectorAll('.rpanel').forEach(p => { p.hidden = p.id !== `rpanel-${key}`; });
+  if (key === 'notes') fitNotes(); // a hidden box can't measure itself, so size it now
 }
 
 async function setCategory(id, category) {
@@ -4314,6 +4383,8 @@ const actions = {
     toast(on ? 'Screen will stay on while this recipe is open' : 'Screen will sleep as usual');
   },
   'recipe-menu': () => { const r = currentRecipe(); if (r) openRecipeMenu(r); },
+  'recipe-tab': el => showRecipeTab(el.dataset.rtab),
+  'view-scans': () => { const r = currentRecipe(); if (r) openViewer(r, 'images', 0); },
   'view-photo': el => {
     const r = currentRecipe(); if (!r) return;
     const kind = el.dataset.kind || 'images';
@@ -4400,6 +4471,17 @@ view.addEventListener('pointerdown', e => {
 });
 
 view.addEventListener('keydown', e => {
+  // Arrow keys, Home and End move between the recipe's tabs.
+  const rtab = e.target.closest('.rtab');
+  if (rtab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+    e.preventDefault();
+    const keys = RECIPE_TABS.map(([k]) => k);
+    const i = keys.indexOf(rtab.dataset.rtab);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? keys.length - 1
+      : (i + (e.key === 'ArrowRight' ? 1 : -1) + keys.length) % keys.length;
+    showRecipeTab(keys[next], true);
+    return;
+  }
   const grip = e.target.closest('[data-grip]');
   if (grip) return moveWithKeys(e, grip);
   const input = e.target.closest('.edit-row .row-input');

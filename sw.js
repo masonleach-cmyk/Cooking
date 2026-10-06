@@ -1,16 +1,16 @@
 // Offline support. Browsers only run service workers from their own file,
 // so this is the one piece that can't live inside index.html.
 // Bump VERSION whenever you change index.html so phones pick up the update.
-const VERSION = 'v1';
+const VERSION = 'v3';
 const SHELL_CACHE = `recipe-box-shell-${VERSION}`;
 const RUNTIME_CACHE = 'recipe-box-runtime';
 
 const SHELL = [
   './',
   './index.html',
-  './icons/apple-touch-icon.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
+  './apple-touch-icon.png',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 self.addEventListener('install', event => {
