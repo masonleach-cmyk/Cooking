@@ -39,6 +39,7 @@
   --star-off: #E7D8CF;
   --tab: #1E2A2A;
   --tab-text: #C9D6D4;
+  --mustard: #D4961A;        /* "worth a second look" dot after a scan */
 
   --display: 'Lilita One', 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif;
   --text: 'Nunito Sans', -apple-system, 'Helvetica Neue', sans-serif;
@@ -70,6 +71,7 @@
     --star-off: #3A4A49;
     --tab: #0B1212;
     --tab-text: #9FB1AE;
+    --mustard: #E9B949;
     color-scheme: dark;
   }
 }
@@ -607,6 +609,20 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .edit-row.needs-check { border-color: var(--cherry); }
 .row-flag { grid-column: 1 / -1; margin: 0; padding: .1rem .75rem .6rem 2.25rem; color: var(--cherry); font-size: .88rem; font-weight: 800; }
 
+/* ---------- scan: lines worth a second look ---------- */
+/* A small mustard dot on the row's edge; the detail only shows while you're in that line. */
+.edit-row.unsure { position: relative; }
+.edit-row.unsure::before, .field.unsure > label::after {
+  content: ''; width: .5rem; height: .5rem; border-radius: 50%; background: var(--mustard);
+}
+.edit-row.unsure::before { position: absolute; top: .95rem; left: -.3rem; box-shadow: 0 0 0 2px var(--card); }
+.field.unsure > label::after { display: inline-block; margin-left: .4rem; vertical-align: .1em; }
+.doubt { display: none; margin: 0; font-size: .8rem; line-height: 1.35; color: var(--muted); }
+.row-doubt { grid-column: 1 / -1; padding: 0 .75rem .55rem 2.25rem; }
+.field-doubt { padding-top: .15rem; }
+.unsure:focus-within > .doubt { display: block; }
+.doubt b { color: var(--ink); font-weight: 800; box-shadow: inset 0 -2px var(--mustard); }
+
 /* ---------- photo viewer controls ---------- */
 .photo-bar { position: fixed; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 1rem); display: flex; justify-content: center; gap: .75rem; }
 .photo-nav, .photo-remove {
@@ -696,7 +712,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v7';
+const APP_VERSION = 'v10';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -833,7 +849,9 @@ const STEP_ONLY = /^(?:(?:step|stage)\s*(\d{1,2})\s*[.:)]?|(\d{1,2})\s*[.)])$/i;
 // ---------- cleaning ----------
 
 function cleanLine(raw) {
-  let s = raw
+  // A checkbox in front of an ingredient reads as "|", "__|", "[" or a lone "l".
+  let s = raw.replace(/^\s*(?:[|_\[\]{}]+|[lI()](?=\s+[\d½¼¾⅓⅔⅛⅜⅝⅞]))\s+/, '');
+  s = s
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[|¦]/g, 'l')
@@ -841,7 +859,11 @@ function cleanLine(raw) {
     .trim();
   // Drop bullet characters OCR picks up (including bullets misread as o, e, « or »).
   s = s.replace(/^[•·●○◦▪■□☐❑*>~_\-–—]+\s*/, '');
-  s = s.replace(new RegExp(`^[oeO«»©®]\\s+(?=[\\d${FRAC}A-Z])`), '');
+  s = s.replace(new RegExp(`^[oeO«»©®¢€°@]\\s+(?=[\\d${FRAC}A-Z])`), '');
+  // A numbered step whose period read as a comma: "3, Preheat the oven".
+  s = s.replace(/^(\d{1,2}),\s+(?=[A-Z][a-z])/, '$1. ');
+  // A lone mark after a finished sentence (a pen tick, a smudge): "...and pepper. #"
+  s = s.replace(/([.!?)])\s+[#*~^\/\\@%&+]{1,2}$/, '$1');
   // "1 / 2" -> "1/2"
   s = s.replace(/(\d)\s*\/\s*(\d)/g, '$1/$2');
   return fixCommonMisreads(s).trim();
@@ -853,6 +875,10 @@ const ACCENTS = [
   [/\bjalape(?:n|ñ|fi|f|ri|r)o(s?)\b/gi, 'jalapeño$1'],
   [/\bcr[eè]me fra[iî]che\b/gi, 'crème fraîche'],
   [/\bsaut[eé](ed|ing|s)?\b/gi, 'sauté$1'],
+  [/\brag[uúùt]\b/gi, 'ragù'],
+  [/\bchets\b/gi, 'chefs'], // f read as t in serif type
+  [/\bpur[eé]e(s?)\b/gi, 'purée$1'],
+  [/\bplac[éè](?![\wÀ-ÿ])/gi, 'place'], // a speck over the e
 ];
 // A fraction glyph the repair pass couldn't split: "%4-inch" -> "¼-inch", "Y2 cup" -> "½ cup".
 const LONE_FRACTION = /(^|[\s(])[%Y¥]([2348])(?=[\s-]|$)/g;
@@ -860,6 +886,11 @@ function fixCommonMisreads(s) {
   s = s.replace(RUN_TOGETHER, (m, w) => `${w} a`);
   for (const [re, to] of ACCENTS) s = s.replace(re, m => { const r = m.replace(re, to); return /^[A-Z]/.test(m) ? r.charAt(0).toUpperCase() + r.slice(1) : r; });
   s = s.replace(LONE_FRACTION, (m, pre, d) => pre + ({ 2: '½', 3: '⅓', 4: '¼', 8: '⅛' })[d]);
+  // Ounces read with a zero: "4(50z.)", "5 0z.", "(5 02.)" -> "4 (5 oz.)"
+  s = s.replace(/(\d)\s?0z\b/g, '$1 oz').replace(/(\d)\s+02\.(?=\))/g, '$1 oz.');
+  s = s.replace(/(\d)\((?=\d)/g, '$1 (');
+  // "½, cup": a stray comma read after a fraction.
+  s = s.replace(new RegExp(`([${FRAC}]),\\s+(?=(?:cups?|teaspoons?|tablespoons?|tsps?|tbsps?|pounds?|lbs?|ounces?|oz|inch(?:es)?|pints?|quarts?|medium|large|small)\\b)`, 'g'), '$1 ');
   // "2½, to 3 pounds": a stray comma inside a range.
   s = s.replace(new RegExp(`([\\d${FRAC}]),\\s+(to|or)\\s+(?=[\\d${FRAC}])`, 'g'), '$1 $2 ');
   return s;
@@ -949,6 +980,56 @@ const LOOSE_COOK = new RegExp(`^(?:cook|bake)\\s+${TIME}$`, 'i');
  * @param {string} rawText  full OCR text (pages separated by blank lines)
  * @param {Array<{text:string,height:number}>} [ocrLines] lines with text height, used to find the title
  */
+// Which parts of a scanned recipe to double-check: the words the reader was unsure of,
+// traced to the ingredient, step or field they ended up in. Returns
+// { fields: { servings: ['1hr'] }, ingredients: { 3: ['½'] }, steps: { 0: ['wok'] } }.
+function scanDoubts(parsed, lines) {
+  const toks = t => (t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .match(/[a-z]+|\d+|[½¼¾⅓⅔⅛⅜⅝⅞]/g) || []);
+  const contains = (hay, needle) => {
+    if (!needle.length || needle.length > hay.length) return false;
+    outer: for (let i = 0; i + needle.length <= hay.length; i++) {
+      for (let k = 0; k < needle.length; k++) if (hay[i + k] !== needle[k]) continue outer;
+      return true;
+    }
+    return false;
+  };
+  const doubtful = (lines || []).filter(l => l.weak && l.weak.length).map(l => ({ toks: toks(l.text), weak: l.weak }));
+  // An amount whose fraction couldn't be rebuilt ("¥% cup", "1% teaspoons"): the reader is
+  // often confident about these, but they're the costliest thing to get wrong.
+  const BAD_AMOUNT = /(?:^|\s)(\d*[%¥#@&§$£€*?]+[A-Za-z]?)(?=\s+(?:cups?|teaspoons?|tablespoons?|tsps?|tbsps?|pounds?|lbs?|ounces?|oz|pints?|quarts?|inch(?:es)?|medium|large|small|cloves?|sticks?)\b|-inch)|¥\S*/gi;
+  const check = text => {
+    if (!text) return [];
+    const words = text.split(/\s+/);
+    const all = toks(text);
+    const found = new Set();
+    for (const m of text.matchAll(BAD_AMOUNT)) found.add((m[1] || m[0]).trim());
+    for (const l of doubtful) {
+      // The line ended up in this text (or, for a short field, this text came from the line).
+      if (!(contains(all, l.toks) || (all.length && contains(l.toks, all)))) continue;
+      for (const w of l.weak) {
+        if (!/[a-z0-9]/i.test(w) && words.includes(w)) { found.add(w); continue; } // a symbol where a word should be
+        const wt = toks(w);
+        // Ignore junk that was cleaned away and words too common to be worth a look.
+        if (!wt.length || !contains(all, wt) || /^(?:a|an|the|and|or|of|to|in|on|is|it|at|by|as)$/.test(wt.join(' '))) continue;
+        const shown = words.find(x => contains(toks(x), wt));
+        if (shown) found.add(shown.replace(/^[^\w½¼¾⅓⅔⅛⅜⅝⅞]+|[^\w½¼¾⅓⅔⅛⅜⅝⅞)]+$/g, '') || shown);
+      }
+    }
+    const list = [...found];
+    return list.filter(w => !list.some(o => o !== w && o.includes(w))).slice(0, 3);
+  };
+  const out = { fields: {}, ingredients: {}, steps: {} };
+  for (const k of ['title', 'servings', 'prepTime', 'cookTime', 'totalTime', 'source']) {
+    const d = check(parsed[k]);
+    if (d.length) out.fields[k] = d;
+  }
+  for (const kind of ['ingredients', 'steps']) {
+    (parsed[kind] || []).forEach((t, i) => { const d = check(t); if (d.length) out[kind][i] = d; });
+  }
+  return out;
+}
+
 function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
   const out = { title: '', servings: '', prepTime: '', cookTime: '', totalTime: '', source: extra.sourceHint || '', ingredients: [], steps: [], notes: '', issues: [] };
 
@@ -970,6 +1051,11 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
     if (UI_LINE.test(s)) return false;
     const by = s.match(/^[Bb][Yy]\s+([A-Z][\w.'’-]+(?:\s+[A-Z][\w.'’-]+){0,3})\s*$/);
     if (by) { if (!out.source) out.source = by[1]; return false; }
+    const NAMES = `([A-Z][\\w.'’-]+(?:\\s+(?:[A-Z][\\w.'’-]+|and|&))*)`;
+    const from = s.match(new RegExp(`^recipe (?:from|by)\\s+${NAMES}\\s*$`, 'i'));
+    if (from) { out.source = out.source && out.source !== from[1] ? `${from[1]}, ${out.source}` : from[1]; return false; }
+    const adapted = s.match(new RegExp(`^adapted (?:by|from)\\s+${NAMES}\\s*$`, 'i'));
+    if (adapted) { out.source = out.source ? `${out.source}, adapted by ${adapted[1]}` : `Adapted by ${adapted[1]}`; return false; }
     if (/\bprep\b/i.test(s) && !out.cookTime) {
       const c = s.match(/\bcook\s*:?\s*(\d+\s*(?:-|–|to)?\s*\d*\s*(?:min(?:ute)?s?|hours?|hrs?)\.?)/i);
       if (c) out.cookTime = c[1].trim();
@@ -977,7 +1063,7 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
     // "4 servings" (number first) is checked before "Servings 4" so "4 servings 1x" reads as 4.
     const sv = s.match(SERVINGS_LINE);
     if (sv && s.length < 30) { if (!out.servings) out.servings = sv[1]; return false; }
-    const total = s.match(/^(?:total\s+)?time\s*:?\s*((?:about\s+)?\d+\s*(?:-|–|to)?\s*\d*\s*(?:min(?:ute)?s?|hours?|hrs?)(?:\s*\d+\s*min(?:ute)?s?)?)\.?$/i);
+    const total = s.match(/^(?:total\s+)?time\b[^\d\n]{0,4}?((?:about\s+)?\d+\s*(?:-|–|to)?\s*\d*\s*(?:min(?:ute)?s?|hours?|hrs?)(?:\s*\d+\s*min(?:ute)?s?)?)\.?$/i);
     if (total) { if (!out.totalTime) out.totalTime = total[1].trim(); return false; }
     let matched = false;
     for (const [key, re] of Object.entries(META)) {
@@ -1038,7 +1124,9 @@ function parseRecipeText(rawText, ocrLines = [], titleHint = '', extra = {}) {
       lines.splice(lines.indexOf(pick), 1);
     }
   }
-  out.title = titleCase(out.title.replace(/[:.]+$/, ''));
+  out.title = titleCase(fixCommonMisreads(out.title.replace(/[:.]+$/, '')));
+  // Recipe websites tack "Recipe" onto the name ("Teriyaki Baked Salmon Recipe").
+  if (out.title.split(/\s+/).length >= 3) out.title = out.title.replace(/\s+recipe$/i, '');
   if (out.title) {
     const t = out.title.toLowerCase().replace(/[^a-z0-9]/g, '');
     lines = lines.filter(s => { if (s === null) return true; const k = s.toLowerCase().replace(/[^a-z0-9]/g, ''); return !(k.length >= 4 && t.includes(k)); });
@@ -1255,6 +1343,7 @@ function buildSteps(lines) {
   const worded = real.filter(s => /^(?:step|stage)\s*\d/i.test(s) && STEP_ONLY.test(s)).length; // "STEP 4"
   const inline = real.filter(s => NUMBER_MARKER.test(s)).length;
   let steps = [];
+  if (inline >= 2 && markerOnly < 2 && !worded) return numberedSteps(lines);
   if (markerOnly >= 2 || inline >= 2 || worded >= 1) {
     let open = false;
     for (const s of real) {
@@ -1270,6 +1359,54 @@ function buildSteps(lines) {
     if (steps.length === 1 && steps[0].length > 220) steps = sentenceChunks(steps[0]);
   }
   return steps.map(s => s.trim()).filter(s => s.length > 1);
+}
+
+// "1. Heat the oven… 2. Stir…": numbered steps. On a photographed page the numbers sit in a
+// margin and the reader sometimes drops one ("Preheat the oven…" with no "3."). A paragraph
+// that starts a new sentence is then a step whose number was lost, but only where the
+// numbers around it leave room for it (2 … 5 has room for two), or after the last number.
+function numberedSteps(lines) {
+  const pieces = []; // { n, text, cand }
+  let afterBreak = false;
+  for (const s of lines) {
+    if (s === null) { afterBreak = true; continue; }
+    const m = s.match(NUMBER_MARKER);
+    if (m) pieces.push({ n: Number(m[1]), text: s.replace(NUMBER_MARKER, ''), cand: false });
+    else if (!pieces.length) pieces.push({ n: null, text: s, cand: false }); // the end of a step from an earlier page
+    else {
+      const last = pieces[pieces.length - 1];
+      // A new paragraph starting a new sentence, after a finished step.
+      const cand = afterBreak && /^[A-Z]/.test(s) && /[.!?)"”]\**$/.test(last.text) && (last.n !== null || last.cand);
+      if (cand) pieces.push({ n: null, text: s, cand: true });
+      else last.text = joinWrapped(last.text, s);
+    }
+    afterBreak = false;
+  }
+  // Decide which candidates really are steps: fill each numbering gap exactly. After the last
+  // number there's no gap to measure, so trust paragraphs there only if no numbered step
+  // elsewhere has a paragraph of its own (then paragraphs here just mean paragraphs).
+  const runs = [];
+  for (let i = 0; i < pieces.length; i++) {
+    if (pieces[i].n === null) continue;
+    let j = i + 1; const between = [];
+    while (j < pieces.length && pieces[j].n === null) { if (pieces[j].cand) between.push(j); j++; }
+    runs.push({ from: pieces[i].n, next: j < pieces.length ? pieces[j].n : null, between });
+  }
+  const paragraphsInSteps = runs.some(r => r.next !== null && r.next - r.from - 1 < r.between.length);
+  const keep = new Set();
+  for (const r of runs) {
+    const room = r.next === null ? (paragraphsInSteps ? 0 : r.between.length) : r.next - r.from - 1;
+    if (room > 0 && r.between.length === room) r.between.forEach(k => keep.add(k));
+  }
+  const steps = [];
+  pieces.forEach((p, i) => {
+    if (steps.length && p.cand && !keep.has(i)) steps[steps.length - 1] = joinWrapped(steps[steps.length - 1], p.text);
+    else steps.push(p.text);
+  });
+  lastStepNumbers = [];
+  let n = 0;
+  for (const p of pieces) { if (p.n !== null) n = p.n; else if (keep.has(pieces.indexOf(p))) n += 1; else continue; lastStepNumbers.push(n); }
+  return steps.map(t => t.trim().replace(/([.!?)"”])\*+$/, '$1')).filter(t => t.length > 1);
 }
 
 // Unnumbered steps: a new step starts after a blank line, or when the previous
@@ -1783,6 +1920,8 @@ const isScreenshot = (w, h) => h / w > 1.9;
 const STATUS_BAR_BOTTOM = 0.055; // fraction of a screenshot's height taken by the status bar
 
 /** Walk tesseract.js blocks (or a flat paragraphs list) into lines with layout info. */
+const WEAK_WORD_CONF = 70;
+
 function pageFromOCR(data, width, height) {
   const paragraphs = data.blocks ? data.blocks.flatMap(b => b.paragraphs || []) : (data.paragraphs || []);
   // On a phone screenshot the top strip is the status bar (clock, signal, Dynamic Island
@@ -1794,6 +1933,11 @@ function pageFromOCR(data, width, height) {
     for (const l of p.lines || []) {
       let words = (l.words || []).filter(w => w.text && w.text.trim());
       if (statusBar) words = words.filter(w => (w.bbox.y0 + w.bbox.y1) / 2 > statusBar);
+      // Checkboxes beside ingredients read as "{_]", "(l_l", "[]": a squarish mark with no real letters.
+      words = words.filter(w => {
+        const bw = w.bbox.x1 - w.bbox.x0, bh = w.bbox.y1 - w.bbox.y0;
+        return !(w.text.length <= 4 && /^[[\]{}()|_lIi!:;=—-]+$/.test(w.text) && bh > 0 && bw / bh > 0.6 && bw / bh < 1.6);
+      });
       if (!words.length) continue;
       // Drop short junk stuck onto a line from a separate column (like/comment counts, icons),
       // but only when it stands apart from the text: short words at the end of a line
@@ -1808,6 +1952,18 @@ function pageFromOCR(data, width, height) {
         const gapAfter = i + 1 < words.length ? words[i + 1].bbox.x0 - w.bbox.x1 : Infinity;
         return !(apart(gapBefore) && apart(gapAfter));
       });
+      // The last word, read with almost no confidence, is a mark rather than text when it sits
+      // far from the line (star-rating icons beside a title read as "ataltet") or is a lone
+      // symbol after a finished sentence (a pen tick read as "f" or "#").
+      while (words.length > 1) {
+        const w = words[words.length - 1], prev = words[words.length - 2];
+        if ((w.confidence ?? 100) >= 20) break;
+        const lineH = Math.max(1, ...words.map(x => x.bbox.y1 - x.bbox.y0));
+        const far = w.bbox.x0 - prev.bbox.x1 > Math.max(lineH * 2.5, apart(0) ? 0 : usual * 3);
+        const tick = w.text.length <= 2 && /[.!?)]$/.test(prev.text);
+        if (!far && !tick) break;
+        words = words.slice(0, -1);
+      }
       // A screenshot's header bar: a centred title between a back arrow and icons
       // ("<   Miso Chicken   (1k  ⇧"). Keep the title words; note the back arrow.
       let header = null;
@@ -1829,7 +1985,14 @@ function pageFromOCR(data, width, height) {
         x0: Math.min(...words.map(w => w.bbox.x0)), x1: Math.max(...words.map(w => w.bbox.x1)),
         y0: Math.min(...words.map(w => w.bbox.y0)), y1: Math.max(...words.map(w => w.bbox.y1)),
       };
-      lines.push({ text, ...box, height: box.y1 - box.y0, conf, brk: first, ...(header ? { header } : {}) });
+      // Words the reader wasn't sure of (and fractions we rebuilt from a digit re-read).
+      // Fractions always read with low confidence, but repairFractions has already rebuilt them;
+      // likewise accents the misread fixer restores (jalapeño, purée). Neither needs a second look.
+      const fold = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ñ/g, 'n');
+      const weak = words.filter(w => (w.confidence ?? 100) < WEAK_WORD_CONF
+        && !new RegExp(`^\\W*\\d*[${FRAC}]`).test(w.text)
+        && fixCommonMisreads(fold(w.text)) === fold(w.text)).map(w => w.text);
+      lines.push({ text, ...box, height: box.y1 - box.y0, conf, weak, brk: first, ...(header ? { header } : {}) });
       first = false;
     }
   }
@@ -1838,7 +2001,9 @@ function pageFromOCR(data, width, height) {
   const median = heights[heights.length >> 1] || 0;
   // Screenshot text is crisp, so a shaky read there is a photo or an ad, not recipe text.
   const minConf = isScreenshot(width, height) ? 50 : 35;
-  const kept = lines.filter(l => l.conf >= minConf && !(l.height < median * 0.6 && l.conf < 70)
+  // A shaky "Time  1 hr" is still worth keeping: its label tells us what it is.
+  const meta = l => /^(?:total\s+|prep\w*\s+|cook\w*\s+)?time\b|^(?:serves|yield|servings)\b/i.test(l.text) && /\d/.test(l.text);
+  const kept = lines.filter(l => (l.conf >= minConf || (l.conf >= 25 && meta(l))) && !(l.height < median * 0.6 && l.conf < 70)
     && !(l.conf < 75 && !/[A-Za-z]{4}/.test(l.text))); // shaky read with no real words: "mo are ee. a"
   kept.forEach((l, i) => { if (i && !l.brk && !lines.includes(kept[i - 1])) l.brk = true; });
   return { width, height, lines: kept };
@@ -1931,11 +2096,11 @@ const STATUS_BAR = /\b\d{1,2}:\d{2}\b|\b(?:5G|LTE|4G|3G)\b/i;
 const TAB_WORDS = /^(?:(?:home|search|recent|saved|profile|account|recipe box|recipes|inspiration|explore|library|settings|more|shop|for you|cart|menu|favorites|collections|grocery list)\s*)+$/i;
 const CHROME_LINE = new RegExp([
   '^advertisement$', '^sponsored', '^add a note$', '^your (?:private )?notes$', "^you don.?t have any notes",
-  '^cooked(?!\\s+[a-z]{3,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$', '^saved\\b',
+  '^cooked(?![,;]?\\s+[a-z]{2,})', '^jump to recipe', '^print(?: recipe)?$', '^save(?: recipe| to recipe box)?$', '^saved\\b',
   '^share(?: recipe)?$', '^rate (?:this|the) recipe', '^leave a (?:review|comment)', '^(?:log|sign) in',
   '^subscribe', '^read (?:more|comments)', '^\\d+ (?:comments|ratings|reviews)$', '^(?:yield|scale|convert)(?:\\s+(?:yield|scale|convert))*$',
   '^add (?:a )?comment', 'find\\s*rel\\w*\\s*(?:con\\w*)?', '\\bfind\\s+\\w{2,9}\\s+cont\\w*', '^search$', '^(?:less|more|see more|show more|\\.\\.\\. ?more)\\W*\\w?$',
-  '^add to grocery list', 'shop (?:on instacart|ingredients)', '^shop\\s*ingred', '^rating\\b', '^comments\\b', '^ingredient substitution', '^nutrition(?:al)? info', '^cook mode$',
+  '^add to grocery list', 'shop (?:on instacart|ingredients)', '^shop\\s*ingred', '\\bsho\\w?\\s+ing\\w*\\b', '^\\W*\\w{0,3}\\s*saved\\b', '^rating\\b', '^comments\\b', '^ingredient substitution', '^nutrition(?:al)? info', '^cook mode$',
   '^overview\\b.*\\bcook mode', 'food stylist', 'for the new york times\\b', '^photo(?:graph)? by\\b',
   '^enjoy!*$', '^(?:follow|like|subscribe)\\b.*\\b(?:recipes?|more)\\b',
   // Connection banners and toasts that pop up over the page.
@@ -2012,7 +2177,9 @@ function align(A, B) {
         break;
       }
       const reachesEnd = ia >= A.length - 1; // the last line of A may be cut off
-      const strong = matched >= 2 || norm(A[i].text).length >= 25;
+      // A section heading ("PREPARATION") appears once per recipe, so it pins the overlap
+      // even when the line after it was cut off by the tab bar ("CTED 1" for "STEP 1").
+      const strong = matched >= 2 || norm(A[i].text).length >= 25 || !!headingOf(A[i].text) || /^step\s*\d{1,2}$/i.test(A[i].text.trim());
       if (reachesEnd && strong && (!best || matched > best.score)) best = { i, j, score: matched };
     }
     if (best) break;
@@ -2028,22 +2195,28 @@ function heroTitle(pages) {
   let best = null;
   pages.forEach(p => {
     if (!isScreenshot(p.width, p.height)) return;
+    // Normal text height: buttons and junk reads are tall, so look below the middle.
     const hs = p.lines.map(l => l.height).sort((a, b) => a - b);
-    const median = hs[hs.length >> 1] || 0;
+    const median = hs[Math.floor(hs.length * 0.35)] || 0;
     const ok = l => l.y0 > p.height * 0.12 && l.conf >= 60 && /[A-Za-z]{3}/.test(l.text) && !/^\W/.test(l.text)
+      && (l.x1 - l.x0) / l.text.length >= 0.3 * l.height // real big type is wide; a button's outline isn't
+      && !CHROME_LINE.test(l.text.replace(/^(?:[A-Za-z]{1,2}\s+)+/, ''))
       && l.text.split(/\s+/).length <= 12 && (l.text.match(/[A-Za-z]/g) || []).length >= l.text.replace(/\s/g, '').length * 0.8
       && !CHROME_LINE.test(l.text) && !headingOf(l.text);
     for (let i = 0; i < p.lines.length; i++) {
       const l = p.lines[i];
-      if (l.height < median * 1.6 || !ok(l)) continue;
+      if (l.height < median * 1.45 || !ok(l)) continue;
       const group = [l];
       for (let j = i + 1; j < p.lines.length; j++) {
         const m = p.lines[j], last = group[group.length - 1];
-        if (m.height < last.height * 0.7 || m.height > last.height * 1.3 || m.y0 - last.y1 > last.height * 0.8 || !ok(m)) break;
+        if (m.height < last.height * 0.7 || m.height > last.height * 1.3 || m.y0 - last.y1 > last.height * 0.8
+          || m.y0 < last.y0 + last.height * 0.6 || !ok(m)) break; // overlapping = a second read of the same line
         group.push(m);
       }
       const h = Math.max(...group.map(g => g.height));
-      if (!best || h > best.height) best = { height: h, lines: group, text: group.map(g => g.text).join(' ').replace(/\s+/g, ' ').trim() };
+      // The reader sometimes reads big type twice, overlapping ("Mapo Ragt" / "apo Kagu").
+      const twins = p.lines.filter(m => !group.includes(m) && group.some(g => Math.min(g.y1, m.y1) - Math.max(g.y0, m.y0) > 0.5 * Math.min(g.height, m.height)));
+      if (!best || h > best.height) best = { height: h, lines: [...group, ...twins], text: group.map(g => g.text).join(' ').replace(/\s+/g, ' ').trim() };
       i += group.length - 1;
     }
   });
@@ -2082,19 +2255,22 @@ function assemblePages(pages) {
   const bars = pages.map(p => {
     if (!screenshot(p)) return null;
     const ls = p.lines.filter(l => l.y1 < p.height * (pages.length === 1 ? 0.11 : 0.12));
-    const title = ls.map(l => cleanTitleLine(lettersOnly(l.text))).filter(Boolean).join(' ');
+    const title = ls.filter(l => !headingOf(l.text) && !CHROME_LINE.test(l.text))
+      .map(l => cleanTitleLine(lettersOnly(l.text))).filter(Boolean).join(' ');
     const conf = ls.length ? ls.reduce((a, l) => a + l.conf, 0) / ls.length : 0;
     return { ls, title, conf, back: ls.some(l => l.header && l.header.back) };
   });
   // A title bar is trusted when another screenshot (or the big title) agrees with it, allowing
   // for a garbled word or two; when it sits beside a back arrow; or on a lone screenshot.
-  const hero = heroTitle(pages);
+  let hero = heroTitle(pages);
   const agrees = b => bars.some(o => o && o !== b && o.title && overlap(o.title, b.title) >= 0.6) || (hero && overlap(hero.text, b.title) >= 0.6);
   const trusted = bars.map((b, i) => [b, i]).filter(([b]) => b && b.title
     && (pages.length === 1 || agrees(b) || (b.back && b.conf >= 80)));
   let barBottom = 0;
   for (const [b, i] of trusted) barBottom = Math.max(barBottom, ...b.ls.map(l => l.y1 / pages[i].height));
   const barTitle = (trusted.map(([b]) => b).sort((a, b) => (agrees(b) - agrees(a)) || b.conf - a.conf || b.title.length - a.title.length)[0] || {}).title || '';
+  // Big text that has nothing to do with the header bar's title isn't the title.
+  if (hero && barTitle && overlap(hero.text, barTitle) < 0.5) hero = null;
   const knownTitle = (hero && hero.text) || barTitle;
 
   // Pinned elements sit at the same spot on every screenshot (author line, video
@@ -2138,7 +2314,7 @@ function assemblePages(pages) {
         && l.y0 - lastDropped.y1 < lastDropped.height * 1.5) drop = true; // the wrapped end of chrome text
       lastDropped = drop ? l : null;
       if (drop) { pendingBrk = pendingBrk || l.brk; continue; }
-      lines.push({ text: l.text, brk: l.brk || pendingBrk });
+      lines.push({ text: l.text, weak: l.weak, brk: l.brk || pendingBrk });
       pendingBrk = false;
     }
     return { index, lines };
@@ -2174,7 +2350,14 @@ function assemblePages(pages) {
       const offset = merged.length - cleaned[order[k - 1]].lines.length; // A's lines sit at the end of merged
       const cut = offset + e.i;
       const first = { ...B[e.j], brk: merged[cut] ? merged[cut].brk : B[e.j].brk };
-      merged = merged.slice(0, cut).concat([first], B.slice(e.j + 1));
+      const tail = B.slice(e.j + 1);
+      // Lines both photos show were read twice: a word only stays doubtful if both reads were unsure of it.
+      [first, ...tail].forEach((l, t) => {
+        const a = merged[cut + t];
+        if (!a || norm(a.text) !== norm(l.text) || !l.weak) return;
+        l.weak = l.weak.filter(w => (a.weak || []).includes(w));
+      });
+      merged = merged.slice(0, cut).concat([first], tail);
     }
     // Rank: an intro page (title, byline, times) comes first, then ingredients, then steps.
     const hasIngredients = merged.some(l => /^ingredients?\b/i.test(l.text));
@@ -2210,16 +2393,20 @@ function assemblePages(pages) {
       const key = norm(l.text);
       if (key.length >= 30 && seen.has(key)) return;
       seen.add(key);
-      lines.push({ text: l.text, brk: i === 0 ? true : l.brk });
+      lines.push({ text: l.text, weak: l.weak, brk: i === 0 ? true : l.brk });
     });
   }
   if (lines.length) lines[0].brk = false;
-  // The big title beats the title bar (which can be cut short), unless they disagree.
+  // Title: the header bar's plain type reads most reliably, but it can be cut short; the
+  // big title is complete but its decorative type can misread ("Mapo Ragt"). Use the bar
+  // when it has as many words as the big title, otherwise the big title.
   const words = t => new Set(t.toLowerCase().match(/[a-z]+/g) || []);
+  const count = t => (t.match(/\S+/g) || []).length;
   if (barTitle) titleHint = barTitle;
   if (hero) {
     const hw = words(hero.text), bw = words(titleHint);
-    if (!titleHint || [...bw].filter(w => hw.has(w)).length >= bw.size / 2) titleHint = hero.text;
+    const related = [...bw].filter(w => hw.has(w)).length >= bw.size / 2;
+    if (!titleHint || (related && count(titleHint) < count(hero.text))) titleHint = hero.text;
   }
   return { lines, titleHint: titleHint.replace(/[,;:]$/, ''), sourceHint, gaps };
 }
@@ -2276,6 +2463,24 @@ async function getWorker() {
   return workerPromise;
 }
 
+// The reader works in the background. A phone can stop it when memory runs short, and then
+// it never answers, so every read gets a time limit and a stalled reader is replaced.
+const READ_LIMIT_MS = 150000, DIGIT_LIMIT_MS = 20000;
+class ReaderStalled extends Error {}
+async function within(promise, ms) {
+  let timer;
+  try {
+    return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new ReaderStalled()), ms); })]);
+  } finally { clearTimeout(timer); }
+}
+async function resetWorker() {
+  const pending = workerPromise;
+  workerPromise = null;
+  try { const w = await within(pending, 3000); await within(w.terminate(), 3000); } catch {}
+}
+// Let the screen respond to taps between the heavy steps of a scan.
+const breathe = () => new Promise(resolve => setTimeout(resolve, 0));
+
 function loadImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -2312,11 +2517,18 @@ async function prepareForOCR(file) {
   }
   const total = w * h;
 
-  // Mostly-dark page (e.g. white caption text over a video): keep only the bright
-  // text and turn it into black-on-white, which the reader handles far better.
+  // Mostly-dark page. The reader wants dark text on a light page, so flip it.
   let acc0 = 0, median = 0;
   for (; median < 255; median++) { acc0 += hist[median]; if (acc0 >= total / 2) break; }
-  if (median < 100) {
+  let flat = 0;
+  for (let v = Math.max(0, median - 10); v <= Math.min(255, median + 10); v++) flat += hist[v];
+  if (median < 100 && flat >= total * 0.45) {
+    // An app in dark mode (flat background): invert, keeping the soft letter edges,
+    // which read far better than hard black-and-white ("Ragt", "chets" otherwise).
+    for (let j = 0; j < gray.length; j++) gray[j] = 255 - gray[j];
+    hist.reverse();
+  } else if (median < 100) {
+    // White caption text over a busy video frame: keep only the bright text.
     for (let j = 0, i = 0; j < gray.length; j++, i += 4) {
       const v = gray[j] > 185 ? 0 : 255;
       gray[j] = v;
@@ -2380,14 +2592,19 @@ async function readRecipePhotos(files, onProgress = () => {}) {
   };
 
   onProgress({ label: 'Getting the text reader ready', fraction: 0 });
-  const worker = await getWorker();
+  const worker = await within(getWorker(), READ_LIMIT_MS).catch(async err => {
+    if (err instanceof ReaderStalled) { await resetWorker(); throw new Error('The text reader didn’t start. Check your connection and try again.'); }
+    throw err;
+  });
 
   const pages = [];
   try {
     for (page = 0; page < count; page++) {
       onProgress({ label: label(), fraction: page / count });
+      await breathe();
       const prepared = await prepareForOCR(files[page]);
-      let { data } = await worker.recognize(prepared.canvas, {}, { text: true, blocks: true });
+      await breathe();
+      let { data } = await within(worker.recognize(prepared.canvas, {}, { text: true, blocks: true }), READ_LIMIT_MS);
 
       // A fragmented read means the automatic layout split a text column: reread the
       // page as one block of text and keep whichever read is cleaner.
@@ -2395,7 +2612,7 @@ async function readRecipePhotos(files, onProgress = () => {}) {
       if (first > 0.15) {
         onProgress({ label: `${label()} (second pass)`, fraction: (page + 0.5) / count });
         await worker.setParameters({ tessedit_pageseg_mode: '6' });
-        const retry = (await worker.recognize(prepared.canvas, {}, { text: true, blocks: true })).data;
+        const retry = (await within(worker.recognize(prepared.canvas, {}, { text: true, blocks: true }), READ_LIMIT_MS)).data;
         await worker.setParameters({ tessedit_pageseg_mode: '3' });
         if (fragmentation(pageFromOCR(retry, prepared.width, prepared.height)) < first) data = retry;
       }
@@ -2410,7 +2627,7 @@ async function readRecipePhotos(files, onProgress = () => {}) {
           digitMode = true;
         }
         for (const size of [48, 72]) {
-          const r = await worker.recognize(digitCanvas(part, prepared.gray, prepared.width, size));
+          const r = await within(worker.recognize(digitCanvas(part, prepared.gray, prepared.width, size)), DIGIT_LIMIT_MS);
           const digit = (r.data.text || '').trim().slice(0, 1);
           if (/^[1-9]$/.test(digit)) return digit;
         }
@@ -2427,7 +2644,7 @@ async function readRecipePhotos(files, onProgress = () => {}) {
         sctx.imageSmoothingQuality = 'high';
         sctx.drawImage(prepared.canvas, 0, top, prepared.width, bottom - top, 0, 0, strip.width, strip.height);
         await worker.setParameters({ tessedit_pageseg_mode: '6' });
-        const hdr = (await worker.recognize(strip, {}, { text: true, blocks: true })).data;
+        const hdr = (await within(worker.recognize(strip, {}, { text: true, blocks: true }), READ_LIMIT_MS)).data;
         await worker.setParameters({ tessedit_pageseg_mode: '3' });
         data = mergeHeader(data, hdr, top, bottom, 2);
       }
@@ -2437,6 +2654,14 @@ async function readRecipePhotos(files, onProgress = () => {}) {
       pageResult.secondPass = first > 0.15;
       pages.push(pageResult);
     }
+  } catch (err) {
+    if (err instanceof ReaderStalled) {
+      await resetWorker();
+      throw new Error('The text reader stopped responding. Try again; if it keeps happening, scan fewer photos at a time.');
+    }
+    // A failed read can leave the reader in single-digit mode; start fresh next time.
+    await resetWorker();
+    throw err;
   } finally {
     progressHandler = null;
     quiet = false;
@@ -2446,6 +2671,7 @@ async function readRecipePhotos(files, onProgress = () => {}) {
   const { lines, titleHint, sourceHint, gaps } = assemblePages(pages);
   return {
     text: linesToText(lines),
+    assembled: lines,
     lines: pages.flatMap(p => p.lines.map(l => ({ text: l.text, height: l.height }))),
     titleHint, sourceHint, gaps,
     // For troubleshooting: what was read on each photo, line by line.
@@ -2610,6 +2836,31 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && wantWake && !wakeLock) setWakeLock(true);
 });
 
+// ---------- iOS keyboard ----------
+// In iOS 26, closing the keyboard can leave the page shifted: the tab bar and buttons look
+// right but taps land in the wrong place. Nudging the scroll position makes WebKit
+// re-sync the viewport. Runs once the keyboard has finished closing.
+const TYPING = 'input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea, select, [contenteditable]';
+function settleViewport() {
+  const vv = window.visualViewport;
+  if (!vv || (vv.offsetTop < 1 && window.innerHeight - vv.height < 1)) return;
+  if (vv.scale > 1.01) return; // pinch-zoomed on purpose
+  const x = window.scrollX, y = window.scrollY;
+  window.scrollTo(x, y + 1);
+  window.scrollTo(x, y);
+}
+let settleTimer;
+function settleSoon() {
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => {
+    const a = document.activeElement;
+    if (a && a.matches && a.matches(TYPING)) return; // moved on to another field
+    settleViewport();
+  }, 400);
+}
+document.addEventListener('focusout', e => { if (e.target.matches && e.target.matches(TYPING)) settleSoon(); });
+window.visualViewport?.addEventListener('resize', settleSoon);
+
 // ---------- routing ----------
 
 function route() {
@@ -2618,6 +2869,19 @@ function route() {
 }
 
 function render() {
+  try { renderScreen(); } catch (err) {
+    // Never leave a half-drawn screen behind: show a way out instead.
+    console.error(err);
+    view.innerHTML = `
+      ${band(`<div class="band-bar"><a class="back" href="#/">Recipes</a></div><h1 class="sign">Something went wrong</h1>`)}
+      <section class="card sec">
+        <p>This screen couldn't open. Your saved recipes are safe.</p>
+        <a class="btn btn-primary" href="#/">Back to recipes</a>
+      </section>`;
+  }
+}
+
+function renderScreen() {
   if (wantWake) setWakeLock(false);
   // Leaving a screen closes anything layered over it.
   for (const id of ['sheet', 'photoViewer']) { const d = document.getElementById(id); if (d && d.open) d.close(); }
@@ -2936,24 +3200,35 @@ function rowLabel(kind, index, header) {
   return header ? 'Section heading' : kind === 'step' ? `Step ${index + 1}` : `Ingredient ${index + 1}`;
 }
 
-function editRow(kind, value, index, flag = '') {
+let doubtSeq = 0;
+// "Not sure about “1hr”" — the note behind the mustard dot.
+function doubtNote(words, cls) {
+  const id = `doubt-${++doubtSeq}`;
+  const list = words.map(w => `<b>${esc(w)}</b>`);
+  const joined = list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}` : list[0];
+  return { id, html: `<p class="doubt ${cls}" id="${id}">The scan wasn't sure about ${joined}.</p>` };
+}
+
+function editRow(kind, value, index, flag = '', doubt = null) {
   const header = kind === 'ingredient' && isHeader(value);
   const text = header ? value.slice(HEADER_MARK.length) : value;
   const label = rowLabel(kind, index, header);
   const placeholder = header ? 'Section name, e.g. For the sauce' : kind === 'step' ? 'Describe this step' : 'e.g. 1 cup flour';
+  const note = doubt && doubt.length ? doubtNote(doubt, 'row-doubt') : null;
   return `
-    <li class="edit-row${header ? ' is-header' : ''}${flag ? ' needs-check' : ''}" data-kind="${kind}"${header ? ' data-header' : ''}>
+    <li class="edit-row${header ? ' is-header' : ''}${flag ? ' needs-check' : ''}${note ? ' unsure' : ''}" data-kind="${kind}"${header ? ' data-header' : ''}>
       <button type="button" class="grip" data-grip aria-label="Move ${label}. Drag, or use the arrow keys.">${ICONS.grip}</button>
       ${kind === 'step' ? `<span class="row-num" aria-hidden="true">${index + 1}</span>` : ''}
-      <textarea class="row-input" rows="${kind === 'step' ? 3 : 1}" aria-label="${label}" enterkeyhint="next" placeholder="${placeholder}">${esc(text)}</textarea>
+      <textarea class="row-input" rows="${kind === 'step' ? 3 : 1}" aria-label="${label}"${note ? ` aria-describedby="${note.id}"` : ''} enterkeyhint="next" placeholder="${placeholder}">${esc(text)}</textarea>
       <button type="button" class="row-remove" data-action="row-remove" aria-label="Remove ${label}">${ICONS.remove}</button>
       ${flag ? `<p class="row-flag">${esc(flag)}</p>` : ''}
+      ${note ? note.html : ''}
     </li>`;
 }
 
-function editList(kind, values, flags = {}) {
+function editList(kind, values, flags = {}, doubts = {}) {
   const items = values.length ? values : [''];
-  return items.map((v, i) => editRow(kind, v, i, flags[i] || '')).join('');
+  return items.map((v, i) => editRow(kind, v, i, flags[i] || '', doubts[i])).join('');
 }
 
 function renderForm(id) {
@@ -3105,8 +3380,8 @@ function addRow(list, value = '', after = null, focus = true, header = false) {
   return row;
 }
 
-function setListValues(list, values, flags = {}) {
-  list.innerHTML = editList(list.dataset.kind, values, flags);
+function setListValues(list, values, flags = {}, doubts = {}) {
+  list.innerHTML = editList(list.dataset.kind, values, flags, doubts);
   list.querySelectorAll('.row-input').forEach(autosize);
 }
 
@@ -3122,7 +3397,7 @@ function startDrag(e, grip) {
   const row = grip.closest('.edit-row');
   const list = row.parentElement;
   e.preventDefault();
-  grip.setPointerCapture(e.pointerId);
+  try { grip.setPointerCapture(e.pointerId); } catch { return; } // the touch already ended
   const grabOffset = e.clientY - row.getBoundingClientRect().top;
   let lastY = e.clientY;
   row.classList.add('dragging');
@@ -3144,6 +3419,7 @@ function startDrag(e, grip) {
 
   let raf = 0;
   const edgeScroll = () => {
+    if (!row.isConnected) return end(); // the list was redrawn mid-drag
     const edge = 90;
     const bottomLimit = window.innerHeight - 80; // keep clear of the tab bar
     let dy = 0;
@@ -3155,19 +3431,27 @@ function startDrag(e, grip) {
   raf = requestAnimationFrame(edgeScroll);
 
   const move = ev => { lastY = ev.clientY; place(); };
-  const end = () => {
+  let ended = false;
+  function end() {
+    if (ended) return;
+    ended = true;
     cancelAnimationFrame(raf);
     grip.removeEventListener('pointermove', move);
     grip.removeEventListener('pointerup', end);
     grip.removeEventListener('pointercancel', end);
+    grip.removeEventListener('lostpointercapture', end);
+    window.removeEventListener('blur', end);
     row.classList.remove('dragging');
     list.classList.remove('is-dragging');
     row.style.transform = '';
     renumber(list);
-  };
+  }
   grip.addEventListener('pointermove', move);
   grip.addEventListener('pointerup', end);
   grip.addEventListener('pointercancel', end);
+  // iOS can take the touch away (a call, a swipe home) without a pointerup.
+  grip.addEventListener('lostpointercapture', end);
+  window.addEventListener('blur', end);
 }
 
 function moveWithKeys(e, grip) {
@@ -3224,6 +3508,8 @@ async function runScan() {
       label.textContent = l;
       fill.style.width = `${Math.round(fraction * 100)}%`;
     });
+    // Left this screen while the photos were being read: don't write into whatever is open now.
+    if (!form.isConnected) return;
     const parsed = parseRecipeText(result.text, result.lines, result.titleHint, { sourceHint: result.sourceHint, gaps: result.gaps });
     state.lastScanReport = [
       `Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''} scan report, ${new Date().toLocaleString()}`,
@@ -3240,18 +3526,22 @@ async function runScan() {
       label.textContent = 'No ingredients or steps found. Try a sharper, well-lit photo, or copy what you need from the text below.';
       return;
     }
+    // A scan fills in the name, ingredients and steps only. Notes, times, servings and the
+    // source are left for you: on a photo they're too often a description or a stray label.
     if (parsed.title) form.title.value = parsed.title;
-    for (const key of ['servings', 'prepTime', 'cookTime', 'totalTime', 'source']) if (parsed[key]) form[key].value = parsed[key];
     const diet = suggestDiet(parsed);
     for (const [k] of DIETS) { const el = form.querySelector(`input[name="diet-${k}"][value="${diet[k]}"]`); if (el) el.checked = true; }
     document.getElementById('dietHint').hidden = !(diet.gf || diet.df);
     if (!form.category.value) form.category.value = guessCategory(parsed) || '';
     const flags = kind => Object.fromEntries(parsed.issues.filter(x => x.field === kind && x.index != null).map(x => [x.index, x.message]));
-    setListValues(document.getElementById('ingList'), parsed.ingredients, flags('ingredients'));
-    setListValues(document.getElementById('stepList'), parsed.steps, flags('steps'));
-    if (parsed.notes && !form.notes.value.trim()) { form.notes.value = parsed.notes; autosize(form.notes); }
+    const doubts = scanDoubts(parsed, result.assembled);
+    setListValues(document.getElementById('ingList'), parsed.ingredients, flags('ingredients'), doubts.ingredients);
+    setListValues(document.getElementById('stepList'), parsed.steps, flags('steps'), doubts.steps);
+    markFieldDoubts(form, doubts.fields.title ? { title: doubts.fields.title } : {});
     const count = parsed.ingredients.filter(i => !isHeader(i)).length;
-    label.textContent = `Found ${plural(count, 'ingredient')} and ${plural(parsed.steps.length, 'step')}.`;
+    const unsure = (doubts.fields.title ? 1 : 0) + Object.keys(doubts.ingredients).length + Object.keys(doubts.steps).length;
+    label.textContent = `Found ${plural(count, 'ingredient')} and ${plural(parsed.steps.length, 'step')}.`
+      + (unsure ? ` A dot marks ${unsure === 1 ? 'one line' : `${unsure} lines`} worth a second look.` : '');
     showIssues(parsed.issues);
     (parsed.issues.length ? document.getElementById('issues') : document.getElementById('fields'))
       .scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
@@ -3262,6 +3552,31 @@ async function runScan() {
   } finally {
     btn.disabled = !state.draft.photos.length;
   }
+}
+
+// Put the mustard dot on scanned fields (name, times, servings, source) the reader wasn't sure of.
+function markFieldDoubts(form, fields) {
+  form.querySelectorAll('.field.unsure').forEach(clearFieldDoubt);
+  for (const [name, words] of Object.entries(fields)) {
+    const input = form[name];
+    const field = input && input.closest('.field');
+    if (!field) continue;
+    const note = doubtNote(words, 'field-doubt');
+    field.classList.add('unsure');
+    input.insertAdjacentHTML('afterend', note.html);
+    input.setAttribute('aria-describedby', [input.getAttribute('aria-describedby'), note.id].filter(Boolean).join(' '));
+  }
+}
+
+function clearFieldDoubt(field) {
+  const note = field.querySelector('.field-doubt');
+  const input = field.querySelector('input, select');
+  if (note && input) {
+    const rest = (input.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== note.id).join(' ');
+    rest ? input.setAttribute('aria-describedby', rest) : input.removeAttribute('aria-describedby');
+  }
+  note?.remove();
+  field.classList.remove('unsure');
 }
 
 function showIssues(issues) {
@@ -3706,7 +4021,10 @@ view.addEventListener('click', e => {
   const el = e.target.closest('[data-action]');
   if (!el || !view.contains(el)) return;
   const fn = actions[el.dataset.action];
-  if (fn) { e.preventDefault(); fn(el, e); }
+  if (!fn) return;
+  e.preventDefault();
+  // An error in one button shouldn't leave the screen unresponsive.
+  Promise.resolve().then(() => fn(el, e)).catch(err => { console.error(err); toast('That didn’t work. Try again.'); });
 });
 
 view.addEventListener('pointerdown', e => {
@@ -3756,7 +4074,15 @@ view.addEventListener('input', e => {
     autosize(e.target);
     const row = e.target.closest('.needs-check');
     if (row) { row.classList.remove('needs-check'); row.querySelector('.row-flag')?.remove(); }
+    const unsure = e.target.closest('.edit-row.unsure');
+    if (unsure) {
+      unsure.classList.remove('unsure');
+      unsure.querySelector('.row-doubt')?.remove();
+      e.target.removeAttribute('aria-describedby');
+    }
   }
+  const field = e.target.closest && e.target.closest('.field.unsure');
+  if (field) clearFieldDoubt(field);
 });
 
 let notesTimer;
