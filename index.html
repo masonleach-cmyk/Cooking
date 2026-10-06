@@ -1107,39 +1107,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 /* ---------- settings: theme picker ---------- */
 .theme-now { font-weight: 800; font-size: .9rem; color: var(--muted); }
 .theme-intro { margin-top: 0; }
-.theme-group { margin-top: 1rem; }
-.theme-group-title {
-  display: flex; align-items: center; gap: .6rem; margin: 0 0 .55rem;
-  font: 800 .75rem/1.2 var(--text); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
-}
-.theme-group-title::after { content: ''; flex: 1; border-top: 2px dashed var(--dash); }
-.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
-@media (max-width: 330px) { .theme-grid { grid-template-columns: 1fr; } }
-.theme-opt {
-  position: relative; display: flex; flex-direction: column; align-items: stretch; gap: .15rem;
-  padding: 0 0 .75rem; margin: 0; text-align: left; cursor: pointer; overflow: hidden;
-  font: inherit; color: var(--ink); background: var(--card);
-  border: 2px solid var(--line); border-radius: 14px;
-  touch-action: manipulation; -webkit-appearance: none; appearance: none;
-  transition: transform .12s ease;
-}
-.theme-opt:active { transform: scale(.98); }
-.theme-opt[aria-checked="true"] { border-color: var(--heading); box-shadow: 0 0 0 2px var(--heading); }
-.theme-opt[aria-checked="true"] .theme-name::after {
-  content: ''; position: absolute; top: .5rem; right: .55rem; width: 1.45rem; height: 1.45rem; border-radius: 50%;
-  background: var(--heading) no-repeat center / 62% 62%
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  box-shadow: 0 0 0 2px var(--card);
-}
-.theme-name { position: relative; padding: .6rem 2.3rem 0 .75rem; font-weight: 800; font-size: 1rem; line-height: 1.25; }
-.theme-badge {
-  display: inline-block; margin-left: .25rem; padding: 0 .4rem; border-radius: 999px; vertical-align: .12em;
-  border: 1.5px solid var(--heading); color: var(--heading);
-  font-size: .62rem; line-height: 1.1rem; letter-spacing: .06em; text-transform: uppercase;
-}
-.theme-tag { padding: 0 .75rem; font-size: .8rem; line-height: 1.35; color: var(--muted); }
-
-/* the little preview inside each option paints itself with that theme's tokens */
+/* the little live preview on each globe card paints itself with that theme's tokens */
 .tp { display: block; background: var(--cream); color: var(--ink); font-family: var(--text); border-bottom: 2px solid var(--line); }
 .tp-band { display: flex; align-items: center; justify-content: center; height: 3.7rem; background: var(--band-home-bg); }
 .tp-plate {
@@ -1449,16 +1417,138 @@ html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
 .mode-seg label { flex: 1; }
 .mode-seg span { justify-content: center; padding: 0 .5rem; }
 .mode-field .hint { margin: .55rem 0 0; }
-.theme-folder > summary { gap: .75rem; }
-.theme-sum { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-width: 0; }
-.theme-sum .theme-now { display: inline-flex; align-items: center; gap: .5rem; min-width: 0; }
 .theme-dots { display: inline-flex; padding-left: .3rem; }
 .theme-dots i { width: .95rem; height: .95rem; margin-left: -.3rem; border-radius: 50%; box-shadow: 0 0 0 2px var(--card); }
 .theme-dots i:nth-child(1) { background: var(--aqua); }
 .theme-dots i:nth-child(2) { background: var(--aqua-deep); }
 .theme-dots i:nth-child(3) { background: var(--cherry); }
-.theme-folder[open] > .theme-intro { margin-top: .1rem; }
-.theme-folder .theme-group:last-child { margin-bottom: .6rem; }
+
+/* ---------- settings: the window onto the theme globe ---------- */
+.theme-field { margin-top: 1.1rem; padding-top: .95rem; border-top: 2px dashed var(--dash); }
+.theme-field-head {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  margin-bottom: .65rem; font-weight: 800; color: var(--heading);
+}
+.theme-field-head .theme-now { display: inline-flex; align-items: center; gap: .5rem; min-width: 0; }
+.globe-window {
+  position: relative; display: block; width: 100%; height: 12.75rem; padding: 0; margin: 0; overflow: hidden;
+  border: 0; border-radius: 16px; cursor: pointer; text-align: left; color: #FFFFFF;
+  background: #0B1020; font: inherit; isolation: isolate;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 14px 28px -18px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(255, 255, 255, .06);
+  transition: transform .2s ease;
+}
+.globe-window:active { transform: scale(.985); }
+.globe-window:focus-visible { outline: 3px solid var(--heading); outline-offset: 3px; }
+.globe-window canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; z-index: 0; }
+.globe-window::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(4, 6, 14, .72), rgba(4, 6, 14, .28) 46%, rgba(4, 6, 14, 0) 64%);
+}
+.globe-window.gw-away canvas, .globe-window.gw-away .gw-text { opacity: 0; }
+.gw-text {
+  position: absolute; z-index: 2; left: 1rem; top: .95rem; bottom: .95rem; max-width: 52%;
+  display: flex; flex-direction: column; align-items: flex-start; pointer-events: none;
+  transition: opacity .25s ease;
+}
+.gw-kicker { font: 800 .66rem/1.2 var(--text); letter-spacing: .16em; text-transform: uppercase; opacity: .62; }
+.gw-city {
+  margin-top: .35rem; font: var(--display-style) var(--display-weight) 1.75rem/1.05 var(--display);
+  letter-spacing: var(--sign-spacing); text-shadow: 0 2px 14px rgba(0, 0, 0, .5);
+}
+.gw-theme { margin-top: .3rem; font: 800 .88rem/1.2 var(--text); color: var(--gw-glow, #8FD3CC); }
+.gw-cta {
+  margin-top: auto; display: inline-flex; align-items: center; gap: .4rem;
+  padding: .5rem .85rem; border-radius: 999px;
+  background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font: 800 .82rem/1 var(--text); white-space: nowrap;
+}
+.theme-field .theme-intro { margin: .7rem 0 0; }
+
+/* ---------- the full globe ---------- */
+html.gx-lock, html.gx-lock body { overflow: hidden; }
+.gx {
+  position: fixed; inset: 0; z-index: 40; overflow: hidden;
+  color: #FFFFFF; background: #05070F;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  clip-path: inset(0px round 0px);
+  transition: clip-path .76s cubic-bezier(.65, 0, .35, 1);
+  overscroll-behavior: contain;
+}
+.gx.gx-leave { transition-duration: .62s; }
+.gx-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.gx-canvas:active { cursor: grabbing; }
+
+.gx-head {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2;
+  display: grid; grid-template-columns: 3.75rem 1fr 3.75rem; align-items: center; gap: .25rem;
+  padding: calc(var(--safe-top) + .55rem) .8rem .5rem; pointer-events: none;
+  transition: opacity .4s ease .25s, transform .5s cubic-bezier(.2, .8, .2, 1) .2s;
+}
+.gx-head > button { pointer-events: auto; }
+.gx-close {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0;
+  border: 0; border-radius: 50%; cursor: pointer; color: #FFFFFF;
+  background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.gx-close:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.gx-titles { text-align: center; }
+.gx-titles h2 { margin: 0; font: 800 1rem/1.2 var(--text); letter-spacing: .01em; }
+.gx-titles p { margin: .15rem 0 0; font: 700 .76rem/1.2 var(--text); opacity: .6; }
+.gx-count { justify-self: end; white-space: nowrap; font: 800 .8rem/1 var(--text); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.gx-count i { font-style: normal; opacity: .45; }
+
+.gx-rail {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: flex; gap: var(--gx-gap, 12px); overflow-x: auto; overflow-y: hidden;
+  padding: 1.25rem var(--gx-pad, 24px) calc(var(--safe-bottom) + 1.1rem);
+  scroll-snap-type: x mandatory; scroll-padding-inline: var(--gx-pad, 24px);
+  scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  transition: opacity .45s ease .28s, transform .6s cubic-bezier(.2, .8, .2, 1) .22s;
+}
+.gx-rail::-webkit-scrollbar { display: none; }
+.gx.gx-enter .gx-rail, .gx.gx-leave .gx-rail { opacity: 0; transform: translateY(2.5rem); transition-delay: 0s; transition-duration: .3s; }
+.gx.gx-enter .gx-head, .gx.gx-leave .gx-head { opacity: 0; transform: translateY(-.75rem); transition-delay: 0s; transition-duration: .25s; }
+
+.gx-card {
+  flex: 0 0 var(--gx-card-w, 320px); scroll-snap-align: center; scroll-snap-stop: always;
+  display: grid; grid-template-columns: 8.25rem minmax(0, 1fr); height: 11rem; overflow: hidden;
+  border-radius: 20px; background: var(--card); color: var(--ink); font-family: var(--text);
+  box-shadow: 0 22px 44px -20px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .1);
+  opacity: .55; transform: scale(.93);
+  transition: opacity .35s ease, transform .45s cubic-bezier(.2, .8, .2, 1);
+  cursor: pointer; -webkit-user-select: none; user-select: none;
+}
+.gx-card.is-on { opacity: 1; transform: none; cursor: default; }
+.gx-card.just-chosen { animation: gx-chosen .6s cubic-bezier(.2, .8, .2, 1); }
+@keyframes gx-chosen { 40% { transform: scale(1.035); } }
+.gx-prev { position: relative; overflow: hidden; background: var(--cream); border-right: 1.5px solid var(--line); }
+.gx-prev .tp { position: absolute; top: 0; left: 0; width: 11rem; transform: scale(.75); transform-origin: 0 0; border-bottom: 0; }
+.gx-prev .tp-card + .tp-card { margin-top: .4rem; }
+.gx-body { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: .85rem .9rem .85rem .95rem; }
+.gx-where { font: 800 .62rem/1.2 var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.gx-city {
+  margin-top: .3rem; max-width: 100%; overflow-wrap: anywhere;
+  font: var(--display-style) var(--display-weight) 1.45rem/1.05 var(--display);
+  letter-spacing: var(--sign-spacing); color: var(--heading);
+}
+.gx-theme { margin-top: .2rem; font: 800 .82rem/1.2 var(--text); color: var(--cherry); }
+.gx-note {
+  margin-top: .3rem; font-size: .76rem; line-height: 1.35; color: var(--muted);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.gx-use { margin-top: auto; min-height: 2.35rem; padding: .3rem .95rem; font-size: .84rem; gap: .3rem; white-space: nowrap; max-width: 100%; }
+.gx-use[aria-pressed="true"] { background: transparent; color: var(--heading); border-color: var(--line); box-shadow: none; cursor: default; }
+@media (max-height: 640px) {
+  .gx-card { height: 9.5rem; }
+  .gx-note { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gx, .gx-rail, .gx-head, .gx-card { transition: none; }
+  .gx-card.just-chosen { animation: none; }
+}
 
 /* ================================================================
    Top of the screen.
@@ -1698,7 +1788,7 @@ html.pinned .pinband { opacity: 1; }
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v19';
+const APP_VERSION = 'v20';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -3849,12 +3939,6 @@ const toastEl = document.getElementById('toast');
 
 // Themes (defined in the head so they apply before the first paint).
 const THEMES = window.RB_THEMES;
-const THEME_GROUPS = [
-  ['The Americas', ['diner', 'mercado', 'speakeasy']],
-  ['Europe', ['patisserie', 'cabin', 'herbarium']],
-  ['Africa', ['riad', 'kente']],
-  ['Asia', ['izakaya', 'jaipur']],
-];
 const MODES = [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Automatic']];
 const theme = () => THEMES[state.settings.theme] || THEMES.diner;
 
@@ -4060,6 +4144,7 @@ function render() {
 function renderScreen() {
   if (wantWake) setWakeLock(false);
   // Leaving a screen closes anything layered over it.
+  closeGlobe(true);
   for (const id of ['sheet', 'photoViewer']) { const d = document.getElementById(id); if (d && d.open) d.close(); }
   const r = route();
   const tab = { home: 'home', recipe: 'home', settings: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
@@ -4932,35 +5017,1024 @@ function renderList() {
 
 // ---------- settings & backup ----------
 
-// One option in the theme picker: a small live preview painted in that theme's own colors.
-function themeOption(id) {
-  const t = THEMES[id];
-  const on = id === state.settings.theme;
-  return `
-    <button class="theme-opt" role="radio" aria-checked="${on}" data-action="set-theme" data-theme-id="${id}">
-      <span class="tp" data-theme="${id}" aria-hidden="true">
-        <span class="tp-band"><span class="tp-plate">Recipe Box</span></span>
-        <span class="tp-trim"></span>
-        <span class="tp-page">
-          <span class="tp-card"><span class="tp-num">${{ speakeasy: 'I', izakaya: '一' }[id] || '1'}</span><span class="tp-lines"><i></i><i></i></span></span>
-          <span class="tp-foot"><span class="tp-stars">★★★★</span><span class="tp-btn"></span></span>
-        </span>
-      </span>
-      <span class="theme-name">${esc(t.name)}${id === 'diner' ? ' <span class="theme-badge">Original</span>' : ''}</span>
-      <span class="theme-tag">${esc(t.tagline)}</span>
-    </button>`;
+// ================================================================
+// The theme globe.
+// Each theme lives in the city it comes from. Settings shows a small window onto the globe;
+// tapping it opens the full globe, where swiping the theme cards flies between cities and
+// dragging spins the world. Everything is drawn on a canvas from the land dots below.
+// ================================================================
+
+// Where each theme comes from, with the colors the globe takes on while you're there.
+// Sorted west to east, so swiping through the cards travels around the world.
+const PLACES = {
+  diner:      { city: 'New York', country: 'United States', lat: 40.71, lon: -74.01, glow: '#7FE0D6', night: '#0A2423',
+                note: 'Chrome counters, cherry-red stools and pie under glass' },
+  mercado:    { city: 'Mexico City', country: 'Mexico', lat: 19.43, lon: -99.13, glow: '#FF5C93', night: '#2A0919',
+                note: 'Papel picado strung over the market stalls of La Merced' },
+  speakeasy:  { city: 'Chicago', country: 'United States', lat: 41.88, lon: -87.63, glow: '#E2C77E', night: '#0C0C10',
+                note: 'Onyx and gold Art Deco from the Prohibition years' },
+  patisserie: { city: 'Paris', country: 'France', lat: 48.86, lon: 2.35, glow: '#FF8FB0', night: '#28121A',
+                note: 'Rose-striped awnings over raspberry, cocoa and pistachio' },
+  cabin:      { city: 'Bergen', country: 'Norway', lat: 60.39, lon: 5.32, glow: '#FF6B5E', night: '#0C1626',
+                note: 'Fjord-side cabins, lingonberries and navy knitted wool' },
+  herbarium:  { city: 'London', country: 'United Kingdom', lat: 51.51, lon: -0.13, glow: '#C9D99A', night: '#111A0F',
+                note: 'Kew’s pressed botanicals on hand-written parchment labels' },
+  riad:       { city: 'Marrakech', country: 'Morocco', lat: 31.63, lon: -7.99, glow: '#6F8BFF', night: '#0A1236',
+                note: 'Majorelle blue and saffron zellige behind arched doors' },
+  kente:      { city: 'Kumasi', country: 'Ghana', lat: 6.69, lon: -1.62, glow: '#F4C232', night: '#0C1D11',
+                note: 'Kente in gold, green and red, woven in nearby Bonwire' },
+  izakaya:    { city: 'Tokyo', country: 'Japan', lat: 35.68, lon: 139.65, glow: '#FF6D4D', night: '#0D1130',
+                note: 'Indigo noren and a vermilion hanko in the lantern-lit alleys' },
+  jaipur:     { city: 'Jaipur', country: 'India', lat: 26.91, lon: 75.79, glow: '#FF9A2E', night: '#230F22',
+                note: 'The Pink City’s saffron bandhani and block-print paisley' },
+};
+const PLACE_ORDER = Object.keys(PLACES).sort((a, b) => PLACES[a].lon - PLACES[b].lon);
+const place = id => PLACES[id] || PLACES.diner;
+const coords = p => `${Math.abs(p.lat).toFixed(2)}° ${p.lat >= 0 ? 'N' : 'S'} · ${Math.abs(p.lon).toFixed(2)}° ${p.lon >= 0 ? 'E' : 'W'}`;
+
+// Land, as a dot every degree: one row per degree of latitude, each "count,start,length,start,length…" in hex.
+// Made from Natural Earth's 1:50m land (public domain).
+const LAND = '3;9;10;16;1c;23;29,10,1;2f,d,2,11,4;35,d,a,18,1;3b,e,1,10,2,13,8,25,1,27,1;42,f,4,15,8,23,1,25,1,32,1;48,f,2,13,2,16,a,26,2,38,1;4e,12,2,15,1,19,a,2a,1,3d,1;54,e,1,10,1,12,1,14,4,1a,b,39,1,41,3;5a,10,3,14,1,16,3,1e,a,3b,2,41,1,43,6,4f,2;60,f,1,18,1,21,a,3f,1,46,7;66,10,2,18,1,1a,3,23,a,42,1,48,1,4a,7,52,3,56,1,5b,1;6c,10,5,17,3,1b,4,25,a,46,1,4b,1,4d,10,60,2;72,0,1,12,1,14,4,1d,5,27,b,49,2,4e,14,64,5;78,6,3,17,3,1c,1,1e,7,2a,8,45,1,52,2,55,1c;7e,6,8,10,3,14,1,16,5,1c,1,1e,1,21,1,23,4,2c,b,46,5,54,4,59,21,7b,2;84,0,1,5,13,1a,2,20,2,23,1,26,4,2e,a,48,8,52,1,55,9,5f,25;8a,0,2,6,15,1c,7,24,2,27,1,29,3,30,8,4b,a,57,33;90,0,4,7,1e,2b,4,33,7,41,1,4d,8,56,2,5a,a,65,2b;95,1,3,5,20,26,1,2c,3,35,5,40,5,50,4,55,4,5b,3a;9b,6,1,8,22,2c,1,2e,3,37,5,44,3,52,5,58,42;a1,8,20,2a,1,2d,1,31,3,3a,4,54,5,5a,46;a6,7,21,2c,1,2f,1,33,1,3c,4,56,5,5d,41,9f,5,a5,1;ac,7,22,31,3,3f,3,58,6,60,41,a2,1,a4,5;b1,3,1,7,9,11,19,32,4,42,1,5b,6,63,3,67,3e,a8,3;b7,9,4,e,1,15,16,34,4,3a,1,5e,7,68,1,6a,3d,a9,1,ad,2;bc,c,2,16,1,18,15,35,8,5b,1,61,2,64,3,69,3f,b1,2;c1,c,1,e,1,18,17,37,8,5d,3,67,2,6a,1,6c,1,6e,3d,b5,3;c7,b,1,19,1a,37,1,39,8,61,1,68,2,6b,1,6f,41,ba,4;cc,a,1,1b,1b,3a,a,63,2,6c,2,72,41,be,4;d1,1c,1d,3a,d,64,1,66,2,72,1,74,44,c3,3;d6,1c,1e,3c,e,65,2,69,2,6e,52,c8,2;db,1d,1,1f,1d,3e,e,68,2,6b,4,70,53,c4,1,cd,1;e0,21,2c,6e,2,72,57,d1,1,df,1;e5,21,1,23,2a,4e,1,6f,1,73,59,cd,1;ea,23,26,4c,1,4f,2,75,5b,d1,2;ef,25,24,4a,3,51,3,74,61;f3,26,28,54,2,78,5f,d9,1;f8,27,28,7b,16,92,3,96,8,a1,3a;fc,27,29,51,2,7d,16,95,2,98,7,a3,3b;101,28,28,51,2,80,9,8b,a,98,1,9c,6,a4,3e,e6,1;105,28,27,7c,3,81,4,86,2,8a,2,8f,8,9f,6,a8,3c,e9,3;109,29,27,7e,9,8b,1,8d,2,92,7,a3,5,ab,3a,eb,3;10e,2a,28,80,9,90,3,96,6,9f,3,a6,6,b0,38;112,2a,27,82,7,8f,1,94,3,98,3,9c,1,9f,10,b1,34,e6,5,f4,1;116,2b,27,84,7,8d,1,91,1,97,1,9b,2,a0,11,b4,33,e9,1,ec,1,f7,2;11a,2c,26,86,7,99,1,9d,2,a2,11,b7,32,ef,3,fa,2;11e,2e,24,88,6,99,2,a0,2,a5,11,ba,36,f4,2,fd,2;121,2f,25,8b,1,91,8,a2,1,a8,1,aa,2,ad,45,f6,2,fe,3;125,30,25,91,a,b0,44,f9,3,ff,6;129,31,24,8f,e,b2,45,101,2,104,1;12c,34,20,8f,10,b3,48,ff,1,102,3;130,35,1f,90,14,a9,3,b5,49,106,1;133,36,2,39,1b,91,16,ab,5,b3,2,b7,4a,109,1;136,37,1,3a,1b,93,18,ac,57;139,38,2,3b,f,4d,2,54,2,94,32,c8,3f;13c,3a,1,3c,d,55,2,94,28,bd,c,cb,3e;13f,3a,2,3d,c,56,2,94,29,bf,c,ce,3c;142,3c,1,3f,b,57,2,94,2c,c1,d,d4,38;145,3d,1,40,b,59,1,95,2d,c4,d,d8,6,df,2f;148,3e,1,42,9,96,2e,c6,d,d5,3,e1,2f,112,1;14a,40,1,43,8,96,30,c8,13,e4,2c,113,1;14d,45,7,59,1,5b,2,97,31,cb,13,e7,29;14f,14,1,46,7,55,2,5e,2,98,32,cc,13,e8,11,fd,f,10e,1;151,46,8,54,3,60,3,99,32,ce,12,ed,d,ff,d,10f,1;153,17,1,47,8,54,3,65,3,9a,33,d0,10,ee,c,102,b,110,2;155,48,9,53,4,64,1,66,4,6b,1,6d,1,9b,34,d2,e,f0,a,104,b,112,1,11d,1;157,4b,c,9c,35,d4,c,f1,a,106,b,11e,2;159,4e,a,9d,35,d5,a,f3,8,107,2,10a,a,120,2;15b,54,8,9d,37,d7,8,f5,6,10c,a,121,2;15d,55,9,73,1,9e,39,d8,6,f7,5,10d,b;15e,58,6,9f,39,d9,3,f8,5,109,1,10f,1,111,8,124,2;15f,5b,3,9f,3b,e4,1,f9,5,10f,2,113,7,125,2,129,1;161,5c,2,69,1,6c,1,a1,3a,e1,2,fb,4,111,1,116,5,128,1,12a,2;162,5d,2,67,9,72,1,a3,41,fc,4,112,1,118,3,126,1,129,1;163,5e,2,63,1,67,e,a4,40,fd,2,100,1,119,1,126,1,12a,1,12d,1;164,5f,4,64,13,a5,3f,fe,1,101,1,113,2,12d,2;165,62,1,65,13,a6,3e,102,2,115,1,12e,2;166,66,14,a8,3c,103,1,116,2,127,1,12c,1,12e,3;166,66,18,a9,a,b8,2b,117,2,126,3;167,66,1a,b9,2,bc,27,113,2,118,3,125,5;167,66,1b,bd,25,114,3,118,3,124,4;168,65,1c,be,24,116,2,11a,2,123,7,134,1;168,65,1d,bd,23,117,3,11b,1,121,9,133,2;168,64,1d,bd,22,117,4,121,9,12d,3,134,1;168,59,1,64,20,bd,21,118,3,11c,1,121,9,133,1,138,1;168,63,1c,80,3,84,3,bd,21,119,3,122,7,12b,3,12f,1,133,1,138,2;168,63,24,be,1f,119,5,122,7,12b,3,13c,5;167,63,2a,be,1d,119,4,126,2,12b,2,131,1,135,1,138,b;167,62,2c,bf,1c,11a,3,12b,1,13b,a;166,62,2e,bf,1b,11b,1,12a,1,13c,8,146,1,148,2;166,63,2d,bf,1b,11c,3,138,1,13d,9,14d,1;165,64,2c,bf,1a,11d,5,13b,a;164,64,2b,bf,1a,127,4,12e,2,13d,3,143,2,14d,1;163,64,2a,be,1b,127,1,12c,1,143,2,14f,1;162,64,29,be,1b,144,1;161,65,27,be,1a,130,1,132,1,13c,1,14d,1;15f,65,25,bd,1a,df,1,12f,6,13a,1;15e,7,1,65,24,bb,1b,de,2,12d,6,139,2;15d,65,24,ba,1c,dd,2,128,3,12c,6,138,3;15b,65,23,b9,1c,da,3,125,c,136,4,14e,1;159,67,20,b8,1b,d7,5,123,e,134,4,158,1;157,67,1f,b7,18,d5,6,120,17,155,1;155,68,1d,b6,17,d4,5,11e,17;153,67,1d,b6,15,d3,5,11c,18;151,67,1c,b5,14,d2,4,117,1d,142,1,144,1;14f,66,1b,b4,14,d0,4,113,20,141,1;14d,65,1b,b4,13,cf,4,110,22;14a,64,18,b2,13,cd,4,10d,23;148,64,15,b1,13,cc,3,10b,24;145,63,14,b0,10,cb,1,108,25;142,62,13,af,f,106,24;13f,61,14,ad,f,105,23;13c,5f,14,ac,e,103,22;139,5e,13,ab,d,100,22;136,5d,13,aa,b,fe,21;133,5c,11,a9,a,fc,20;130,5c,10,a7,9,fa,8,109,10;12c,5a,10,a5,8,f6,7,106,2,109,b;129,59,b,65,3,a4,1,f4,3,104,1,107,a;125,57,d,103,a,120,1;121,56,d,101,8;11e,54,e,fe,8,11a,1;11a,53,c,fd,1,ff,1,116,3;116,52,9,111,3;112,51,9,10c,1,10e,1;10e,50,6,f4,2,108,3;109,4f,7,ef,2,102,2;105,4e,5,ec,1,fe,2;101,4b,7,f8,3;fc,4a,5,f3,3;f8,48,6,f0,1;f3,47,6;ef,45,6;ea,44,5;e5,43,4;e0,42,3,4a,2;db,40,3;d6,3f,2,42,1;d1,3f,3,53,1;cc;c7;c1;bc;b7;b1;ac;a6;a1,36,2;9b,33,1;95,30,1;90,5c,3,70,3,74,2,7a,1,7c,3;8a,2a,2,58,6,65,17;84,29,1,51,b,5f,1a,7a,1;7e,25,4,4d,a,5a,1d;78,24,3,3e,1,40,2,46,d,54,1e;72,21,2,24,1,35,1,37,18,50,1f;6c,18,1,20,1,22,2,32,18,4b,1e;66,17,4,1c,1,1e,4,2e,34;60,10,3,15,a,2b,31;5a,8,1,a,13,28,2e;54,8,12,23,2d;4e,5,1,7,10,20,2a,4b,1;48,5,e,14,1,16,1,1a,1,1d,28;42,3,1,5,e,18,1,1b,23;3b,5,c,13,1,15,1,18,20;35,4,d,14,1e;2f,3,c,10,1d;29,1,27;23,0,1,2,21;1c,0,1c;16,0,16;10,0,10;9,0,9;3,0,3';
+
+const RAD = Math.PI / 180;
+const LIFT = 9; // the chosen city sits this many degrees above the globe's middle, leaving room for the card's line
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smoothstep = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const mixRgb = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const llVec = (lat, lon) => { const p = lat * RAD, l = lon * RAD; return [Math.cos(p) * Math.cos(l), Math.cos(p) * Math.sin(l), Math.sin(p)]; };
+const vecLL = v => [Math.asin(clamp(v[2], -1, 1)) / RAD, Math.atan2(v[1], v[0]) / RAD];
+const vdot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const vangle = (a, b) => Math.acos(clamp(vdot(a, b), -1, 1));
+function slerp(a, b, t) {
+  const w = vangle(a, b);
+  if (w < 1e-5) return a.slice();
+  const s = Math.sin(w), k1 = Math.sin((1 - t) * w) / s, k2 = Math.sin(t * w) / s;
+  return [a[0] * k1 + b[0] * k2, a[1] * k1 + b[1] * k2, a[2] * k1 + b[2] * k2];
+}
+const placeVec = id => { const p = place(id); return p.vec || (p.vec = llVec(p.lat, p.lon)); };
+const wrapLon = (lon, near) => lon + 360 * Math.round((near - lon) / 360);
+
+let landDots = null; // Float32Array of x, y, z per dot
+function getLand() {
+  if (landDots) return landDots;
+  const out = [];
+  const rows = LAND.split(';');
+  rows.forEach((row, r) => {
+    const v = row.split(',').map(h => parseInt(h, 16));
+    const lat = 90 - (r + .5) * 180 / rows.length, n = v[0];
+    for (let k = 1; k + 1 < v.length; k += 2) {
+      for (let i = v[k]; i < v[k] + v[k + 1]; i++) out.push(...llVec(lat, -180 + (i + .5) * 360 / n));
+    }
+  });
+  return (landDots = new Float32Array(out));
 }
 
-async function setTheme(id) {
+// A seeded scatter of stars, so they don't reshuffle between visits.
+function makeStars(count, seed) {
+  let s = seed;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: count }, () => ({
+    x: rnd(), y: rnd(), r: .35 + rnd() * rnd() * 1.1, a: .25 + rnd() * .65, depth: .15 + rnd() * .85, ph: rnd() * 6.28, sp: .6 + rnd() * 1.4,
+  }));
+}
+
+const LIGHT = (() => { const v = [-.48, .56, .68], m = Math.hypot(...v); return v.map(c => c / m); })();
+const DOT_BINS = 8;
+
+class GlobeView {
+  constructor(canvas, { mini = false } = {}) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.mini = mini;
+    this.w = 0; this.h = 0; this.dpr = 1;
+    this.cam = { lat: 20, lon: 0, zoom: 1, vlat: 0, vlon: 0 };
+    this.layout = { cx: 0, cy: 0, R: 100 };
+    this.bounds = { top: 0, bottom: 0 }; // where labels may go
+    this.night = [10, 14, 30]; this.glow = [140, 210, 204];
+    this.focusId = null; this.homeId = null;
+    this.glowFor = {};   // id -> how lit its region is, 0..1
+    this.labels = {};    // id -> { a, dir, ox, oy }
+    this.arc = null;     // { a, b, t, alpha }
+    this.ripples = [];
+    this.stars = makeStars(mini ? 60 : 170, mini ? 7 : 11);
+    this.hits = [];
+    this.connector = null; // { x, y, alpha } a point on the focused card to draw a line from
+    this.lastDraw = 0;
+    this.bins = Array.from({ length: DOT_BINS }, () => []);
+    this.resize();
+  }
+
+  resize() {
+    const r = this.canvas.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (!r.width || !r.height) return false;
+    if (r.width !== this.w || r.height !== this.h || dpr !== this.dpr) {
+      this.w = r.width; this.h = r.height; this.dpr = dpr;
+      this.canvas.width = Math.round(r.width * dpr);
+      this.canvas.height = Math.round(r.height * dpr);
+    }
+    return true;
+  }
+
+  setPalette(id, instant) {
+    const p = place(id);
+    this.nightTo = hexRgb(p.night); this.glowTo = hexRgb(p.glow);
+    if (instant) { this.night = this.nightTo.slice(); this.glow = this.glowTo.slice(); }
+  }
+
+  // Camera basis: east, north and toward-the-viewer, for the current center.
+  basis() {
+    const p = this.cam.lat * RAD, l = this.cam.lon * RAD;
+    const sp = Math.sin(p), cp = Math.cos(p), sl = Math.sin(l), cl = Math.cos(l);
+    return [[-sl, cl, 0], [-sp * cl, -sp * sl, cp], [cp * cl, cp * sl, sp]];
+  }
+
+  project(v, B, lift = 1) {
+    const { cx, cy } = this.layout, R = this.layout.R * this.cam.zoom * lift;
+    const x = vdot(v, B[0]), y = vdot(v, B[1]), z = vdot(v, B[2]);
+    return { x: cx + R * x, y: cy - R * y, z, rx: x, ry: y };
+  }
+
+  draw(now, dt) {
+    const { ctx, w, h, dpr } = this;
+    if (!w) return;
+    // colors drift toward the place you're looking at
+    if (this.nightTo) {
+      const k = 1 - Math.exp(-dt * 3.2);
+      this.night = mixRgb(this.night, this.nightTo, k);
+      this.glow = mixRgb(this.glow, this.glowTo, k);
+    }
+    const night = this.night, glow = this.glow;
+    const { cx, cy } = this.layout, R = this.layout.R * this.cam.zoom;
+    const B = this.basis();
+    const still = reducedMotion();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // sky
+    const sky = ctx.createRadialGradient(cx, cy, R * .3, cx, cy, Math.max(w, h) * (this.mini ? 1.1 : .95));
+    sky.addColorStop(0, rgba(mixRgb(night, glow, .16)));
+    sky.addColorStop(.5, rgba(night));
+    sky.addColorStop(1, rgba(mixRgb(night, [0, 0, 0], .62)));
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, h);
+
+    // stars, drifting a little as the globe turns
+    const span = w + 40;
+    for (const s of this.stars) {
+      let x = (s.x * span - this.cam.lon * s.depth * span / 540) % span; if (x < 0) x += span;
+      let y = (s.y * h + this.cam.lat * s.depth * h / 400) % h; if (y < 0) y += h;
+      const dx = x - 20 - cx, dy = y - cy;
+      if (dx * dx + dy * dy < R * R * 1.1) continue;
+      const tw = still ? 1 : .6 + .4 * Math.sin(now * .0012 * s.sp + s.ph);
+      ctx.fillStyle = `rgba(235,240,255,${s.a * tw})`;
+      ctx.fillRect(x - 20, y, s.r * 1.3, s.r * 1.3);
+    }
+
+    // atmosphere
+    const at = ctx.createRadialGradient(cx, cy, R * .94, cx, cy, R * 1.3);
+    at.addColorStop(0, rgba(mixRgb(glow, [255, 255, 255], .4), .34));
+    at.addColorStop(.18, rgba(glow, .16));
+    at.addColorStop(.55, rgba(glow, .04));
+    at.addColorStop(1, rgba(glow, 0));
+    ctx.fillStyle = at;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, 7); ctx.fill();
+
+    // the sphere itself, lit from the upper left
+    const body = ctx.createRadialGradient(cx - R * .38, cy - R * .46, R * .04, cx, cy, R * 1.02);
+    body.addColorStop(0, rgba(mixRgb(mixRgb(night, glow, .22), [255, 255, 255], .06)));
+    body.addColorStop(.55, rgba(mixRgb(night, glow, .07)));
+    body.addColorStop(1, rgba(mixRgb(night, [0, 0, 0], .45)));
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+
+    this.drawLand(B, R, cx, cy);
+
+    // a thin bright rim on the lit side
+    const rim = ctx.createLinearGradient(cx - R, cy - R, cx + R * .6, cy + R * .8);
+    rim.addColorStop(0, rgba(mixRgb(glow, [255, 255, 255], .55), .75));
+    rim.addColorStop(.5, rgba(glow, .18));
+    rim.addColorStop(1, rgba(glow, 0));
+    ctx.strokeStyle = rim; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(cx, cy, R - .4, 0, 7); ctx.stroke();
+
+    this.drawArc(B, now);
+    this.drawRipples(B, now);
+    this.drawConnector(B, now);
+    this.drawPins(B, now);
+    this.lastDraw = now;
+  }
+
+  drawLand(B, R, cx, cy) {
+    const { ctx } = this;
+    const pts = getLand();
+    const [E, N, F] = B;
+    const bins = this.bins; for (const b of bins) b.length = 0;
+    const back = [];
+    // lit regions around the chosen city (and the one you just left, as it fades)
+    const lit = [];
+    for (const id in this.glowFor) if (this.glowFor[id] > .01) lit.push(...placeVec(id), this.glowFor[id]);
+    const litDots = [];
+    const lx = LIGHT[0], ly = LIGHT[1], lz = LIGHT[2];
+    const COS_NEAR = Math.cos(9.5 * RAD), COS_CORE = Math.cos(1.2 * RAD);
+    for (let i = 0; i < pts.length; i += 3) {
+      const px = pts[i], py = pts[i + 1], pz = pts[i + 2];
+      const z = px * F[0] + py * F[1] + pz * F[2];
+      if (z <= 0) { if (!this.mini && (i % 9 === 0) && z < -.12) back.push(i); continue; }
+      const x = px * E[0] + py * E[1] + pz * E[2];
+      const y = px * N[0] + py * N[1] + pz * N[2];
+      const lam = Math.max(0, x * lx + y * ly + z * lz);
+      const b = (.26 + .74 * lam) * smoothstep(0, .22, z);
+      bins[Math.min(DOT_BINS - 1, (b * DOT_BINS) | 0)].push(cx + R * x, cy - R * y, z);
+      for (let j = 0; j < lit.length; j += 4) {
+        const c = px * lit[j] + py * lit[j + 1] + pz * lit[j + 2];
+        if (c > COS_NEAR) litDots.push(cx + R * x, cy - R * y, z, smoothstep(COS_NEAR, COS_CORE, c) * lit[j + 3] * (.45 + .55 * b));
+      }
+    }
+    const size = Math.max(.7, R * .0088);
+    const ink = mixRgb([228, 236, 248], this.glow, .1);
+
+    // the far side, faintly, as if through glass
+    if (back.length) {
+      ctx.fillStyle = rgba(ink, .05);
+      ctx.beginPath();
+      for (const i of back) {
+        const px = pts[i], py = pts[i + 1], pz = pts[i + 2];
+        const x = px * E[0] + py * E[1] + pz * E[2], y = px * N[0] + py * N[1] + pz * N[2];
+        ctx.rect(cx + R * x - .5, cy - R * y - .5, 1, 1);
+      }
+      ctx.fill();
+    }
+
+    for (let b = 0; b < DOT_BINS; b++) {
+      const list = bins[b];
+      if (!list.length) continue;
+      ctx.fillStyle = rgba(ink, .1 + .86 * (b + .5) / DOT_BINS);
+      ctx.beginPath();
+      for (let k = 0; k < list.length; k += 3) {
+        const r = size * (.55 + .45 * list[k + 2]);
+        ctx.moveTo(list[k] + r, list[k + 1]);
+        ctx.arc(list[k], list[k + 1], r, 0, 6.2832);
+      }
+      ctx.fill();
+    }
+
+    if (litDots.length) {
+      const hot = mixRgb(this.glow, [255, 255, 255], .18);
+      for (let b = 1; b <= 4; b++) {
+        ctx.fillStyle = rgba(hot, b / 4);
+        ctx.beginPath();
+        for (let k = 0; k < litDots.length; k += 4) {
+          if (Math.min(4, Math.ceil(litDots[k + 3] * 4)) !== b) continue;
+          const r = size * (.75 + .5 * litDots[k + 2]);
+          ctx.moveTo(litDots[k] + r, litDots[k + 1]);
+          ctx.arc(litDots[k], litDots[k + 1], r, 0, 6.2832);
+        }
+        ctx.fill();
+      }
+    }
+  }
+
+  // A flight path between two places, lifted off the surface, with a bright head while moving.
+  drawArc(B) {
+    const arc = this.arc;
+    if (!arc || arc.alpha < .01 || arc.t <= .001) return;
+    const { ctx } = this;
+    const ang = vangle(arc.a, arc.b);
+    if (ang < .01) return;
+    const alt = .05 + .2 * ang / Math.PI;
+    const steps = Math.max(12, Math.round(56 * arc.t));
+    const pts = [];
+    for (let k = 0; k <= steps; k++) {
+      const s = arc.t * k / steps;
+      const p = this.project(slerp(arc.a, arc.b, s), B, 1 + alt * Math.sin(Math.PI * s));
+      p.vis = p.z > 0 || p.rx * p.rx + p.ry * p.ry > 1 / ((1 + alt * Math.sin(Math.PI * s)) ** 2) + .0001;
+      p.s = k / steps;
+      pts.push(p);
+    }
+    const col = mixRgb(this.glow, [255, 255, 255], .25);
+    ctx.lineCap = 'round';
+    for (const [width, a] of [[6, .12], [1.8, .95]]) {
+      ctx.lineWidth = width;
+      for (let k = 1; k < pts.length; k++) {
+        const p0 = pts[k - 1], p1 = pts[k];
+        if (!p0.vis || !p1.vis) continue;
+        ctx.strokeStyle = rgba(col, a * arc.alpha * Math.pow(p1.s, 1.3));
+        ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+      }
+    }
+    const head = pts[pts.length - 1];
+    if (arc.head && head.vis) {
+      const g = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 11);
+      g.addColorStop(0, `rgba(255,255,255,${.95 * arc.alpha})`);
+      g.addColorStop(.25, rgba(this.glow, .8 * arc.alpha));
+      g.addColorStop(1, rgba(this.glow, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(head.x, head.y, 11, 0, 7); ctx.fill();
+    }
+  }
+
+  ripple(id, kind = 'land') { this.ripples.push({ id, kind, t0: performance.now(), glow: this.glowTo || this.glow }); }
+
+  drawRipples(B, now) {
+    const { ctx } = this;
+    this.ripples = this.ripples.filter(r => now - r.t0 < (r.kind === 'screen' ? 1100 : 1600));
+    for (const r of this.ripples) {
+      const v = placeVec(r.id);
+      if (r.kind === 'screen') {
+        const t = clamp((now - r.t0) / 1100, 0, 1), p = this.project(v, B);
+        const far = Math.hypot(Math.max(p.x, this.w - p.x), Math.max(p.y, this.h - p.y));
+        const rad = 8 + far * easeOut(t);
+        ctx.fillStyle = rgba(r.glow, .22 * (1 - t));
+        ctx.beginPath(); ctx.arc(p.x, p.y, rad, 0, 7); ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${.7 * (1 - t)})`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(p.x, p.y, rad * .82, 0, 7); ctx.stroke();
+        continue;
+      }
+      // a ring spreading over the surface around the city
+      for (const delay of [0, 260]) {
+        const t = (now - r.t0 - delay) / 1340;
+        if (t <= 0 || t >= 1) continue;
+        const a = (1.2 + 9 * easeOut(t)) * RAD;
+        const u = Math.abs(v[2]) < .9 ? [0, 0, 1] : [1, 0, 0];
+        const e1 = [v[1] * u[2] - v[2] * u[1], v[2] * u[0] - v[0] * u[2], v[0] * u[1] - v[1] * u[0]];
+        const m = Math.hypot(...e1); e1[0] /= m; e1[1] /= m; e1[2] /= m;
+        const e2 = [v[1] * e1[2] - v[2] * e1[1], v[2] * e1[0] - v[0] * e1[2], v[0] * e1[1] - v[1] * e1[0]];
+        ctx.strokeStyle = rgba(mixRgb(r.glow, [255, 255, 255], .3), .85 * Math.pow(1 - t, 1.6));
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        let pen = false;
+        for (let k = 0; k <= 48; k++) {
+          const q = k / 48 * 6.2832, ca = Math.cos(a), sa = Math.sin(a), cq = Math.cos(q), sq = Math.sin(q);
+          const pv = [v[0] * ca + sa * (cq * e1[0] + sq * e2[0]), v[1] * ca + sa * (cq * e1[1] + sq * e2[1]), v[2] * ca + sa * (cq * e1[2] + sq * e2[2])];
+          const p = this.project(pv, B);
+          if (p.z <= 0) { pen = false; continue; }
+          if (pen) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+          pen = true;
+        }
+        ctx.stroke();
+      }
+    }
+  }
+
+  // The line from the theme card up to its city.
+  drawConnector(B, now) {
+    const c = this.connector;
+    if (!c || !this.focusId || c.alpha < .01) return;
+    const p = this.project(placeVec(this.focusId), B);
+    const vis = smoothstep(.05, .3, p.z) * c.alpha;
+    if (vis < .01) return;
+    const { ctx } = this;
+    const pull = Math.min(90, Math.abs(c.y - p.y) * .5);
+    const path = () => { ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.bezierCurveTo(c.x, c.y - pull, p.x, p.y + pull, p.x, p.y + 6); };
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = rgba(this.glow, .16 * vis); ctx.lineWidth = 5; path(); ctx.stroke();
+    ctx.strokeStyle = rgba(mixRgb(this.glow, [255, 255, 255], .35), .9 * vis); ctx.lineWidth = 1.4;
+    ctx.setLineDash([2, 5]); ctx.lineDashOffset = reducedMotion() ? 0 : -now * .02; path(); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = rgba(mixRgb(this.glow, [255, 255, 255], .35), vis);
+    ctx.beginPath(); ctx.arc(c.x, c.y, 3, 0, 7); ctx.fill();
+  }
+
+  drawPins(B, now) {
+    const { ctx } = this;
+    const still = reducedMotion();
+    const hits = this.hits = [];
+    const seen = [];
+    for (const id of PLACE_ORDER) {
+      const p = this.project(placeVec(id), B);
+      const fade = smoothstep(.02, .2, p.z);
+      if (fade < .01) { const L = this.labels[id]; if (L) L.a = 0; continue; }
+      const glow = hexRgb(place(id).glow);
+      const on = id === this.focusId, home = id === this.homeId;
+      // halo
+      const hr = on ? 18 : 11;
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, hr);
+      g.addColorStop(0, rgba(glow, .75 * fade)); g.addColorStop(1, rgba(glow, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, hr, 0, 7); ctx.fill();
+      // pulse
+      if (on && !still) {
+        for (const off of [0, 900]) {
+          const t = ((now + off) % 1800) / 1800;
+          ctx.strokeStyle = rgba(glow, .7 * (1 - t) * fade); ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 4 + 18 * easeOut(t), 0, 7); ctx.stroke();
+        }
+      }
+      ctx.fillStyle = rgba(glow, fade);
+      ctx.beginPath(); ctx.arc(p.x, p.y, on ? 4.2 : 3, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${.95 * fade})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, on ? 1.8 : 1.2, 0, 7); ctx.fill();
+      if (home) {
+        ctx.strokeStyle = `rgba(255,255,255,${.9 * fade})`; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.arc(p.x, p.y, on ? 7.5 : 6, 0, 7); ctx.stroke();
+      }
+      hits.push({ id, x: p.x, y: p.y, r: 22 });
+      seen.push({ id, p, fade, on, home, glow });
+    }
+    this.drawLabels(seen, now);
+  }
+
+  drawLabels(seen, now) {
+    const { ctx } = this;
+    const dt = Math.min(.05, (now - (this.lastDraw || now)) / 1000);
+    if (this.mini) return; // the window names the city itself
+    const showAll = true;
+    // the chosen city first, then your own, then the rest front to back
+    seen.sort((a, b) => (b.on - a.on) || (b.home - a.home) || (b.p.z - a.p.z));
+    const placed = [];
+    const DIRS = [[0, -1], [.62, -.78], [-.62, -.78], [1, 0], [-1, 0], [0, 1], [.62, .78], [-.62, .78]];
+    const top = this.bounds.top, bottom = this.bounds.bottom || this.h;
+    // pins are obstacles too, so a label never covers another city
+    const pinBoxes = seen.map(s => ({ x: s.p.x - 7, y: s.p.y - 7, w: 14, h: 14, id: s.id }));
+    const hitsAdd = [];
+    for (const s of seen) {
+      const L = this.labels[s.id] || (this.labels[s.id] = { a: 0, dir: 0, ox: 0, oy: -20, set: false });
+      const big = s.on;
+      const pl = place(s.id), th = THEMES[s.id];
+      const name = big ? pl.city : pl.city.toUpperCase();
+      ctx.font = big ? '800 15px "Nunito Sans", system-ui, sans-serif' : '800 10.5px "Nunito Sans", system-ui, sans-serif';
+      const nameW = ctx.measureText(name).width;
+      let sub = '', subW = 0;
+      if (big) {
+        sub = th.name + (s.home ? ' · your kitchen' : '');
+        ctx.font = '700 11px "Nunito Sans", system-ui, sans-serif';
+        subW = ctx.measureText(sub).width;
+      }
+      const bw = Math.ceil(Math.max(nameW, subW) + (big ? 22 : 14) + (!big && s.home ? 10 : 0));
+      const bh = big ? 40 : 20;
+      const lead = (big ? 30 : 15) * (.4 + .6 * s.fade);
+      const want = (showAll || big || s.home) && s.fade > .35;
+      let choice = -1, box = null;
+      if (want) {
+        const order = [L.dir, ...DIRS.keys()];
+        for (const d of order) {
+          const [dx, dy] = DIRS[d];
+          const ax = s.p.x + dx * lead, ay = s.p.y + dy * lead;
+          const bx = ax + (dx > .1 ? 0 : dx < -.1 ? -bw : -bw / 2);
+          const by = ay + (dy > .1 ? 0 : dy < -.1 ? -bh : -bh / 2);
+          const b = { x: bx, y: by, w: bw, h: bh };
+          if (b.x < 6 || b.x + b.w > this.w - 6 || b.y < top || b.y + b.h > bottom) continue;
+          const pad = 4;
+          const clash = placed.some(o => b.x < o.x + o.w + pad && b.x + b.w + pad > o.x && b.y < o.y + o.h + pad && b.y + b.h + pad > o.y)
+            || pinBoxes.some(o => o.id !== s.id && b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+          if (!clash) { choice = d; box = b; break; }
+        }
+      }
+      const k = 1 - Math.exp(-dt * 12);
+      if (box) {
+        placed.push(box);
+        const tox = box.x - s.p.x, toy = box.y - s.p.y;
+        if (!L.set || L.a < .05) { L.ox = tox; L.oy = toy; }
+        L.ox += (tox - L.ox) * Math.min(1, k * 1.4); L.oy += (toy - L.oy) * Math.min(1, k * 1.4);
+        L.dir = choice; L.set = true;
+        L.a += (1 - L.a) * k;
+      } else {
+        L.a += (0 - L.a) * k * 1.5;
+      }
+      if (L.a < .02) continue;
+      const a = L.a * s.fade * (this.labelFade ?? 1);
+      const bx = s.p.x + L.ox, by = s.p.y + L.oy;
+      // leader line from the pin to the label
+      const ex = clamp(s.p.x, bx + 6, bx + bw - 6), ey = clamp(s.p.y, by, by + bh);
+      ctx.strokeStyle = `rgba(255,255,255,${.5 * a})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(s.p.x, s.p.y); ctx.lineTo(ex, ey); ctx.stroke();
+      // chip
+      ctx.fillStyle = rgba(mixRgb(this.night, [0, 0, 0], .35), .78 * a);
+      ctx.strokeStyle = rgba(s.glow, (big ? .8 : .45) * a); ctx.lineWidth = 1;
+      ctx.beginPath(); roundRect(ctx, bx, by, bw, bh, big ? 11 : 10); ctx.fill(); ctx.stroke();
+      ctx.textBaseline = 'middle';
+      if (big) {
+        ctx.font = '800 15px "Nunito Sans", system-ui, sans-serif';
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fillText(name, bx + 11, by + 14);
+        ctx.font = '700 11px "Nunito Sans", system-ui, sans-serif';
+        ctx.fillStyle = rgba(mixRgb(s.glow, [255, 255, 255], .2), a);
+        ctx.fillText(sub, bx + 11, by + 29);
+      } else {
+        let tx = bx + 7;
+        if (s.home) {
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.beginPath(); ctx.arc(bx + 9, by + bh / 2, 2.6, 0, 7); ctx.fill();
+          tx += 9;
+        }
+        ctx.font = '800 10.5px "Nunito Sans", system-ui, sans-serif';
+        ctx.fillStyle = `rgba(255,255,255,${.92 * a})`;
+        ctx.fillText(name, tx, by + bh / 2 + .5);
+      }
+      if (L.a > .5) hitsAdd.push({ id: s.id, box: { x: bx - 4, y: by - 4, w: bw + 8, h: bh + 8 } });
+    }
+    this.hits.push(...hitsAdd);
+  }
+
+  hitTest(x, y) {
+    let best = null, bestD = Infinity;
+    for (const h of this.hits) {
+      if (h.box) {
+        if (x >= h.box.x && x <= h.box.x + h.box.w && y >= h.box.y && y <= h.box.y + h.box.h) return h.id;
+        continue;
+      }
+      const d = Math.hypot(x - h.x, y - h.y);
+      if (d < h.r && d < bestD) { best = h.id; bestD = d; }
+    }
+    return best;
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, h / 2, w / 2);
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// One animation loop for every globe on screen.
+const globeLoop = {
+  views: new Set(), raf: 0, last: 0,
+  add(v) { this.views.add(v); this.start(); },
+  start() { if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(t => this.tick(t)); } },
+  tick(now) {
+    this.raf = 0;
+    const dt = Math.min(.05, Math.max(0, (now - this.last) / 1000));
+    this.last = now;
+    for (const v of this.views) {
+      if (!v.canvas.isConnected) { this.views.delete(v); continue; }
+      try { v.frame(now, dt); } catch (err) { console.error(err); this.views.delete(v); }
+    }
+    if (this.views.size) this.raf = requestAnimationFrame(t => this.tick(t));
+  },
+};
+
+// ---------- the small window in Settings ----------
+
+let themeWindow = null;
+
+function mountThemeWindow() {
+  const canvas = document.getElementById('globeMini');
+  if (!canvas) return;
+  const v = themeWindow = new GlobeView(canvas, { mini: true });
+  const id = state.settings.theme;
+  v.homeId = v.focusId = id;
+  v.glowFor = { [id]: 1 };
+  v.setPalette(id, true);
+  const p = place(id);
+  v.cam.lat = p.lat - LIFT; v.cam.lon = p.lon - 4;
+  v.frame = function (now, dt) {
+    if (globeUI.open && !globeUI.closing) return; // the full globe is showing this one
+    if (!this.resize()) return;
+    const r = this.canvas.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    if (now - this.lastDraw < 30 && !this.dirty) return; // half rate is plenty for a window
+    this.dirty = false;
+    const home = place(this.homeId);
+    const { w, h } = this;
+    this.layout.R = Math.min(h * .66, w * .42);
+    this.layout.cx = w - this.layout.R * .82;
+    this.layout.cy = h * .55;
+    this.bounds = { top: 6, bottom: h - 6 };
+    const sway = reducedMotion() ? 0 : Math.sin(now / 5200) * 9;
+    const k = 1 - Math.exp(-dt * 2.4);
+    const tl = wrapLon(home.lon - 4 + sway, this.cam.lon);
+    this.cam.lat += (home.lat - LIFT - this.cam.lat) * k;
+    this.cam.lon += (tl - this.cam.lon) * k;
+    for (const id of Object.keys(this.glowFor)) this.glowFor[id] += ((id === this.homeId ? 1 : 0) - this.glowFor[id]) * k;
+    this.draw(now, dt);
+  };
+  globeLoop.add(v);
+}
+
+function updateThemeWindow() {
+  const id = state.settings.theme, p = place(id), t = THEMES[id];
+  const btn = document.getElementById('globeWindow');
+  if (!btn) return;
+  btn.querySelector('.gw-city').textContent = p.city;
+  btn.querySelector('.gw-theme').textContent = t.name;
+  btn.style.setProperty('--gw-glow', p.glow);
+  btn.setAttribute('aria-label', `Theme: ${t.name}, from ${p.city}. Open the globe to choose another.`);
+  if (themeWindow) {
+    themeWindow.homeId = themeWindow.focusId = id;
+    themeWindow.setPalette(id);
+    themeWindow.dirty = true;
+    if (!themeWindow.glowFor[id]) themeWindow.glowFor[id] = 0;
+  }
+}
+
+function themeWindowMarkup() {
+  const id = state.settings.theme, p = place(id), t = THEMES[id];
+  return `
+    <div class="theme-field">
+      <div class="theme-field-head">
+        <span>Theme</span>
+        <span class="theme-now"><span class="theme-dots" id="themeDots" data-theme="${id}" aria-hidden="true"><i></i><i></i><i></i></span><span id="themeNow">${esc(t.name)}</span></span>
+      </div>
+      <button class="globe-window" id="globeWindow" data-action="open-globe" style="--gw-glow:${p.glow}"
+        aria-label="Theme: ${esc(t.name)}, from ${esc(p.city)}. Open the globe to choose another.">
+        <canvas id="globeMini" aria-hidden="true"></canvas>
+        <span class="gw-text" aria-hidden="true">
+          <span class="gw-kicker">Your kitchen</span>
+          <span class="gw-city">${esc(p.city)}</span>
+          <span class="gw-theme">${esc(t.name)}</span>
+          <span class="gw-cta">Explore the globe <svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </span>
+      </button>
+      <p class="hint theme-intro">Ten kitchens, each in the city it comes from. Spin the globe and try one on.</p>
+    </div>`;
+}
+
+// ---------- the full globe ----------
+
+const globeUI = { open: false, closing: false };
+
+function globeCard(id) {
+  const p = place(id), t = THEMES[id], on = id === state.settings.theme;
+  return `
+    <article class="gx-card" data-theme="${id}" data-place="${id}" aria-label="${esc(p.city)}, ${esc(p.country)}: ${esc(t.name)}">
+      <span class="gx-prev" aria-hidden="true">
+        <span class="tp">
+          <span class="tp-band"><span class="tp-plate">Recipe Box</span></span>
+          <span class="tp-trim"></span>
+          <span class="tp-page">
+            <span class="tp-card"><span class="tp-num">${{ speakeasy: 'I', izakaya: '一' }[id] || '1'}</span><span class="tp-lines"><i></i><i></i></span></span>
+            <span class="tp-card"><span class="tp-num">${{ speakeasy: 'II', izakaya: '二' }[id] || '2'}</span><span class="tp-lines"><i></i><i></i></span></span>
+            <span class="tp-foot"><span class="tp-stars">★★★★</span><span class="tp-btn"></span></span>
+          </span>
+        </span>
+      </span>
+      <span class="gx-body">
+        <span class="gx-where">${esc(p.country)}</span>
+        <span class="gx-city">${esc(p.city)}</span>
+        <span class="gx-theme">${esc(t.name)}</span>
+        <span class="gx-note">${esc(p.note)}</span>
+        <button class="btn btn-primary gx-use" data-use="${id}" aria-pressed="${on}">${on ? useLabelOn() : `Cook in ${esc(p.city)}`}</button>
+      </span>
+    </article>`;
+}
+const useLabelOn = () => `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> Your kitchen`;
+
+function openGlobe() {
+  if (globeUI.open) return;
+  const from = document.getElementById('globeWindow');
+  const fromRect = from?.getBoundingClientRect();
+  const home = state.settings.theme;
+  const startIdx = Math.max(0, PLACE_ORDER.indexOf(home));
+  window.rbLoadThemeFonts(Object.keys(THEMES));
+
+  const instant = reducedMotion() || !fromRect;
+  const el = document.createElement('div');
+  el.className = 'gx';
+  // start clipped to the window's shape, before it is ever drawn, so it can only grow
+  if (!instant) { el.style.clipPath = insetFor(fromRect); el.classList.add('gx-enter'); }
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-labelledby', 'gxTitle');
+  el.innerHTML = `
+    <canvas class="gx-canvas" aria-hidden="true"></canvas>
+    <header class="gx-head">
+      <button class="gx-close" aria-label="Close the globe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <div class="gx-titles"><h2 id="gxTitle">Kitchens of the world</h2><p>Swipe the cards or spin the globe</p></div>
+      <span class="gx-count" aria-hidden="true"><b>01</b><i> / ${String(PLACE_ORDER.length).padStart(2, '0')}</i></span>
+    </header>
+    <div class="gx-rail" role="group" aria-label="Themes">${PLACE_ORDER.map(globeCard).join('')}</div>`;
+  document.body.appendChild(el);
+
+  const canvas = el.querySelector('.gx-canvas');
+  const rail = el.querySelector('.gx-rail');
+  const cards = [...rail.querySelectorAll('.gx-card')];
+  const v = new GlobeView(canvas);
+  Object.assign(globeUI, { open: true, closing: false, el, v, rail, cards, from, idx: -1, landed: -1,
+    mode: 'rail', flight: null, drag: null, lastTouch: 0, programmatic: 0, trans: { t: 0, dir: 1, t0: performance.now() } });
+
+  // start where the little window was, so the globe seems to grow out of it
+  const mini = themeWindow && themeWindow.canvas.isConnected ? themeWindow : null;
+  v.homeId = home; v.focusId = home;
+  v.glowFor = { [home]: 1 };
+  v.setPalette(home, true);
+  if (mini) { v.cam.lat = mini.cam.lat; v.cam.lon = mini.cam.lon; } else { v.cam.lat = place(home).lat - LIFT; v.cam.lon = place(home).lon; }
+
+  layoutGlobe();
+  rail.scrollLeft = startIdx * globeUI.stride;
+  globeUI.fromLayout = mini && fromRect ? (() => {
+    const cr = mini.canvas.getBoundingClientRect();
+    return { cx: cr.left + mini.layout.cx, cy: cr.top + mini.layout.cy, R: mini.layout.R };
+  })() : null;
+  globeUI.fromRect = fromRect;
+  if (!instant) {
+    el.getBoundingClientRect();
+    requestAnimationFrame(() => { el.style.clipPath = 'inset(0px round 0px)'; el.classList.remove('gx-enter'); });
+  } else {
+    globeUI.trans.t = 1;
+  }
+  if (from) from.classList.add('gw-away');
+
+  view.inert = true;
+  document.querySelector('.tabs')?.setAttribute('inert', '');
+  document.documentElement.classList.add('gx-lock');
+
+  wireGlobe();
+  v.frame = globeFrame;
+  globeLoop.add(v);
+  setTimeout(() => el.querySelector('.gx-close')?.focus({ preventScroll: true }), 50);
+}
+
+function insetFor(r) {
+  return `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 16px)`;
+}
+
+function layoutGlobe() {
+  const g = globeUI, { el, rail, v } = g;
+  if (!el) return;
+  const w = el.clientWidth, h = el.clientHeight;
+  const cardW = Math.min(w - 48, 352);
+  const gap = 12;
+  el.style.setProperty('--gx-card-w', cardW + 'px');
+  el.style.setProperty('--gx-pad', (w - cardW) / 2 + 'px');
+  el.style.setProperty('--gx-gap', gap + 'px');
+  g.stride = cardW + gap;
+  v.resize();
+  const head = el.querySelector('.gx-head').getBoundingClientRect().bottom;
+  const card = g.cards[0].getBoundingClientRect();
+  const railTop = card.top || (h - 200);
+  const room = railTop - head;
+  const R = Math.max(80, Math.min(w * .47, room * .43));
+  g.layout = { cx: w / 2, cy: head + room * .54, R };
+  v.bounds = { top: head + 4, bottom: railTop - 14 };
+}
+
+function wireGlobe() {
+  const g = globeUI, { el, rail, v, cards } = g;
+  el.querySelector('.gx-close').addEventListener('click', () => closeGlobe());
+  g.onKey = e => {
+    if (e.key === 'Escape') { e.preventDefault(); closeGlobe(); return; }
+    if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.target.closest('input, textarea')) {
+      e.preventDefault();
+      goToPlace(PLACE_ORDER[clamp(g.idx + (e.key === 'ArrowRight' ? 1 : -1), 0, PLACE_ORDER.length - 1)]);
+    }
+    if (e.key === 'Tab') { // keep focus inside the globe
+      const f = [...el.querySelectorAll('button')].filter(b => !b.disabled);
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      else if (!el.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    }
+  };
+  document.addEventListener('keydown', g.onKey); // on the document, since spinning the globe leaves focus on the page
+  rail.addEventListener('scroll', () => {
+    if (performance.now() > g.programmatic) { g.flight = null; g.mode = 'rail'; }
+  }, { passive: true });
+  rail.addEventListener('click', e => {
+    const use = e.target.closest('[data-use]');
+    if (use) { usePlace(use.dataset.use); return; }
+    const card = e.target.closest('.gx-card');
+    if (card && card.dataset.place !== PLACE_ORDER[g.idx]) goToPlace(card.dataset.place);
+  });
+  rail.addEventListener('focusin', e => {
+    const card = e.target.closest('.gx-card');
+    if (card && card.dataset.place !== PLACE_ORDER[g.idx] && e.target.matches(':focus-visible')) goToPlace(card.dataset.place);
+  });
+
+  // spinning the globe by hand
+  const canvas = v.canvas;
+  canvas.addEventListener('pointerdown', e => {
+    if (e.button > 0) return;
+    canvas.setPointerCapture(e.pointerId);
+    g.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false, vlon: 0, vlat: 0 };
+  });
+  canvas.addEventListener('pointermove', e => {
+    const d = g.drag;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
+    if (!d.moved) { d.moved = true; g.flight = null; g.mode = 'free'; }
+    const now = performance.now(), dtm = Math.max(1, now - d.t);
+    const R = v.layout.R * v.cam.zoom;
+    const dlon = -dx / R / RAD, dlat = dy / R / RAD;
+    v.cam.lon += dlon; v.cam.lat = clamp(v.cam.lat + dlat, -70, 75);
+    d.vlon = d.vlon * .6 + (dlon / dtm * 1000) * .4;
+    d.vlat = d.vlat * .6 + (dlat / dtm * 1000) * .4;
+    d.x = e.clientX; d.y = e.clientY; d.t = now;
+    g.lastTouch = now;
+  });
+  const end = e => {
+    const d = g.drag;
+    if (!d || d.id !== e.pointerId) return;
+    g.drag = null;
+    if (!d.moved) {
+      const r = canvas.getBoundingClientRect();
+      const hit = v.hitTest(e.clientX - r.left, e.clientY - r.top);
+      if (hit) goToPlace(hit);
+      return;
+    }
+    const idle = performance.now() - d.t > 80;
+    v.cam.vlon = idle ? 0 : clamp(d.vlon, -400, 400);
+    v.cam.vlat = idle ? 0 : clamp(d.vlat, -200, 200);
+    g.lastTouch = performance.now();
+  };
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+
+  g.onResize = () => { layoutGlobe(); if (g.idx >= 0) rail.scrollLeft = g.idx * g.stride; };
+  window.addEventListener('resize', g.onResize);
+}
+
+// Fly straight to a place (a tapped pin, label or card), and bring its card to the middle.
+function goToPlace(id) {
+  const g = globeUI, v = g.v;
+  const i = PLACE_ORDER.indexOf(id);
+  if (i < 0 || !g.open) return;
+  const fromF = llVec(v.cam.lat + LIFT, v.cam.lon);
+  const to = placeVec(id);
+  const ang = vangle(fromF, to);
+  const still = reducedMotion();
+  g.flight = still || ang < .02 ? null : { from: fromF, to, t0: performance.now(), dur: 650 + 1100 * Math.min(1, ang / 2.2), ang, id };
+  g.mode = 'rail';
+  g.programmatic = performance.now() + (g.flight ? g.flight.dur : 0) + 700;
+  setFocus(i);
+  g.rail.scrollTo({ left: i * g.stride, behavior: still ? 'auto' : 'smooth' });
+  if (!g.flight) { v.cam.lat = place(id).lat - LIFT; v.cam.lon = wrapLon(place(id).lon, v.cam.lon); }
+}
+
+function setFocus(i) {
+  const g = globeUI, v = g.v;
+  if (i === g.idx) return;
+  g.idx = i;
+  const id = PLACE_ORDER[i];
+  v.focusId = id;
+  v.setPalette(id);
+  if (!(id in v.glowFor)) v.glowFor[id] = 0;
+  g.cards.forEach((c, k) => c.classList.toggle('is-on', k === i));
+  const n = g.el.querySelector('.gx-count b');
+  if (n) n.textContent = String(i + 1).padStart(2, '0');
+}
+
+async function usePlace(id) {
+  const g = globeUI, v = g.v;
+  if (!THEMES[id]) return;
+  if (PLACE_ORDER[g.idx] !== id) goToPlace(id);
+  if (id === state.settings.theme) return;
+  if (!reducedMotion()) v.ripple(id, 'screen');
+  await setTheme(id, { quiet: true });
+  v.homeId = id;
+  g.cards.forEach(c => {
+    const b = c.querySelector('[data-use]'), on = c.dataset.place === id;
+    b.setAttribute('aria-pressed', on);
+    b.innerHTML = on ? useLabelOn() : `Cook in ${esc(place(c.dataset.place).city)}`;
+    if (on) { c.classList.remove('just-chosen'); void c.offsetWidth; c.classList.add('just-chosen'); }
+  });
+  announce(`${THEMES[id].name} theme on`);
+}
+
+// Screen readers hear what changed even though the toast is hidden behind the globe.
+function announce(text) {
+  let live = document.getElementById('gxLive');
+  if (!live && globeUI.el) {
+    live = document.createElement('p');
+    live.id = 'gxLive'; live.className = 'sr-only'; live.setAttribute('role', 'status');
+    globeUI.el.appendChild(live);
+  }
+  if (live) live.textContent = text;
+}
+
+function globeFrame(now, dt) {
+  const g = globeUI, v = this;
+  if (!v.resize()) return;
+  const still = reducedMotion();
+
+  // open and close: grow out of (and back into) the window in Settings
+  const T = g.trans;
+  const tdur = g.closing ? 620 : 760;
+  T.t = still ? (g.closing ? 0 : 1) : clamp(g.closing ? 1 - (now - T.t0) / tdur : (now - T.t0) / tdur, 0, 1);
+  const e = easeInOut(T.t);
+  const to = g.layout;
+  const from = g.fromLayout || { cx: to.cx, cy: to.cy + 40, R: to.R * .6 };
+  v.layout = { cx: from.cx + (to.cx - from.cx) * e, cy: from.cy + (to.cy - from.cy) * e, R: from.R + (to.R - from.R) * e };
+  v.labelFade = smoothstep(.5, 1, T.t);
+
+  // which card is in the middle of the rail
+  const f = clamp(g.rail.scrollLeft / g.stride, 0, PLACE_ORDER.length - 1);
+  const i0 = Math.floor(f), frac = f - i0, i1 = Math.min(PLACE_ORDER.length - 1, i0 + 1);
+  if (!g.flight) setFocus(Math.round(f));
+
+  let zoomTo = 1;
+  if (g.flight) {
+    const fl = g.flight, t = clamp((now - fl.t0) / fl.dur, 0, 1), te = easeInOut(t);
+    const F = slerp(fl.from, fl.to, te);
+    const [la, lo] = vecLL(F);
+    v.cam.lat = la - LIFT; v.cam.lon = wrapLon(lo, v.cam.lon);
+    v.cam.vlat = v.cam.vlon = 0;
+    zoomTo = 1 - .3 * Math.sin(Math.PI * te) * Math.min(1, fl.ang / 1.6);
+    v.cam.zoom = zoomTo;
+    v.arc = { a: fl.from, b: fl.to, t: te, alpha: 1, head: true };
+    if (t >= 1) { g.flight = null; g.arcFade = { a: fl.from, b: fl.to, t0: now }; }
+  } else if (g.mode === 'free') {
+    // a flick keeps the globe turning for a moment
+    const decay = Math.exp(-dt * 2.6);
+    v.cam.lon += v.cam.vlon * dt; v.cam.lat = clamp(v.cam.lat + v.cam.vlat * dt, -70, 75);
+    v.cam.vlon *= decay; v.cam.vlat *= decay;
+    v.cam.zoom += (1 - v.cam.zoom) * (1 - Math.exp(-dt * 4));
+    if (!g.drag && now - g.lastTouch > 3600) g.mode = 'rail'; // then drift home to the chosen city
+  } else {
+    // follow the rail: between two cards, the globe sits partway along the flight between their cities
+    const a = placeVec(PLACE_ORDER[i0]), b = placeVec(PLACE_ORDER[i1]);
+    const F = slerp(a, b, frac);
+    const [la, lo] = vecLL(F);
+    const ang = vangle(a, b);
+    zoomTo = 1 - .2 * Math.sin(Math.PI * frac) * Math.min(1, ang / 1.4);
+    const k = g.drag ? 0 : 1 - Math.exp(-dt * (T.t < 1 ? 5 : 9));
+    v.cam.lat += (la - LIFT - v.cam.lat) * k;
+    v.cam.lon += (wrapLon(lo, v.cam.lon) - v.cam.lon) * k;
+    v.cam.zoom += (zoomTo - v.cam.zoom) * k;
+    if (frac > .002 && frac < .998) {
+      v.arc = { a, b, t: frac, alpha: Math.pow(Math.sin(Math.PI * frac), .5), head: true };
+      g.arcFade = null;
+    } else if (g.arcFade) {
+      const t = (now - g.arcFade.t0) / 900;
+      v.arc = t < 1 ? { a: g.arcFade.a, b: g.arcFade.b, t: 1, alpha: 1 - t, head: false } : null;
+      if (t >= 1) g.arcFade = null;
+    } else v.arc = null;
+    // a ripple when you land somewhere new
+    const settled = Math.abs(f - Math.round(f)) < .004 && Math.abs(la - LIFT - v.cam.lat) < 1.5;
+    if (settled && g.landed !== g.idx && T.t >= 1) { g.landed = g.idx; if (!still) v.ripple(PLACE_ORDER[g.idx]); }
+  }
+  if (g.flight === null && v.arc && v.arc.head && g.mode !== 'rail') v.arc = null;
+
+  // light up the chosen city's region
+  for (const id of Object.keys(v.glowFor)) {
+    const target = id === v.focusId && g.mode !== 'free' ? 1 : id === v.focusId ? .6 : 0;
+    v.glowFor[id] += (target - v.glowFor[id]) * (1 - Math.exp(-dt * 4));
+    if (v.glowFor[id] < .005 && id !== v.focusId) delete v.glowFor[id];
+  }
+
+  // the line from the middle card to its city
+  const card = g.cards[g.idx];
+  if (card) {
+    const r = card.getBoundingClientRect();
+    const off = Math.abs(r.left + r.width / 2 - v.w / 2) / g.stride;
+    v.connector = { x: r.left + r.width / 2, y: r.top + 1, alpha: (1 - smoothstep(.08, .4, off)) * smoothstep(.55, 1, T.t) * (g.flight ? .35 : 1) };
+  }
+
+  v.draw(now, dt);
+
+  if (g.closing && T.t <= 0) finishCloseGlobe();
+}
+
+function closeGlobe(instant = false) {
+  const g = globeUI;
+  if (!g.open || g.closing) { if (instant && g.open) finishCloseGlobe(); return; }
+  g.closing = true;
+  const from = document.getElementById('globeWindow');
+  const r = from?.getBoundingClientRect();
+  const visible = r && r.bottom > 0 && r.top < innerHeight;
+  if (instant || reducedMotion() || !visible) { finishCloseGlobe(); return; }
+  // shrink back into the window, which now shows the theme you chose
+  if (themeWindow) {
+    const id = state.settings.theme, p = place(id);
+    themeWindow.homeId = themeWindow.focusId = id;
+    themeWindow.setPalette(id, true);
+    themeWindow.glowFor = { [id]: 1 };
+    themeWindow.cam.lat = p.lat - LIFT; themeWindow.cam.lon = p.lon - 4;
+    themeWindow.resize();
+    const R = Math.min(themeWindow.h * .66, themeWindow.w * .42);
+    g.fromLayout = { cx: r.left + themeWindow.w - R * .82, cy: r.top + themeWindow.h * .55, R };
+  }
+  g.flight = null; g.mode = 'rail';
+  g.trans.t0 = performance.now();
+  g.el.classList.add('gx-leave');
+  g.el.style.clipPath = insetFor(r);
+  const el = g.el;
+  setTimeout(() => { if (globeUI.el === el) finishCloseGlobe(); }, 900); // in case the globe stopped drawing
+}
+
+function finishCloseGlobe() {
+  const g = globeUI;
+  if (!g.open) return;
+  window.removeEventListener('resize', g.onResize);
+  document.removeEventListener('keydown', g.onKey);
+  g.el.remove();
+  g.open = false; g.closing = false;
+  view.inert = false;
+  document.querySelector('.tabs')?.removeAttribute('inert');
+  document.documentElement.classList.remove('gx-lock');
+  const from = document.getElementById('globeWindow');
+  if (from) { from.classList.remove('gw-away'); from.focus({ preventScroll: true }); }
+  updateThemeWindow();
+  if (themeWindow) themeWindow.dirty = true;
+  Object.assign(globeUI, { el: null, v: null, rail: null, cards: null });
+}
+
+async function setTheme(id, { quiet = false } = {}) {
   if (!THEMES[id] || id === state.settings.theme) return;
   fadeColors();
   state.settings.theme = window.rbApplyTheme(id);
-  view.querySelectorAll('.theme-opt').forEach(b => b.setAttribute('aria-checked', b.dataset.themeId === id));
   const now = document.getElementById('themeNow');
   if (now) now.textContent = THEMES[id].name;
   document.getElementById('themeDots')?.setAttribute('data-theme', id);
+  if (!globeUI.open) updateThemeWindow(); // with the globe open, the window catches up as it closes
   await saveSettings();
-  toast(`${THEMES[id].name} theme on`);
+  if (!quiet) toast(`${THEMES[id].name} theme on`);
 }
 
 function fadeColors() {
@@ -5004,21 +6078,7 @@ async function renderSettings() {
           </div>
           <p class="hint">Automatic follows your iPhone’s Light and Dark setting.</p>
         </fieldset>
-        <details class="setup theme-folder">
-          <summary>
-            <span class="theme-sum">Theme
-              <span class="theme-now"><span class="theme-dots" id="themeDots" data-theme="${state.settings.theme}" aria-hidden="true"><i></i><i></i><i></i></span><span id="themeNow">${esc(theme().name)}</span></span>
-            </span>
-          </summary>
-          <p class="hint theme-intro">Colors, lettering and trim from kitchens and crafts around the world. Tap one to try it.</p>
-          <div role="radiogroup" aria-label="Theme">
-            ${THEME_GROUPS.map(([label, ids], g) => `
-              <div class="theme-group" role="group" aria-labelledby="themeGroup${g}">
-                <h3 class="theme-group-title" id="themeGroup${g}">${esc(label)}</h3>
-                <div class="theme-grid">${ids.map(themeOption).join('')}</div>
-              </div>`).join('')}
-          </div>
-        </details>
+        ${themeWindowMarkup()}
       </section>
 
       <section class="card sec" aria-labelledby="webSetupHead">
@@ -5077,6 +6137,7 @@ async function renderSettings() {
         <button class="text-btn danger" data-action="delete-all">Delete all recipes</button>
       </footer>
     </section>`;
+  mountThemeWindow();
 }
 
 // ---------- website import ----------
@@ -5296,7 +6357,7 @@ function currentRecipe() {
 }
 
 const actions = {
-  'set-theme': el => setTheme(el.dataset.themeId),
+  'open-globe': () => openGlobe(),
   'dismiss-install': async () => { state.settings.installTipDismissed = true; await saveSettings(); document.querySelector('.notice')?.remove(); },
   'filter': el => {
     state.filter.cat = el.dataset.cat;
