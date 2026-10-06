@@ -8678,6 +8678,27 @@ async function renderSettings() {
         </details>
       </section>
 
+      <section class="card sec" aria-labelledby="timerHead">
+        <h2 id="timerHead" class="sec-title">Kitchen timers</h2>
+        <fieldset class="mode-field">
+          <legend>In cook mode, timers run in</legend>
+          <div class="seg mode-seg">
+            ${[['app', 'Recipe Box'], ['clock', 'iPhone Clock']].map(([v, label]) => `<label><input type="radio" name="timerApp" value="${v}" ${(state.settings.timerApp || 'app') === v ? 'checked' : ''}><span>${label}</span></label>`).join('')}
+          </div>
+          <p class="hint">Recipe Box timers ring only while the app is open. iPhone Clock timers ring even when the phone is locked or you’re in another app, and show on the Lock Screen. They need the shortcut below.</p>
+        </fieldset>
+        <details class="setup">
+          <summary>Set up the Recipe Timer shortcut</summary>
+          <ol class="sc">
+            <li>In Shortcuts, tap <b>+</b>. Tap the name at the top, choose Rename, and name it:${snip('snipTimerName', TIMER_SHORTCUT, 'the shortcut name')}</li>
+            <li>Add <b>Start Timer</b>. Tap its number, tap <b>Clear Variable</b> if needed, and choose ${v('Shortcut Input')}. Tap the unit and choose <b>seconds</b>.</li>
+            <li>Tap <b>Done</b>.</li>
+          </ol>
+          <p class="hint">Tapping a timer in cook mode opens Shortcuts for a moment. To come back, tap <b>◀ Recipe Box</b> in the top-left corner or swipe along the bottom edge. The first time, choose <b>Always Allow</b> if asked.</p>
+          <button class="btn btn-secondary" data-action="test-clock-timer">Try a 10-second timer</button>
+        </details>
+      </section>
+
       <section class="card sec" aria-labelledby="backupHead">
         <h2 id="backupHead" class="sec-title">Backups</h2>
         <p>Recipes live only on this phone. Save a backup now and then to keep them safe or move them to a new phone.</p>
@@ -9173,6 +9194,7 @@ view.addEventListener('input', e => {
 view.addEventListener('change', async e => {
   const t = e.target;
   if (t.name === 'appearance') { await setMode(t.value); return; }
+  if (t.name === 'timerApp') { state.settings.timerApp = t.value; await saveSettings(); toast(t.value === 'clock' ? 'Cook mode timers will use iPhone Clock' : 'Cook mode timers will run in Recipe Box'); return; }
   if (t.dataset.categoryFor) { await setCategory(t.dataset.categoryFor, t.value); renderContents(); return; }
   if (t.hasAttribute('data-photo-input')) { const r = currentRecipe(); if (r) await addDishPhotos(r, t.files); t.value = ''; return; }
   if (t.id === 'sort') { state.filter.sort = t.value; renderContents(); }
@@ -9413,7 +9435,15 @@ function storeTimers() {
 }
 const timeLeft = t => (t.done ? 0 : t.paused ? t.left : Math.max(0, t.endsAt - Date.now()));
 
+// iPhone Clock timers go through a Shortcut (web apps can't open Clock's timer directly).
+const TIMER_SHORTCUT = 'Recipe Timer';
+const useClock = () => state.settings.timerApp === 'clock';
+function startClockTimer(sec) {
+  location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(TIMER_SHORTCUT)}&input=text&text=${Math.round(sec)}`;
+}
+
 function startTimer(sec, label, recipe) {
+  if (useClock()) { startClockTimer(sec); return; }
   unlockAudio();
   const dup = timers.find(t => !t.done && t.label === label && t.total === sec * 1000 && t.recipeId === (recipe?.id || null));
   if (dup) { renderTimers(); flashTimer(dup.id); toast('That timer is already running'); return; }
@@ -9725,7 +9755,7 @@ function drawCook(r, dir = 0) {
       <p class="ck-text">${markStep(step, pos + 1)}</p>
       ${durs.length ? `<div class="ck-chips">${durs.map(d => `
         <button class="ck-chip" data-action="ck-timer" data-sec="${d.sec}" data-label="Step ${pos + 1} · ${esc(fmtSpan(d.sec))}">
-          ${ICONS.timer}<span>Start ${esc(fmtSpan(d.sec))} timer${d.hi ? `<small>Recipe says ${esc(fmtRange(d))}</small>` : ''}</span>
+          ${ICONS.timer}<span>Start ${esc(fmtSpan(d.sec))} timer${d.hi || useClock() ? `<small>${[d.hi ? `Recipe says ${esc(fmtRange(d))}` : '', useClock() ? 'in iPhone Clock' : ''].filter(Boolean).join(' · ')}</small>` : ''}</span>
         </button>`).join('')}</div>` : ''}
       ${uses.length ? `<section class="ck-uses" aria-labelledby="ckUsesHead">
         <h2 class="ck-label" id="ckUsesHead">In this step</h2>
@@ -9764,7 +9794,7 @@ function openCookPanel(kind) {
       <div class="ck-panel-body">${cookScaler(r)}<ul class="ck-ings">${cookIngredientRows(r)}</ul></div>`;
   } else {
     panel.innerHTML = `
-      <div class="ck-panel-head"><h2 id="ckPanelTitle">New timer</h2>
+      <div class="ck-panel-head"><h2 id="ckPanelTitle">${useClock() ? 'iPhone Clock timer' : 'New timer'}</h2>
         <button class="ck-exit" data-action="ck-panel-close">${ICONS.close}Close</button></div>
       <div class="ck-panel-body">
         <div class="ck-presets">${[1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90].map(m => `
@@ -9830,6 +9860,7 @@ Object.assign(actions, {
       panel.querySelector('.ck-panel-body').innerHTML = `${cookScaler(r)}<ul class="ck-ings">${cookIngredientRows(r)}</ul>`;
     }
   },
+  'test-clock-timer': () => startClockTimer(10),
   'ck-timer': el => startTimer(Number(el.dataset.sec), el.dataset.label, cookRecipe()),
   'ck-preset': el => { const m = Number(el.dataset.min); closeCookPanel(); startTimer(m * 60, `Timer · ${fmtSpan(m * 60)}`, cookRecipe()); },
   'ck-custom-adj': el => {
