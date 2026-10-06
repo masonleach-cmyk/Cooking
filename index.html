@@ -512,6 +512,37 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .paste-box:focus { outline: none; border-color: var(--heading); }
 .source-link { color: inherit; font-weight: 800; }
 
+/* ---------- settings: shortcut setup ---------- */
+.setup { margin-top: .75rem; border-top: 2px dashed var(--dash); }
+.setup > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  min-height: 3rem; cursor: pointer; list-style: none; font-weight: 800; color: var(--heading);
+}
+.setup > summary::-webkit-details-marker { display: none; }
+.setup > summary::after { content: '+'; font: 400 1.6rem/1 var(--display); color: var(--cherry); }
+.setup[open] > summary::after { content: '−'; }
+.sc { margin: .25rem 0 .5rem; padding-left: 1.5rem; }
+.sc > li { margin-bottom: .85rem; padding-left: .15rem; }
+.sc li::marker { font-weight: 800; color: var(--cherry); }
+.sc-branch { list-style: lower-alpha; margin: .5rem 0 0; padding: .1rem 0 .1rem 1.5rem; border-left: 2px dashed var(--dash); }
+.sc-branch > li { margin-bottom: .6rem; }
+.var {
+  display: inline-block; padding: 0 .4rem; border-radius: 6px; line-height: 1.5;
+  background: color-mix(in srgb, var(--aqua) 40%, transparent); color: var(--ink); font-weight: 700;
+}
+.snip { display: flex; align-items: center; gap: .5rem; margin: .35rem 0 0; }
+.snip-block { flex-direction: column; align-items: stretch; gap: .35rem; }
+.snip-block .copy-btn { align-self: flex-start; }
+.snip .val {
+  font: .9rem/1.4 ui-monospace, Menlo, monospace; background: var(--cream);
+  border: 2px dashed var(--dash); border-radius: 8px; padding: .3rem .55rem;
+}
+.snip .code { min-width: 0; margin: 0; }
+.copy-btn { flex: none; }
+.settings-foot { text-align: center; color: var(--muted); font-size: .88rem; margin: 1.25rem var(--gutter) 2.5rem; }
+.settings-foot p { margin: 0 auto .25rem; }
+.text-btn.danger { color: var(--cherry); font-size: .92rem; }
+
 /* ---------- bottom tabs ---------- */
 
 .tabs {
@@ -702,6 +733,44 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 
   <noscript><p class="noscript">Recipe Box needs JavaScript turned on.</p></noscript>
 
+  <script>
+// Startup safety net (a plain script, so it runs even if the app's code can't).
+// If the app hasn't drawn its first screen after a few seconds, say why and offer a fix,
+// instead of leaving a blank page. Saved recipes are never touched here.
+(function () {
+  var problems = [];
+  function note(m) { if (m && problems.length < 5) problems.push(String(m).slice(0, 240)); }
+  window.addEventListener('error', function (e) {
+    note((e.message || 'Error') + (e.filename ? ' (' + e.filename.split('/').pop() + ' line ' + e.lineno + ')' : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) { note(e.reason && (e.reason.message || e.reason)); });
+  setTimeout(function () {
+    if (window.__recipeBoxStarted) return;
+    var view = document.getElementById('view');
+    if (!view) return;
+    var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+    view.innerHTML = '<section class="card sec" style="margin:2rem 1rem">'
+      + '<h1 class="sec-title">Recipe Box didn’t start</h1>'
+      + '<p>Your saved recipes are safe. Try these in order:</p>'
+      + '<p><button class="btn btn-primary" id="snReload">Reload</button></p>'
+      + '<p><button class="btn btn-secondary" id="snReset">Clear the offline copy and reload</button></p>'
+      + '<p class="hint">If it still won’t start, close the app completely (swipe it away) and open it again.</p>'
+      + '<p class="hint">Details: ' + (problems.length ? esc(problems.join(' / ')) : 'no error was reported; the app’s storage or code didn’t answer.') + '</p>'
+      + '</section>';
+    document.getElementById('snReload').onclick = function () { location.reload(); };
+    document.getElementById('snReset').onclick = function () {
+      var jobs = [];
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+      }
+      if (window.caches && caches.keys) {
+        jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      }
+      Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
+    };
+  }, 6000);
+})();
+  </script>
   <script type="module">
 // ================================================================
 // Install manifest (generated here so everything lives in one file)
@@ -729,7 +798,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v11';
+const APP_VERSION = 'v13';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -1804,7 +1873,7 @@ function suggestDiet(r) {
 // ================================================================
 
 // Recipe sites (NYT Cooking included) describe each recipe in a block of schema.org data
-// for search engines. The "Add to Recipe Box" shortcut copies that block (or the whole
+// for search engines. The "Copy Recipe" shortcut copies that block (or the whole
 // page) to the clipboard; this turns it into a recipe. Pure, so it can be tested anywhere.
 
 const WEB_SITES = { 'cooking.nytimes.com': 'NYT Cooking', 'nytimes.com': 'The New York Times', 'seriouseats.com': 'Serious Eats',
@@ -3100,7 +3169,7 @@ function renderHome() {
 
   view.innerHTML = `
     ${band(`
-      <a class="icon-btn band-settings" href="#/settings" aria-label="Backup and settings">${ICONS.settings}</a>
+      <a class="icon-btn band-settings" href="#/settings" aria-label="Settings">${ICONS.settings}</a>
       <div class="sign-plate"><h1 class="sign">Recipe Box</h1></div>
       <p class="band-sub" id="bookCount"></p>`, 'band-home')}
     ${showInstall ? `
@@ -3414,7 +3483,7 @@ function renderForm(id) {
       ${id ? '' : `
       <section class="card sec" aria-labelledby="webHead">
         <h2 id="webHead" class="sec-title">From a website</h2>
-        <p class="hint">Share a recipe from Safari or the NYT Cooking app to <b>Add to Recipe Box</b>, then paste it here. <a href="#/settings">Set up the shortcut</a></p>
+        <p class="hint">Share a recipe from the NYT Cooking app or Safari to <b>Copy Recipe</b>, then paste it here. <a href="#/settings">Set up the shortcut</a></p>
         <button type="button" class="btn btn-primary" data-action="paste-recipe">${ICONS.paste}Paste recipe</button>
       </section>`}
       <section class="card sec scan" aria-labelledby="scanHead">
@@ -3902,67 +3971,72 @@ async function renderSettings() {
   let usage = '';
   try {
     const est = await navigator.storage.estimate();
-    if (est.usage) usage = ` Using about ${(est.usage / 1048576).toFixed(1)} MB on this device.`;
+    if (est.usage >= 104858) usage = ` About ${(est.usage / 1048576).toFixed(1)} MB used.`;
   } catch { /* ignore */ }
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  // A value to type into Shortcuts, with a Copy button beside it.
+  const snip = (id, text, label, block = false) => `
+    <span class="snip${block ? ' snip-block' : ''}"><code class="${block ? 'code' : 'val'}" id="${id}">${esc(text)}</code><button class="btn btn-chip copy-btn" data-action="copy-snippet" data-target="${id}" aria-label="Copy ${esc(label)}">Copy</button></span>`;
+  const v = name => `<span class="var">${esc(name)}</span>`;
   view.innerHTML = `
-    ${band(`<div class="band-bar"><a class="back" href="#/">Recipes</a></div><h1 class="sign">Backup &amp; settings</h1>`, 'band-form')}
+    ${band(`<div class="band-bar"><a class="back" href="#/">Recipes</a></div><h1 class="sign">Settings</h1>`, 'band-form')}
     <section class="settings">
 
       <section class="card sec" aria-labelledby="webSetupHead">
-        <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking and other sites</h2>
-        <p>A Shortcut copies the recipe from the page you're looking at. Make it once, in the Shortcuts app:</p>
-        <ol class="plain-steps">
-          <li>Tap <b>+</b> to make a new shortcut and name it <b>Add to Recipe Box</b>.</li>
-          <li>Tap the <b>ⓘ</b> button (or the name at the top, then Settings) and turn on <b>Show in Share Sheet</b>. Set it to receive <b>URLs</b> and <b>Safari web pages</b> only.</li>
-          <li>Add <b>Get Type</b>, set to the Shortcut Input.</li>
-          <li>Add <b>If</b>: Type <b>is</b> <b>Safari web page</b>.</li>
-          <li>Inside the If, add <b>Run JavaScript on Web Page</b> (input: Shortcut Input) and replace its script with this:
-            <code class="code" id="webScript">${esc(WEB_SHORTCUT_JS)}</code>
-            <button class="btn btn-chip" data-action="copy-web-script">Copy the script</button>
-          </li>
-          <li>Under <b>Otherwise</b>, add <b>Get URLs from Input</b> (Shortcut Input), then <b>Get Contents of URL</b>, then <b>Match Text</b> with this pattern:
-            <code class="code" id="webPattern">${esc(WEB_SHORTCUT_PATTERN)}</code>
-            <button class="btn btn-chip" data-action="copy-web-pattern">Copy the pattern</button>
-            <p>Then add <b>Combine Text</b> (Matches, separated by New Lines).</p>
-          </li>
-          <li>After <b>End If</b>, add <b>Copy to Clipboard</b> (input: If Result), then <b>Show Notification</b>: “Recipe copied. Open Recipe Box and tap Paste.”</li>
-        </ol>
-        <p>To import: on a recipe in Safari or the NYT Cooking app, tap Share, then <b>Add to Recipe Box</b>. Open Recipe Box and tap <b>Paste a web recipe</b>, then Paste.</p>
-        <p class="hint">Also turn on Settings › Apps › Shortcuts › Advanced › <b>Allow Running Scripts</b>. The first time you use it, Shortcuts asks to let it read the site; choose Always Allow.</p>
+        <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking</h2>
+        <p>On a recipe in the NYT Cooking app or in Safari, tap Share, then <b>Copy Recipe</b>. Open Recipe Box and tap <b>Paste a web recipe</b>.</p>
+        <details class="setup">
+          <summary>Set up the Copy Recipe shortcut</summary>
+          <p class="hint">Do this once in the Shortcuts app. For each step, type the bold name into <b>Search Actions</b>, tap it, then set its blue fields as shown. To swap a blue field for another, tap it, tap <b>Clear Variable</b>, then pick the new one.</p>
+          <ol class="sc">
+            <li>In the iPhone Settings app, go to Apps › Shortcuts › Advanced and turn on <b>Allow Running Scripts</b>.</li>
+            <li>In Shortcuts, tap <b>+</b>. Tap the name at the top, choose Rename, and name it:${snip('snipName', 'Copy Recipe', 'the shortcut name')}</li>
+            <li>Tap <b>ⓘ</b> and turn on <b>Show in Share Sheet</b>. In the <b>Receive</b> action that appears at the top, tap the input types and keep only ${v('Safari web pages')}, ${v('URLs')} and ${v('Text')}.</li>
+            <li><b>Get Type</b> of ${v('Shortcut Input')}</li>
+            <li><b>If</b> ${v('Type')} <i>is</i>${snip('snipType', 'Safari web page', 'the If text')}
+              <ol class="sc-branch">
+                <li><b>Run JavaScript on Web Page</b> on ${v('Shortcut Input')}. Delete its sample script and paste this:${snip('snipScript', WEB_SHORTCUT_JS, 'the script', true)}</li>
+              </ol>
+            </li>
+            <li><b>Otherwise</b> is already there, under the If. Add these inside it, in this order:
+              <ol class="sc-branch">
+                <li><b>Match Text</b> in ${v('Shortcut Input')}, with this pattern:${snip('snipLink', NYT_LINK_PATTERN, 'the link pattern', true)}</li>
+                <li><b>Get Item from List</b>: ${v('First Item')} from ${v('Matches')}</li>
+                <li><b>Get Contents of URL</b>: ${v('Item from List')}</li>
+                <li><b>Set Name</b> of ${v('Contents of URL')} to${snip('snipTxt', 'page.txt', 'the file name')}</li>
+                <li><b>Match Text</b> in ${v('Renamed Item')}, with this pattern:${snip('snipData', WEB_SHORTCUT_PATTERN, 'the recipe-data pattern', true)}</li>
+                <li><b>Combine Text</b>: ${v('Matches')} with ${v('New Lines')}</li>
+              </ol>
+            </li>
+            <li>Below <b>End If</b>: <b>Copy to Clipboard</b> with ${v('If Result')}</li>
+            <li>Tap <b>Done</b>.</li>
+          </ol>
+          <p class="hint">Leave out Show Notification: it makes Shortcuts ask permission on every share. The first time you share a recipe, choose <b>Always Allow</b>.</p>
+        </details>
       </section>
 
-      <section class="card sec">
-        <h2 class="sec-title">Backups</h2>
-        <p>Recipes are saved on this device only. Save a backup file now and then, so you can restore your recipes on a new phone or after deleting the app.</p>
-        <p class="hint">${plural(state.recipes.length, 'recipe')} saved.${usage}</p>
+      <section class="card sec" aria-labelledby="backupHead">
+        <h2 id="backupHead" class="sec-title">Backups</h2>
+        <p>Recipes live only on this phone. Save a backup now and then to keep them safe or move them to a new phone.</p>
         <div class="action-row">
-          <button class="btn btn-primary" data-action="backup">Save a backup file</button>
-          <label class="btn btn-secondary file-btn">Restore from backup
+          <button class="btn btn-primary" data-action="backup">Save a backup</button>
+          <label class="btn btn-secondary file-btn">Restore
             <input type="file" accept=".json,application/json" id="restoreInput" class="sr-only">
           </label>
         </div>
+        <p class="hint">${plural(state.recipes.length, 'recipe')} saved.${usage}</p>
       </section>
 
-      <section class="card sec">
-        <h2 class="sec-title">Add to your Home Screen</h2>
-        <ol class="plain-steps">
-          <li>Open this page in Safari.</li>
-          <li>Tap the Share button.</li>
-          <li>Tap Add to Home Screen, then Add.</li>
-        </ol>
-        <p class="hint">The Home Screen app keeps its own recipes, separate from Safari. Add recipes from the Home Screen app, or move them over with a backup file.</p>
-      </section>
+      ${standalone ? '' : `
+      <section class="card sec" aria-labelledby="homeHead">
+        <h2 id="homeHead" class="sec-title">Add to your Home Screen</h2>
+        <p>In Safari, tap Share, then <b>Add to Home Screen</b>. The Home Screen app keeps its own recipes, separate from Safari; move them over with a backup.</p>
+      </section>`}
 
-      <section class="card sec">
-        <h2 class="sec-title">About</h2>
-        <p>Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}. Updates install automatically the next time you open the app while online.</p>
-      </section>
-
-      <section class="card sec">
-        <h2 class="sec-title">Start over</h2>
-        <p>Delete every recipe and clear the grocery list.</p>
-        <button class="btn btn-danger" data-action="delete-all">Delete all recipes</button>
-      </section>
+      <footer class="settings-foot">
+        <p>Recipe Box ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}. Updates install on their own when you're online.</p>
+        <button class="text-btn danger" data-action="delete-all">Delete all recipes</button>
+      </footer>
     </section>`;
 }
 
@@ -3972,6 +4046,8 @@ async function renderSettings() {
 const WEB_SHORTCUT_JS = `var ld = Array.prototype.map.call(document.querySelectorAll('script[type="application/ld+json"]'), function (s) { return s.textContent; });
 var site = (document.querySelector('meta[property="og:site_name"]') || {}).content || '';
 completion(JSON.stringify({ recipeBox: 1, url: location.href, site: site, ld: ld }));`;
+// Shares from the NYT Cooking app carry the recipe link plus a photo; keep just the recipe link.
+const NYT_LINK_PATTERN = String.raw`https://cooking\.nytimes\.com/recipes/[^\s?#"'<>]+`;
 // What it matches in a downloaded page (shares from the NYT Cooking app arrive as a link).
 const WEB_SHORTCUT_PATTERN = '(?s)<script[^>]*application/ld\\+json[^>]*>.*?<\/script>'; // "<\/" keeps this page's own script tag intact
 
@@ -3995,7 +4071,7 @@ function openPasteBox(problem = '') {
     <div class="sheet-body">
       <h2 class="sheet-title">${problem ? 'No recipe found' : 'Paste a web recipe'}</h2>
       ${problem ? `<p>${esc(problem)}</p>` : ''}
-      <p class="hint">Share a recipe page to <b>Add to Recipe Box</b>, then touch and hold the box below and tap Paste.</p>
+      <p class="hint">Share a recipe to <b>Copy Recipe</b>, then touch and hold the box below and tap Paste.</p>
       <textarea class="paste-box" id="pasteBox" aria-label="Paste the recipe here" placeholder="Paste here"></textarea>
       <button class="btn btn-secondary btn-wide" data-close>Close</button>
     </div>`;
@@ -4007,9 +4083,9 @@ async function importWebRecipe(text) {
   if (!found) {
     const t = String(text || '').trim();
     const problem = !t ? 'The clipboard is empty.'
-      : /^https?:\/\/\S+$/.test(t) ? 'That’s a link, not the recipe. Share the page to Add to Recipe Box instead of copying the link; the shortcut copies the recipe itself.'
+      : /^https?:\/\/\S+$/.test(t) ? 'That’s a link, not the recipe. Share the recipe to Copy Recipe instead of copying the link; the shortcut copies the recipe itself.'
       : /<html|<script/i.test(t) ? 'That page doesn’t include recipe data. Open the recipe in Safari and share it from there.'
-      : 'The clipboard doesn’t hold a recipe. Share a recipe page to Add to Recipe Box first.';
+      : 'The clipboard doesn’t hold a recipe. Share a recipe to Copy Recipe first.';
     openPasteBox(problem);
     return;
   }
@@ -4263,8 +4339,10 @@ const actions = {
     renderPhotoTray();
   },
   'scan': () => runScan(),
-  'copy-web-script': async () => toast((await copyText(WEB_SHORTCUT_JS)) ? 'Script copied' : 'Copying failed on this device'),
-  'copy-web-pattern': async () => toast((await copyText(WEB_SHORTCUT_PATTERN)) ? 'Pattern copied' : 'Copying failed on this device'),
+  'copy-snippet': async el => {
+    const src = document.getElementById(el.dataset.target);
+    if (src) toast((await copyText(src.textContent)) ? 'Copied' : 'Copying failed on this device');
+  },
   'copy-report': async () => {
     if (!state.lastScanReport) return;
     toast((await copyText(state.lastScanReport)) ? 'Scan report copied' : 'Copying failed on this device');
@@ -4485,6 +4563,7 @@ async function boot() {
     state.settings = { ...state.settings, ...(settings || {}) };
   } catch (err) {
     console.error(err);
+    window.__recipeBoxStarted = true;
     view.innerHTML = `<section class="card sec"><h1 class="sec-title">Recipe Box can't open its storage</h1>
       <p>Private Browsing blocks saved data. Open Recipe Box in a regular Safari tab or from your Home Screen.</p></section>`;
     return;
@@ -4492,6 +4571,7 @@ async function boot() {
   updateListCount();
   window.addEventListener('hashchange', render);
   render();
+  window.__recipeBoxStarted = true;
   if (db.memoryOnly) toast('Preview mode: recipes added here won’t be saved');
   else requestPersistence();
 }
