@@ -24,7 +24,7 @@
   <style>
 /* Recipe Box — Diner '56: aqua and cherry red, checkerboard trim, menu-card lists, order-ticket steps. */
 
-:root {
+:root, [data-theme="diner"] {
   --cream: #FFF8EC;          /* page */
   --card: #FFFFFF;
   --aqua: #8FD3CC;           /* light band */
@@ -43,6 +43,41 @@
 
   --display: 'Lilita One', 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif;
   --text: 'Nunito Sans', -apple-system, 'Helvetica Neue', sans-serif;
+  --display-weight: 400;
+  --display-style: normal;
+
+  /* theme tokens (Diner '56 values; the other themes restate them below) */
+  --pill-r: 999px;
+  --band-bg: var(--aqua-deep);
+  --band-home-bg: var(--aqua);
+  --band-ink: #FFFFFF;
+  --band-home-ink: var(--ink);
+  --sign-ink: #FFFFFF;
+  --sign-shadow: 3px 3px 0 var(--cherry);
+  --sign-spacing: .01em;
+  --plate-bg: var(--aqua-deep);
+  --plate-ink: #FFFFFF;
+  --plate-border: 4px solid #FFFFFF;
+  --plate-ring: 0 0 0 4px var(--cherry);
+  --plate-radius: 999px;
+  --plate-pad: .85rem 1.6rem .6rem;
+  --plate-kicker: none;
+  --plate-sign-shadow: var(--sign-shadow);
+  --plate-accent: var(--cherry);
+  --trim: repeating-conic-gradient(#1E2A2A 0 25%, #FFFFFF 0 50%) 0 0 / 14px 14px;
+  --trim-home: var(--trim);
+  --trim-h: 14px;
+  --trim-mask: none;
+  --pill-light-bg: #FFFFFF;
+  --pill-light-ink: #1E2A2A;
+  --rating-bg: #FFFFFF;
+  --rating-on: #C2202A;
+  --rating-off: #E7D8CF;
+  --rating-focus: #1C6E69;
+  --tab-active: #8FD3CC;
+  --tab-badge: #C2202A;
+  --tab-badge-ink: #FFFFFF;
+  --fav-on: #FF8C93;
 
   --measure: 40rem;
   --gutter: 1.1rem;
@@ -56,7 +91,7 @@
 
 /* Diner after closing time */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root, [data-theme="diner"] {
     --cream: #111A1A;
     --card: #1B2727;
     --aqua: #24524E;
@@ -120,39 +155,48 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   width: 100vw;
   margin-left: calc(50% - 50vw);
   padding: calc(var(--safe-top) + .6rem) max(var(--gutter), calc(50vw - var(--measure) / 2)) 1.25rem;
-  background: var(--aqua-deep);
-  color: #FFFFFF;
+  background: var(--band-bg);
+  color: var(--band-ink);
 }
 .band > .sign:first-child { margin-top: .9rem; }
-.band-home { background: var(--aqua); text-align: center; padding-top: calc(var(--safe-top) + 1.75rem); color: var(--ink); }
+.band-home { background: var(--band-home-bg); text-align: center; padding-top: calc(var(--safe-top) + 1.75rem); color: var(--band-home-ink); }
 .checker {
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 14px;
-  background: repeating-conic-gradient(#1E2A2A 0 25%, #FFFFFF 0 50%) 0 0 / 14px 14px;
+  height: var(--trim-h);
+  background: var(--trim);
+  -webkit-mask: var(--trim-mask);
+  mask: var(--trim-mask);
   margin-bottom: 1.1rem;
 }
+.band-home + .checker { background: var(--trim-home); }
 
 .sign {
   margin: 0;
-  font: 400 clamp(2rem, 9vw, 2.5rem)/1.05 var(--display);
-  color: #FFFFFF;
-  text-shadow: 3px 3px 0 var(--cherry);
-  letter-spacing: .01em;
+  font: var(--display-style) var(--display-weight) clamp(2rem, 9vw, 2.5rem)/1.05 var(--display);
+  color: var(--sign-ink);
+  text-shadow: var(--sign-shadow);
+  letter-spacing: var(--sign-spacing);
   text-wrap: balance;
 }
 .sign-plate {
   display: inline-block;
-  padding: .85rem 1.6rem .6rem;
-  border-radius: 999px;
-  background: var(--aqua-deep);
-  border: 4px solid #FFFFFF;
-  box-shadow: 0 0 0 4px var(--cherry);
+  padding: var(--plate-pad);
+  border-radius: var(--plate-radius);
+  background: var(--plate-bg);
+  border: var(--plate-border);
+  box-shadow: var(--plate-ring);
+}
+.sign-plate .sign { color: var(--plate-ink); text-shadow: var(--plate-sign-shadow); }
+.sign-plate::before {
+  content: var(--plate-kicker); display: block; margin-bottom: .4rem;
+  font: 800 .68rem/1.1 var(--text); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--plate-ink); opacity: .9;
 }
 .band-home .sign { font-size: clamp(2.4rem, 11vw, 2.75rem); }
 .band-sub { margin: .7rem 0 0; font-weight: 800; font-size: .9rem; opacity: .92; }
-.band-home .band-sub { color: var(--ink); }
-.band-settings { position: absolute; top: calc(var(--safe-top) + .4rem); right: .5rem; color: var(--ink); }
+.band-home .band-sub { color: var(--band-home-ink); }
+.band-settings { position: absolute; top: calc(var(--safe-top) + .4rem); right: .5rem; color: var(--band-home-ink); }
 
 .band-bar { display: flex; justify-content: space-between; align-items: center; margin: 0 -.5rem .35rem; min-height: 2.75rem; }
 .back {
@@ -165,16 +209,16 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   transform: rotate(45deg); margin-right: .1rem;
 }
 .band-actions { display: flex; align-items: center; }
-.band-link { color: #FFFFFF; font-weight: 800; text-decoration: none; padding: 0 .6rem; min-height: 2.75rem; display: inline-flex; align-items: center; }
-.fav-btn { color: #FFFFFF; }
+.band-link { color: var(--band-ink); font-weight: 800; text-decoration: none; padding: 0 .6rem; min-height: 2.75rem; display: inline-flex; align-items: center; }
+.fav-btn { color: var(--band-ink); }
 .fav-btn svg path { fill: none; }
-.fav-btn[aria-pressed="true"] { color: #FF8C93; }
+.fav-btn[aria-pressed="true"] { color: var(--fav-on); }
 .fav-btn[aria-pressed="true"] svg path { fill: currentColor; }
 
 .band-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
-.pill { display: inline-flex; align-items: center; min-height: 2rem; padding: .2rem .85rem; border-radius: 999px; font-weight: 800; font-size: .9rem; }
+.pill { display: inline-flex; align-items: center; min-height: 2rem; padding: .2rem .85rem; border-radius: var(--pill-r); font-weight: 800; font-size: .9rem; }
 .pill-cherry { background: var(--cherry); color: var(--cherry-ink); }
-.pill-white { background: #FFFFFF; color: #1E2A2A; }
+.pill-white { background: var(--pill-light-bg); color: var(--pill-light-ink); }
 
 /* half-star rating: tap position sets the value in half steps */
 .st { display: inline-block; color: var(--star-off); }
@@ -185,8 +229,8 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 .rating {
   display: inline-flex; margin-top: .75rem; padding: .15rem .35rem;
-  background: #FFFFFF; border-radius: 999px;
-  --star-off: #E7D8CF; --cherry: #C2202A;
+  background: var(--rating-bg); border-radius: 999px;
+  --star-off: var(--rating-off); --cherry: var(--rating-on);
 }
 .rate-star {
   display: grid; place-items: center; width: 2.9rem; height: 2.9rem; padding: 0;
@@ -195,7 +239,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 .rate-star:active .st { transform: scale(1.2); }
 .rate-star .st { transition: transform .12s ease; }
-.rate-star:focus-visible { outline: 3px solid #1C6E69; outline-offset: -3px; }
+.rate-star:focus-visible { outline: 3px solid var(--rating-focus); outline-offset: -3px; }
 .rating-hint { margin: .45rem 0 0; font-size: .85rem; font-weight: 700; opacity: .9; }
 
 /* ---------- controls ---------- */
@@ -205,7 +249,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   min-height: 2.9rem; padding: .55rem 1.25rem;
   font: 800 1rem/1.2 var(--text);
   text-decoration: none; cursor: pointer;
-  border-radius: 999px; border: 2.5px solid transparent;
+  border-radius: var(--pill-r); border: 2.5px solid transparent;
   touch-action: manipulation;
 }
 .btn:disabled { opacity: .45; cursor: default; }
@@ -238,7 +282,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .sec { padding: 1.1rem 1.15rem 1.25rem; }
 .sec.plain { padding-inline: .1rem; }
 .sec-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: .5rem; }
-.sec-title { margin: 0; font: 400 1.6rem/1.15 var(--display); color: var(--heading); }
+.sec-title { margin: 0; font: var(--display-style) var(--display-weight) 1.6rem/1.15 var(--display); color: var(--heading); }
 .sec-title.cherry { color: var(--cherry); }
 .sec > .sec-title { margin-bottom: .6rem; }
 .hint { color: var(--muted); font-size: .92rem; margin: .75rem 0; }
@@ -251,7 +295,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .search {
   display: flex; align-items: center; gap: .6rem;
   min-height: 3rem; padding: 0 1rem;
-  border-radius: 999px; background: var(--card);
+  border-radius: var(--pill-r); background: var(--card);
   border: 3px solid var(--cherry); color: var(--muted);
 }
 .search input {
@@ -272,7 +316,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .chapters::-webkit-scrollbar { display: none; }
 .pill-btn {
   flex: none; min-height: 2.5rem; padding: 0 1rem; cursor: pointer;
-  border-radius: 999px; border: 2.5px solid var(--ink); background: var(--card); color: var(--ink);
+  border-radius: var(--pill-r); border: 2.5px solid var(--ink); background: var(--card); color: var(--ink);
   font: 800 .9rem var(--text);
 }
 .pill-btn[aria-pressed="true"] { background: var(--cherry); border-color: var(--cherry); color: var(--cherry-ink); }
@@ -283,7 +327,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 
 .menu { padding: .4rem 1.15rem .75rem; }
-.menu-title { margin: .8rem 0 0; font: 400 1.6rem/1.2 var(--display); color: var(--cherry); }
+.menu-title { margin: .8rem 0 0; font: var(--display-style) var(--display-weight) 1.6rem/1.2 var(--display); color: var(--cherry); }
 .toc { list-style: none; margin: 0; padding: 0; }
 .toc-row { display: block; padding: .7rem 0; color: var(--ink); text-decoration: none; }
 .toc-row:active { opacity: .7; }
@@ -301,7 +345,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .scaler { display: flex; gap: .3rem; }
 .scaler button {
   min-width: 2.75rem; min-height: 2.25rem; padding: 0 .4rem; cursor: pointer;
-  border-radius: 999px; border: 2.5px solid var(--ink); background: none; color: var(--ink);
+  border-radius: var(--pill-r); border: 2.5px solid var(--ink); background: none; color: var(--ink);
   font: 800 .85rem var(--text);
 }
 .scaler button[aria-pressed="true"] { background: var(--cherry); border-color: var(--cherry); color: var(--cherry-ink); }
@@ -343,7 +387,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 9px;
   background: radial-gradient(circle at 7px 0, var(--cream) 6px, transparent 6.5px) 0 0 / 14px 9px repeat-x;
 }
-.ticket-num { font: 400 1.9rem/1 var(--display); color: var(--cherry); }
+.ticket-num { font: var(--display-style) var(--display-weight) 1.9rem/1 var(--display); color: var(--cherry); }
 .ticket p { margin: .15rem 0 0; line-height: 1.55; }
 .ticket.done { opacity: .55; }
 .ticket.done .ticket-num { color: var(--muted); }
@@ -373,7 +417,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .tray-remove {
   position: absolute; top: -.65rem; right: -.65rem;
   display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%;
-  border: 0; background: var(--cherry); color: #FFFFFF; cursor: pointer;
+  border: 0; background: var(--cherry); color: var(--cherry-ink); cursor: pointer;
 }
 .tray-remove svg { width: 14px; height: 14px; }
 
@@ -424,7 +468,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   touch-action: none; /* lets a finger drag the row without scrolling the page */
 }
 .grip:active { cursor: grabbing; }
-.row-num { font: 400 1.4rem/1 var(--display); color: var(--cherry); padding-top: .65rem; }
+.row-num { font: var(--display-style) var(--display-weight) 1.4rem/1 var(--display); color: var(--cherry); padding-top: .65rem; }
 .row-input {
   display: block; width: 100%; min-height: 2.75rem; resize: none; overflow: hidden;
   padding: .6rem .25rem; border: 0; background: transparent;
@@ -453,7 +497,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 
 /* ---------- grocery list ---------- */
 
-.add-item { display: flex; gap: .6rem; align-items: center; padding: .6rem .6rem .6rem 1rem; border-radius: 999px; }
+.add-item { display: flex; gap: .6rem; align-items: center; padding: .6rem .6rem .6rem 1rem; border-radius: var(--pill-r); }
 .add-item input {
   flex: 1; min-width: 0; min-height: 2.6rem; padding: 0;
   font: 1.0625rem var(--text); color: var(--ink);
@@ -464,13 +508,13 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .segmented { display: inline-flex; gap: .35rem; margin: 0 0 .75rem; }
 .segmented button {
   min-height: 2.5rem; padding: 0 1rem; cursor: pointer;
-  border-radius: 999px; border: 2.5px solid var(--ink); background: var(--card); color: var(--ink);
+  border-radius: var(--pill-r); border: 2.5px solid var(--ink); background: var(--card); color: var(--ink);
   font: 800 .9rem var(--text);
 }
 .segmented button[aria-pressed="true"] { background: var(--ink); color: var(--cream); }
 
 .g-card { padding: .3rem 1.15rem .6rem; }
-.g-title { margin: .8rem 0 .1rem; font: 400 1.35rem var(--display); color: var(--cherry); }
+.g-title { margin: .8rem 0 .1rem; font: var(--display-style) var(--display-weight) 1.35rem var(--display); color: var(--cherry); }
 .g-list { list-style: none; margin: 0; padding: 0; }
 .g-item { display: flex; align-items: center; gap: .5rem; border-bottom: 2px dashed var(--dash); }
 .g-item:last-child { border-bottom: 0; }
@@ -519,7 +563,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   min-height: 3rem; cursor: pointer; list-style: none; font-weight: 800; color: var(--heading);
 }
 .setup > summary::-webkit-details-marker { display: none; }
-.setup > summary::after { content: '+'; font: 400 1.6rem/1 var(--display); color: var(--cherry); }
+.setup > summary::after { content: '+'; font: var(--display-style) var(--display-weight) 1.6rem/1 var(--display); color: var(--cherry); }
 .setup[open] > summary::after { content: '−'; }
 .sc { margin: .25rem 0 .5rem; padding-left: 1.5rem; }
 .sc > li { margin-bottom: .85rem; padding-left: .15rem; }
@@ -557,11 +601,11 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   min-height: 2.9rem; padding: .25rem 0;
   font: 800 .72rem/1.2 var(--text); color: var(--tab-text); text-decoration: none;
 }
-.tab[aria-current="page"] { color: #8FD3CC; }
+.tab[aria-current="page"] { color: var(--tab-active); }
 .tab-count {
   position: absolute; top: .05rem; left: calc(50% + .55rem);
   min-width: 1.2rem; height: 1.2rem; padding: 0 .3rem; border-radius: .6rem;
-  background: #C2202A; color: #FFFFFF;
+  background: var(--tab-badge); color: var(--tab-badge-ink);
   font: 800 .7rem/1.2rem var(--text); text-align: center;
 }
 .tab-count[hidden] { display: none; }
@@ -602,7 +646,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 
 /* ---------- ingredient sections ---------- */
 .ing-head h3 {
-  margin: 1.1rem 0 .1rem; font: 400 1.25rem/1.2 var(--display); color: var(--heading);
+  margin: 1.1rem 0 .1rem; font: var(--display-style) var(--display-weight) 1.25rem/1.2 var(--display); color: var(--heading);
 }
 .ing-list > .ing-head:first-child h3 { margin-top: .25rem; }
 
@@ -611,7 +655,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .menu-head .menu-title { margin: 0; }
 .quick-cat { display: block; margin: -.2rem 0 .6rem; }
 .quick-cat select {
-  min-height: 2.4rem; padding: .2rem 2rem .2rem .8rem; border-radius: 999px;
+  min-height: 2.4rem; padding: .2rem 2rem .2rem .8rem; border-radius: var(--pill-r);
   border: 2px dashed var(--heading); background: var(--cream); color: var(--heading);
   font: 800 .85rem var(--text); -webkit-appearance: none; appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--heading) 50%), linear-gradient(135deg, var(--heading) 50%, transparent 50%);
@@ -638,7 +682,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .rtabs { display: flex; gap: .4rem; margin: 0 0 1rem; }
 .rtab {
   flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
-  min-height: 2.75rem; padding: 0 .5rem; border-radius: 999px; cursor: pointer;
+  min-height: 2.75rem; padding: 0 .5rem; border-radius: var(--pill-r); cursor: pointer;
   border: 2.5px solid var(--ink); background: var(--card); color: var(--ink); font: 800 .95rem var(--text);
   touch-action: manipulation;
 }
@@ -648,7 +692,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   background: var(--cherry); color: var(--cherry-ink); font-size: .75rem; line-height: 1.35rem;
 }
 .rpanel[hidden] { display: none; }
-.menu-btn, .fav-btn { color: #FFFFFF; }
+.menu-btn, .fav-btn { color: var(--band-ink); }
 
 /* ---------- options sheet ---------- */
 .sheet {
@@ -658,7 +702,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 }
 .sheet::backdrop { background: rgba(10, 18, 18, .55); }
 .sheet-body { padding: 1.1rem 1.1rem calc(var(--safe-bottom) + 1.1rem); }
-.sheet-title { margin: 0 0 .75rem; font: 400 1.5rem/1.2 var(--display); color: var(--heading); text-wrap: balance; }
+.sheet-title { margin: 0 0 .75rem; font: var(--display-style) var(--display-weight) 1.5rem/1.2 var(--display); color: var(--heading); text-wrap: balance; }
 .sheet-actions { display: flex; flex-direction: column; margin-bottom: 1rem; border: 2px solid var(--line); border-radius: 16px; overflow: hidden; }
 .sheet-item {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -679,7 +723,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .issue-list { list-style: none; margin: 0; padding: 0; }
 .issue-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem 0; border-top: 2px dashed var(--dash); font-weight: 700; }
 .edit-row.is-header { background: var(--card); border-style: dashed; border-color: var(--heading); }
-.edit-row.is-header .row-input { font: 400 1.2rem/1.5 var(--display); color: var(--heading); }
+.edit-row.is-header .row-input { font: var(--display-style) var(--display-weight) 1.2rem/1.5 var(--display); color: var(--heading); }
 .edit-row.needs-check { border-color: var(--cherry); }
 .row-flag { grid-column: 1 / -1; margin: 0; padding: .1rem .75rem .6rem 2.25rem; color: var(--cherry); font-size: .88rem; font-weight: 800; }
 
@@ -707,21 +751,407 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
 .photo-nav[hidden], .photo-remove[hidden] { display: none; }
 
 /* ---------- diet tags ---------- */
-.pill-diet { background: transparent; color: #FFFFFF; border: 2px solid rgba(255, 255, 255, .85); }
+.pill-diet { background: transparent; color: var(--band-ink); border: 2px solid color-mix(in srgb, var(--band-ink) 85%, transparent); }
 .diet-tag {
   display: inline-block; margin-left: .3rem; padding: 0 .5rem; border-radius: 999px;
   border: 1.5px solid var(--heading); color: var(--heading); font-size: .75rem; font-weight: 800; line-height: 1.4rem;
 }
 .diet-field { border: 0; padding: 0; margin: 0 0 1rem; }
 .diet-field legend { padding: 0; margin-bottom: .3rem; font-size: .85rem; font-weight: 800; color: var(--muted); }
-.seg { display: inline-flex; border: 2.5px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.seg { display: inline-flex; border: 2.5px solid var(--ink); border-radius: var(--pill-r); overflow: hidden; }
 .seg label { position: relative; cursor: pointer; }
 .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .seg span { display: flex; align-items: center; min-height: 2.5rem; padding: 0 1rem; font-weight: 800; font-size: .9rem; }
 .seg label + label span { border-left: 2.5px solid var(--ink); }
 .seg input:checked + span { background: var(--cherry); color: var(--cherry-ink); }
 .seg input:focus-visible + span { outline: 3px solid var(--heading); outline-offset: -4px; }
+
+/* ================================================================
+   Themes. Diner '56 is the default (the :root tokens above).
+   Each theme restates every token so it can also paint the little
+   preview cards in Settings, which carry their own data-theme.
+   ================================================================ */
+
+/* ---------- Herbarium: a Victorian pressed-botanical specimen book ---------- */
+[data-theme="herbarium"] {
+  --cream: #F2EBD7; --card: #FBF7EC; --aqua: #B9C49E; --aqua-deep: #34432B; --heading: #34432B;
+  --cherry: #7A3B69; --cherry-ink: #FFFFFF; --ink: #2B2A22; --muted: #5E5A49;
+  --line: #DDD3B8; --dash: #D3C6A6; --star-off: #E2D8C0; --tab: #262A1E; --tab-text: #C8C4AE; --mustard: #B7861F;
+  --display: 'IM Fell English', 'Iowan Old Style', Georgia, serif;
+  --text: 'Alegreya', 'Iowan Old Style', Georgia, serif;
+  --display-weight: 400; --display-style: italic;
+  --radius: 6px; --pill-r: 6px;
+  --band-bg: repeating-linear-gradient(135deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 7px), #34432B;
+  --band-home-bg: repeating-linear-gradient(135deg, rgba(43, 42, 34, .06) 0 1px, transparent 1px 7px), #B9C49E;
+  --band-ink: #F4EEDA; --band-home-ink: #2B2A22;
+  --sign-ink: #F4EEDA; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .28); --sign-spacing: 0;
+  --plate-bg: #FBF7EC; --plate-ink: #34432B; --plate-border: 1.5px solid #34432B;
+  --plate-ring: 0 0 0 5px #FBF7EC, 0 0 0 6.5px #34432B, 0 10px 18px -10px rgba(43, 42, 34, .45);
+  --plate-radius: 3px; --plate-pad: .8rem 1.9rem .75rem; --plate-kicker: 'Ex Herbario'; --plate-sign-shadow: none; --plate-accent: #34432B;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='20' viewBox='0 0 44 20'%3E%3Cpath d='M0 10h44' stroke='%235E6E45' stroke-width='1.1'/%3E%3Cpath d='M7 10c1.6-5 6.5-7.6 12-6.6C17.6 8 13 10.2 7 10z' fill='%234F5F38'/%3E%3Cpath d='M10.5 9.2 16.5 5' stroke='%235E6E45' stroke-width='.6' opacity='.55'/%3E%3Cpath d='M29 10c1.6 5 6.5 7.6 12 6.6C39.6 12 35 9.8 29 10z' fill='%234F5F38'/%3E%3Cpath d='M32.5 10.8 38.5 15' stroke='%235E6E45' stroke-width='.6' opacity='.55'/%3E%3Ccircle cx='23' cy='10' r='2' fill='%237A3B69'/%3E%3Ccircle cx='1' cy='10' r='1.1' fill='%237A3B69'/%3E%3C/svg%3E") 0 50% / 44px 20px repeat-x; --trim-home: var(--trim); --trim-h: 20px; --trim-mask: none;
+  --pill-light-bg: #FBF7EC; --pill-light-ink: #2B2A22;
+  --rating-bg: #FBF7EC; --rating-on: #7A3B69; --rating-off: #E2D8C0; --rating-focus: #34432B;
+  --tab-active: #C9D3A8; --tab-badge: #7A3B69; --tab-badge-ink: #FFFFFF; --fav-on: #E7B6D8;
+  color-scheme: light;
+}
+
+/* ---------- Pâtisserie: a Belle Époque pastry shop under a striped awning ---------- */
+[data-theme="patisserie"] {
+  --cream: #FFF6F3; --card: #FFFFFF; --aqua: #F6CCD6; --aqua-deep: #6B3A2E; --heading: #6B3A2E;
+  --cherry: #B72E5C; --cherry-ink: #FFFFFF; --ink: #3A2320; --muted: #7A5A55;
+  --line: #F1DCDC; --dash: #EBCFCB; --star-off: #F0DADA; --tab: #3A2320; --tab-text: #E8CFCB; --mustard: #C99A2E;
+  --pistachio: #DCEBC8;
+  --display: 'Playfair Display', 'Didot', Georgia, serif;
+  --text: 'Jost', 'Futura', 'Avenir Next', sans-serif;
+  --display-weight: 800; --display-style: italic;
+  --radius: 22px; --pill-r: 999px;
+  --band-bg: repeating-linear-gradient(90deg, #6B3A2E 0 28px, #74423A 28px 56px);
+  --band-home-bg: repeating-linear-gradient(90deg, #F6CCD6 0 28px, #FFF1F4 28px 56px);
+  --band-ink: #FFF6F3; --band-home-ink: #6B3A2E;
+  --sign-ink: #FFF6F3; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .22); --sign-spacing: 0;
+  --plate-bg: #FFFDF8; --plate-ink: #6B3A2E; --plate-border: 2px solid #C9A45C;
+  --plate-ring: 0 0 0 4px #FFFDF8, 0 0 0 6px #C9A45C, 0 12px 20px -10px rgba(107, 58, 46, .45);
+  --plate-radius: 999px; --plate-pad: .75rem 2rem .7rem; --plate-kicker: 'Pâtisserie maison'; --plate-sign-shadow: none; --plate-accent: #C9A45C;
+  --trim: var(--band-bg); --trim-home: var(--band-home-bg); --trim-h: 14px;
+  --trim-mask: radial-gradient(circle at 50% 0, #000 13.5px, transparent 14px) 0 0 / 28px 14px repeat-x;
+  --pill-light-bg: #FFFFFF; --pill-light-ink: #3A2320;
+  --rating-bg: #FFFFFF; --rating-on: #B72E5C; --rating-off: #F0DADA; --rating-focus: #6B3A2E;
+  --tab-active: #F6CCD6; --tab-badge: #B72E5C; --tab-badge-ink: #FFFFFF; --fav-on: #FFB3C6;
+  color-scheme: light;
+}
+
+/* ---------- Speakeasy: a 1920s Art Deco cocktail club, onyx and gold ---------- */
+[data-theme="speakeasy"] {
+  --cream: #F4EFE3; --card: #FFFDF7; --aqua: #14151A; --aqua-deep: #14151A; --heading: #1F4D3F;
+  --cherry: #8A671C; --cherry-ink: #FFFDF7; --ink: #15161B; --muted: #5B5648;
+  --line: #E2D8C2; --dash: #D6C9AA; --star-off: #E3D9C4; --tab: #14151A; --tab-text: #BDB49A; --mustard: #B07F1A;
+  --gold: #D4AF55;
+  --display: 'Limelight', 'Didot', Georgia, serif;
+  --text: 'Josefin Sans', 'Futura', 'Avenir Next', sans-serif;
+  --display-weight: 400; --display-style: normal;
+  --radius: 2px; --pill-r: 2px;
+  --band-bg: repeating-conic-gradient(from -90deg at 50% 118%, rgba(212, 175, 85, .13) 0deg 3deg, transparent 3deg 9deg), #14151A;
+  --band-home-bg: var(--band-bg);
+  --band-ink: #EFE8D6; --band-home-ink: #EFE8D6;
+  --sign-ink: #E9CF8A; --sign-shadow: none; --sign-spacing: .03em;
+  --plate-bg: #14151A; --plate-ink: #E9CF8A; --plate-border: 1.5px solid #D4AF55;
+  --plate-ring: 0 0 0 5px #14151A, 0 0 0 6.5px #D4AF55;
+  --plate-radius: 0; --plate-pad: .85rem 1.35rem .75rem; --plate-kicker: '✦ Members only ✦'; --plate-sign-shadow: none; --plate-accent: #D4AF55;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='18' viewBox='0 0 28 18'%3E%3Crect width='28' height='18' fill='%2314151A'/%3E%3Crect width='28' height='1.6' fill='%23D4AF55'/%3E%3Cpath d='M2.5 1.6a11.5 11.5 0 0 0 23 0' fill='none' stroke='%23D4AF55' stroke-width='1.2'/%3E%3Cpath d='M8 1.6a6 6 0 0 0 12 0' fill='%23D4AF55' opacity='.9'/%3E%3Cpath d='M14 1.6v11.5M14 1.6 5.9 9.7M14 1.6l8.1 8.1' stroke='%23D4AF55' stroke-width='.9'/%3E%3Crect y='16.4' width='28' height='.9' fill='%23D4AF55' opacity='.6'/%3E%3C/svg%3E") 0 0 / 28px 18px repeat-x; --trim-home: var(--trim); --trim-h: 18px; --trim-mask: none;
+  --pill-light-bg: #EFE8D6; --pill-light-ink: #15161B;
+  --rating-bg: #24252C; --rating-on: #D4AF55; --rating-off: #474852; --rating-focus: #D4AF55;
+  --tab-active: #E3C77E; --tab-badge: #D4AF55; --tab-badge-ink: #14151A; --fav-on: #E9CF8A;
+  color-scheme: light;
+}
+
+/* ---------- Fjord Cabin: a Nordic ski lodge, lingonberry, navy and Fair Isle wool ---------- */
+[data-theme="cabin"] {
+  --cream: #F5F0E6; --card: #FFFDF8; --aqua: #A8302A; --aqua-deep: #1F2D3D; --heading: #1F2D3D;
+  --cherry: #B3352C; --cherry-ink: #FFFFFF; --ink: #20262E; --muted: #56606A;
+  --line: #E2DACB; --dash: #D8CDB8; --star-off: #E6DDCD; --tab: #1A2430; --tab-text: #B9C2CB; --mustard: #C08A1E;
+  --display: 'Fraunces', 'Rockwell', Georgia, serif;
+  --text: 'Figtree', -apple-system, 'Helvetica Neue', sans-serif;
+  --display-weight: 900; --display-style: normal;
+  --radius: 16px; --pill-r: 999px;
+  --band-bg: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 3px, transparent 3px 6px), #1F2D3D;
+  --band-home-bg: repeating-linear-gradient(90deg, rgba(0, 0, 0, .07) 0 3px, transparent 3px 6px), #A8302A;
+  --band-ink: #FFF8EC; --band-home-ink: #FFF8EC;
+  --sign-ink: #FFF8EC; --sign-shadow: 0 3px 0 #B3352C; --sign-spacing: 0;
+  --plate-bg: #1F2D3D; --plate-ink: #FFF8EC; --plate-border: 3px solid #1F2D3D;
+  --plate-ring: 0 0 0 3px #F5F0E6, 0 12px 22px -10px rgba(0, 0, 0, .5);
+  --plate-radius: 22px; --plate-pad: 1rem 2rem .8rem; --plate-kicker: 'Velkommen'; --plate-sign-shadow: 0 3px 0 #A8302A; --plate-accent: #F5F0E6;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22.4' height='30.8' viewBox='0 0 22.4 30.8'%3E%3Crect width='22.4' height='30.799999999999997' fill='%231F2D3D'/%3E%3Crect x='3.1' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='8.7' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='14.3' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='19.9' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='8.7' y='8.7' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='5.9' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='11.5' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='3.1' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='8.7' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='14.3' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='19.9' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='5.9' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='11.5' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='8.7' y='19.9' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='3.1' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='8.7' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='14.3' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3Crect x='19.9' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D0473C'/%3E%3C/svg%3E") 0 0 / auto 30.8px repeat-x; --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22.4' height='30.8' viewBox='0 0 22.4 30.8'%3E%3Crect width='22.4' height='30.799999999999997' fill='%23A8302A'/%3E%3Crect x='3.1' y='3.1' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='8.7' y='3.1' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='14.3' y='3.1' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='19.9' y='3.1' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='8.7' y='8.7' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='5.9' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='11.5' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='3.1' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='8.7' y='14.3' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='14.3' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='19.9' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='5.9' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='11.5' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='8.7' y='19.9' width='2.2' height='2.2' rx='.6' fill='%23F5EBDA'/%3E%3Crect x='3.1' y='25.5' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='8.7' y='25.5' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='14.3' y='25.5' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3Crect x='19.9' y='25.5' width='2.2' height='2.2' rx='.6' fill='%231F2D3D'/%3E%3C/svg%3E") 0 0 / auto 30.8px repeat-x; --trim-h: 30.8px; --trim-mask: none;
+  --pill-light-bg: #FFF8EC; --pill-light-ink: #20262E;
+  --rating-bg: #FFF8EC; --rating-on: #B3352C; --rating-off: #E6DDCD; --rating-focus: #1F2D3D;
+  --tab-active: #F2B8A8; --tab-badge: #B3352C; --tab-badge-ink: #FFFFFF; --fav-on: #FF9C92;
+  color-scheme: light;
+}
+
+/* ---------- Riad: a Marrakech courtyard, Majorelle blue, saffron and zellige ---------- */
+[data-theme="riad"] {
+  --cream: #FBF3E4; --card: #FFFCF5; --aqua: #2A3FA0; --aqua-deep: #22348C; --heading: #2A3FA0;
+  --cherry: #B4472A; --cherry-ink: #FFFFFF; --ink: #2A211A; --muted: #6A5A4B;
+  --line: #EBDDC4; --dash: #E2CFAE; --star-off: #EADBC3; --tab: #1C2457; --tab-text: #C3C9EA; --mustard: #C88A12;
+  --display: 'Reem Kufi', 'Avenir Next', sans-serif;
+  --text: 'Readex Pro', -apple-system, 'Helvetica Neue', sans-serif;
+  --display-weight: 700; --display-style: normal;
+  --radius: 14px; --pill-r: 999px;
+  --band-bg: repeating-linear-gradient(45deg, rgba(255, 255, 255, .04) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, .04) 0 1px, transparent 1px 13px), #22348C;
+  --band-home-bg: repeating-linear-gradient(45deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 13px), #2A3FA0;
+  --band-ink: #FFF6E6; --band-home-ink: #FFF6E6;
+  --sign-ink: #FFF6E6; --sign-shadow: 3px 3px 0 #C65A33; --sign-spacing: .01em;
+  --plate-bg: #B4472A; --plate-ink: #FFF6E6; --plate-border: 3px solid #F2C14E;
+  --plate-ring: 0 0 0 5px #2A3FA0, 0 0 0 7px #F2C14E;
+  --plate-radius: 50% 50% .6rem .6rem / 72% 72% .6rem .6rem; --plate-pad: 1.55rem 1.8rem .75rem;
+  --plate-kicker: 'Marhaba'; --plate-sign-shadow: 2px 2px 0 rgba(0, 0, 0, .22); --plate-accent: #F2C14E;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%2322348C'/%3E%3Cpath d='M0 0h4L0 4zM24 0v4l-4-4zM0 24v-4l4 4zM24 24h-4l4-4z' fill='%23C65A33'/%3E%3Cpath d='M5.5 5.5h13v13h-13z' fill='%23F2C14E'/%3E%3Cpath d='M12 2.8 21.2 12 12 21.2 2.8 12z' fill='%23F2C14E'/%3E%3Cpath d='M12 7.4 16.6 12 12 16.6 7.4 12z' fill='%2322348C'/%3E%3Ccircle cx='12' cy='12' r='1.7' fill='%23FFF6E6'/%3E%3C/svg%3E") 0 0 / 24px 24px repeat-x; --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%232A3FA0'/%3E%3Cpath d='M0 0h4L0 4zM24 0v4l-4-4zM0 24v-4l4 4zM24 24h-4l4-4z' fill='%23C65A33'/%3E%3Cpath d='M5.5 5.5h13v13h-13z' fill='%23F2C14E'/%3E%3Cpath d='M12 2.8 21.2 12 12 21.2 2.8 12z' fill='%23F2C14E'/%3E%3Cpath d='M12 7.4 16.6 12 12 16.6 7.4 12z' fill='%232A3FA0'/%3E%3Ccircle cx='12' cy='12' r='1.7' fill='%23FFF6E6'/%3E%3C/svg%3E") 0 0 / 24px 24px repeat-x; --trim-h: 24px; --trim-mask: none;
+  --pill-light-bg: #FFF6E6; --pill-light-ink: #2A211A;
+  --rating-bg: #FFF6E6; --rating-on: #B4472A; --rating-off: #EADBC3; --rating-focus: #2A3FA0;
+  --tab-active: #F2C14E; --tab-badge: #C65A33; --tab-badge-ink: #FFFFFF; --fav-on: #FFB199;
+  color-scheme: light;
+}
+
+/* ---------- the same themes after dark ---------- */
+@media (prefers-color-scheme: dark) {
+  [data-theme="herbarium"] {
+    --cream: #171A12; --card: #20251A; --aqua: #2E3A24; --aqua-deep: #222B1A; --heading: #C9D3A8;
+    --cherry: #D39BC4; --cherry-ink: #24101F; --ink: #ECE6D3; --muted: #ABA68F;
+    --line: #343B2A; --dash: #3A4130; --star-off: #3D4433; --tab: #10130C; --tab-text: #A9A891; --mustard: #D8AE4A;
+    --band-bg: repeating-linear-gradient(135deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px), #222B1A;
+    --band-home-bg: repeating-linear-gradient(135deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px), #2E3A24;
+    --band-home-ink: #ECE6D3;
+    --plate-bg: #20251A; --plate-ink: #C9D3A8; --plate-border: 1.5px solid #C9D3A8;
+    --plate-ring: 0 0 0 5px #20251A, 0 0 0 6.5px #C9D3A8; --plate-accent: #C9D3A8;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='20' viewBox='0 0 44 20'%3E%3Cpath d='M0 10h44' stroke='%237D8C62' stroke-width='1.1'/%3E%3Cpath d='M7 10c1.6-5 6.5-7.6 12-6.6C17.6 8 13 10.2 7 10z' fill='%238FA071'/%3E%3Cpath d='M10.5 9.2 16.5 5' stroke='%237D8C62' stroke-width='.6' opacity='.55'/%3E%3Cpath d='M29 10c1.6 5 6.5 7.6 12 6.6C39.6 12 35 9.8 29 10z' fill='%238FA071'/%3E%3Cpath d='M32.5 10.8 38.5 15' stroke='%237D8C62' stroke-width='.6' opacity='.55'/%3E%3Ccircle cx='23' cy='10' r='2' fill='%23D39BC4'/%3E%3Ccircle cx='1' cy='10' r='1.1' fill='%23D39BC4'/%3E%3C/svg%3E") 0 50% / 44px 20px repeat-x;
+    --pill-light-bg: #ECE6D3; --pill-light-ink: #20251A;
+    --rating-bg: #ECE6D3; --rating-off: #CFC6AE;
+    --tab-active: #C9D3A8; --tab-badge: #D39BC4; --tab-badge-ink: #24101F;
+    color-scheme: dark;
+  }
+  [data-theme="patisserie"] {
+    --cream: #1D1416; --card: #2A1D20; --aqua: #5A2F3B; --aqua-deep: #3A221C; --heading: #F4B9C7;
+    --cherry: #F27A9F; --cherry-ink: #2A0712; --ink: #F6E9E6; --muted: #C4A8A4;
+    --line: #3E2C2F; --dash: #4A3436; --star-off: #4A3639; --tab: #130C0D; --tab-text: #CDB3AE; --mustard: #E3B755;
+    --pistachio: #34402A;
+    --band-bg: repeating-linear-gradient(90deg, #3A221C 0 28px, #432820 28px 56px);
+    --band-home-bg: repeating-linear-gradient(90deg, #5A2F3B 0 28px, #4C2732 28px 56px);
+    --band-home-ink: #FFE9EE;
+    --plate-bg: #2A1D20; --plate-ink: #F4B9C7; --plate-border: 2px solid #D6B470;
+    --plate-ring: 0 0 0 4px #2A1D20, 0 0 0 6px #D6B470; --plate-accent: #D6B470;
+    --pill-light-bg: #FFF6F3; --pill-light-ink: #3A2320;
+    --rating-bg: #FFF6F3; --rating-on: #B72E5C; --rating-off: #EBD3D3;
+    --tab-active: #F4B9C7; --tab-badge: #F27A9F; --tab-badge-ink: #2A0712;
+    color-scheme: dark;
+  }
+  [data-theme="speakeasy"] {
+    --cream: #0E0F12; --card: #1A1B21; --aqua: #0A0B0E; --aqua-deep: #0A0B0E; --heading: #E3C77E;
+    --cherry: #D4AF55; --cherry-ink: #14151A; --ink: #EFE8D6; --muted: #ADA48C;
+    --line: #2A2B33; --dash: #34353D; --star-off: #3A3A40; --tab: #060608; --tab-text: #A39B83; --mustard: #E0B84A;
+    --band-bg: repeating-conic-gradient(from -90deg at 50% 118%, rgba(212, 175, 85, .11) 0deg 3deg, transparent 3deg 9deg), #0A0B0E;
+    --plate-bg: #0A0B0E; --plate-ring: 0 0 0 5px #0A0B0E, 0 0 0 6.5px #D4AF55;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='18' viewBox='0 0 28 18'%3E%3Crect width='28' height='18' fill='%230A0B0E'/%3E%3Crect width='28' height='1.6' fill='%23C9A44C'/%3E%3Cpath d='M2.5 1.6a11.5 11.5 0 0 0 23 0' fill='none' stroke='%23C9A44C' stroke-width='1.2'/%3E%3Cpath d='M8 1.6a6 6 0 0 0 12 0' fill='%23C9A44C' opacity='.9'/%3E%3Cpath d='M14 1.6v11.5M14 1.6 5.9 9.7M14 1.6l8.1 8.1' stroke='%23C9A44C' stroke-width='.9'/%3E%3Crect y='16.4' width='28' height='.9' fill='%23C9A44C' opacity='.6'/%3E%3C/svg%3E") 0 0 / 28px 18px repeat-x;
+    color-scheme: dark;
+  }
+  [data-theme="cabin"] {
+    --cream: #12171E; --card: #1B232D; --aqua: #7E211C; --aqua-deep: #16212D; --heading: #CFE0EE;
+    --cherry: #EE6A5E; --cherry-ink: #1E0605; --ink: #EEF0F2; --muted: #A9B3BD;
+    --line: #2A3542; --dash: #34404E; --star-off: #3A4552; --tab: #0B1016; --tab-text: #A1ADB9; --mustard: #E6B14C;
+    --band-bg: repeating-linear-gradient(90deg, rgba(255, 255, 255, .03) 0 3px, transparent 3px 6px), #16212D;
+    --band-home-bg: repeating-linear-gradient(90deg, rgba(0, 0, 0, .1) 0 3px, transparent 3px 6px), #7E211C;
+    --band-ink: #FFF1E6; --band-home-ink: #FFF1E6; --sign-ink: #FFF1E6; --sign-shadow: 0 3px 0 #9E2D25;
+    --plate-bg: #16212D; --plate-ink: #FFF1E6; --plate-border: 3px solid #16212D;
+    --plate-ring: 0 0 0 3px #E8DCC6, 0 12px 22px -10px rgba(0, 0, 0, .6); --plate-sign-shadow: 0 3px 0 #9E2D25; --plate-accent: #E8DCC6;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22.4' height='30.8' viewBox='0 0 22.4 30.8'%3E%3Crect width='22.4' height='30.799999999999997' fill='%2316212D'/%3E%3Crect x='3.1' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='8.7' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='14.3' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='19.9' y='3.1' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='8.7' y='8.7' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='5.9' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='11.5' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='3.1' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='8.7' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='14.3' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='19.9' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='5.9' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='11.5' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='8.7' y='19.9' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='3.1' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='8.7' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='14.3' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3Crect x='19.9' y='25.5' width='2.2' height='2.2' rx='.6' fill='%23D9574C'/%3E%3C/svg%3E") 0 0 / auto 30.8px repeat-x; --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22.4' height='30.8' viewBox='0 0 22.4 30.8'%3E%3Crect width='22.4' height='30.799999999999997' fill='%237E211C'/%3E%3Crect x='3.1' y='3.1' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='8.7' y='3.1' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='14.3' y='3.1' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='19.9' y='3.1' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='8.7' y='8.7' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='5.9' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='11.5' y='11.5' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='3.1' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='8.7' y='14.3' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='14.3' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='19.9' y='14.3' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='5.9' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='11.5' y='17.1' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='8.7' y='19.9' width='2.2' height='2.2' rx='.6' fill='%23E8DCC6'/%3E%3Crect x='3.1' y='25.5' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='8.7' y='25.5' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='14.3' y='25.5' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3Crect x='19.9' y='25.5' width='2.2' height='2.2' rx='.6' fill='%2316212D'/%3E%3C/svg%3E") 0 0 / auto 30.8px repeat-x;
+    --rating-off: #DDD2BF;
+    --tab-active: #F2B8A8; --tab-badge: #EE6A5E; --tab-badge-ink: #1E0605;
+    color-scheme: dark;
+  }
+  [data-theme="riad"] {
+    --cream: #121426; --card: #1B1E36; --aqua: #1A2463; --aqua-deep: #141B4B; --heading: #F2C14E;
+    --cherry: #EE7B54; --cherry-ink: #240A02; --ink: #F3ECE0; --muted: #B4ACA0;
+    --line: #2A2E4C; --dash: #353A5C; --star-off: #3A3E5C; --tab: #0B0D1C; --tab-text: #A6ABCF; --mustard: #E8B34A;
+    --band-bg: repeating-linear-gradient(45deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 13px),
+      repeating-linear-gradient(-45deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 13px), #141B4B;
+    --band-home-bg: repeating-linear-gradient(45deg, rgba(255, 255, 255, .04) 0 1px, transparent 1px 13px),
+      repeating-linear-gradient(-45deg, rgba(255, 255, 255, .04) 0 1px, transparent 1px 13px), #1A2463;
+    --sign-shadow: 3px 3px 0 #A8432A;
+    --plate-bg: #9A3B22; --plate-ring: 0 0 0 5px #1A2463, 0 0 0 7px #E2B144; --plate-border: 3px solid #E2B144; --plate-accent: #E2B144;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23141B4B'/%3E%3Cpath d='M0 0h4L0 4zM24 0v4l-4-4zM0 24v-4l4 4zM24 24h-4l4-4z' fill='%23B4472A'/%3E%3Cpath d='M5.5 5.5h13v13h-13z' fill='%23E2B144'/%3E%3Cpath d='M12 2.8 21.2 12 12 21.2 2.8 12z' fill='%23E2B144'/%3E%3Cpath d='M12 7.4 16.6 12 12 16.6 7.4 12z' fill='%23141B4B'/%3E%3Ccircle cx='12' cy='12' r='1.7' fill='%23F3ECE0'/%3E%3C/svg%3E") 0 0 / 24px 24px repeat-x; --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%231A2463'/%3E%3Cpath d='M0 0h4L0 4zM24 0v4l-4-4zM0 24v-4l4 4zM24 24h-4l4-4z' fill='%23B4472A'/%3E%3Cpath d='M5.5 5.5h13v13h-13z' fill='%23E2B144'/%3E%3Cpath d='M12 2.8 21.2 12 12 21.2 2.8 12z' fill='%23E2B144'/%3E%3Cpath d='M12 7.4 16.6 12 12 16.6 7.4 12z' fill='%231A2463'/%3E%3Ccircle cx='12' cy='12' r='1.7' fill='%23F3ECE0'/%3E%3C/svg%3E") 0 0 / 24px 24px repeat-x;
+    --tab-active: #F2C14E; --tab-badge: #EE7B54; --tab-badge-ink: #240A02;
+    color-scheme: dark;
+  }
+}
+
+/* ---------- theme touches beyond color ---------- */
+
+/* Herbarium: specimen sheets ruled twice, steps as numbered specimen labels */
+[data-theme="herbarium"] .card { border-width: 1px; box-shadow: inset 0 0 0 4px var(--card), inset 0 0 0 5px var(--line); }
+[data-theme="herbarium"] .ticket { border: 1px solid var(--line); border-radius: 3px; box-shadow: 3px 3px 0 var(--dash); grid-template-columns: 2.6rem 1fr; }
+[data-theme="herbarium"] .ticket::before { display: none; }
+[data-theme="herbarium"] .ticket-num::before { content: 'No.'; font-size: .5em; margin-right: .08em; }
+[data-theme="herbarium"] .ticket-num, [data-theme="herbarium"] .ing-qty, [data-theme="herbarium"] .row-num, [data-theme="herbarium"] .tp-num { font-variant-numeric: lining-nums; }
+/* IM Fell only has old-style figures (its 1 reads as an I), so step numbers use the text face */
+[data-theme="herbarium"] .ticket-num, [data-theme="herbarium"] .tp-num { font-family: var(--text); font-style: normal; font-weight: 700; }
+[data-theme="herbarium"] .ticket-num::before { font-family: var(--display); font-style: italic; font-weight: 400; }
+[data-theme="herbarium"] .sign-plate::before { font-family: var(--display); font-style: italic; text-transform: none; letter-spacing: .06em; font-size: .9rem; font-weight: 400; }
+
+/* Pâtisserie: rounded boxes, step numbers in pistachio macarons */
+[data-theme="patisserie"] .ticket { border: 1.5px solid var(--line); border-radius: 18px; box-shadow: 0 6px 14px -12px rgba(107, 58, 46, .5); grid-template-columns: 2.5rem 1fr; padding: 1rem; }
+[data-theme="patisserie"] .ticket::before { display: none; }
+[data-theme="patisserie"] .ticket-num {
+  display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  background: var(--pistachio); font-size: 1.3rem; line-height: 1; padding-right: .1em;
+}
+[data-theme="patisserie"] .sign-plate::before { color: var(--cherry); }
+
+/* Speakeasy: hairline gold rules and Roman-numeral steps */
+[data-theme="speakeasy"] .card { border-width: 1px; }
+[data-theme="speakeasy"] .band-home .sign { font-size: clamp(2rem, 9vw, 2.3rem); }
+[data-theme="speakeasy"] .tickets { counter-reset: rb-step; }
+[data-theme="speakeasy"] .ticket {
+  counter-increment: rb-step; border: 1px solid var(--line); border-top: 4px double var(--cherry);
+  border-radius: 0; box-shadow: none; grid-template-columns: 3.2rem 1fr;
+}
+[data-theme="speakeasy"] .ticket::before { display: none; }
+[data-theme="speakeasy"] .ticket-num { font-size: 0; }
+[data-theme="speakeasy"] .ticket-num::before {
+  content: counter(rb-step, upper-roman); font: 700 1.25rem/1.2 'Didot', 'Bodoni 72', 'Playfair Display', Georgia, serif; letter-spacing: .04em;
+}
+[data-theme="speakeasy"] .band .pill-cherry { background: var(--gold); color: #14151A; }
+[data-theme="speakeasy"] .sign-plate::before { color: var(--gold); }
+
+/* Fjord Cabin: hand-stitched edges */
+[data-theme="cabin"] .sign-plate { outline: 2px dashed rgba(255, 248, 236, .7); outline-offset: -9px; }
+[data-theme="cabin"] .ticket {
+  border-radius: 14px; box-shadow: 0 2px 0 var(--line);
+  outline: 1.5px dashed var(--dash); outline-offset: -6px; padding: 1.1rem 1.1rem 1.1rem 1rem;
+}
+[data-theme="cabin"] .ticket::before { display: none; }
+
+/* Riad: arched doorways for the sign and the step numbers */
+[data-theme="riad"] .ticket { border-radius: 12px; box-shadow: 0 2px 0 var(--line); grid-template-columns: 2.4rem 1fr; padding: 1rem; }
+[data-theme="riad"] .ticket::before { display: none; }
+[data-theme="riad"] .ticket-num {
+  display: grid; place-items: center; width: 2.2rem; height: 2.75rem; padding-top: .35rem;
+  border-radius: 999px 999px 5px 5px; background: var(--heading); color: var(--card); font-size: 1.25rem;
+}
+[data-theme="riad"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); }
+
+/* ---------- settings: theme picker ---------- */
+.theme-now { font-weight: 800; font-size: .9rem; color: var(--muted); }
+.theme-intro { margin-top: 0; }
+.theme-group { margin-top: 1.1rem; }
+.theme-group-title {
+  display: flex; align-items: center; gap: .6rem; margin: 0 0 .55rem;
+  font: 800 .75rem/1.2 var(--text); letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+}
+.theme-group-title::after { content: ''; flex: 1; border-top: 2px dashed var(--dash); }
+.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+@media (max-width: 330px) { .theme-grid { grid-template-columns: 1fr; } }
+.theme-opt {
+  position: relative; display: flex; flex-direction: column; align-items: stretch; gap: .15rem;
+  padding: 0 0 .75rem; margin: 0; text-align: left; cursor: pointer; overflow: hidden;
+  font: inherit; color: var(--ink); background: var(--card);
+  border: 2px solid var(--line); border-radius: 14px;
+  touch-action: manipulation; -webkit-appearance: none; appearance: none;
+  transition: transform .12s ease;
+}
+.theme-opt:active { transform: scale(.98); }
+.theme-opt[aria-checked="true"] { border-color: var(--heading); box-shadow: 0 0 0 2px var(--heading); }
+.theme-opt[aria-checked="true"] .theme-name::after {
+  content: ''; position: absolute; top: .5rem; right: .55rem; width: 1.45rem; height: 1.45rem; border-radius: 50%;
+  background: var(--heading) no-repeat center / 62% 62%
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  box-shadow: 0 0 0 2px var(--card);
+}
+.theme-name { position: relative; padding: .6rem 2.3rem 0 .75rem; font-weight: 800; font-size: 1rem; line-height: 1.25; }
+.theme-badge {
+  display: inline-block; margin-left: .25rem; padding: 0 .4rem; border-radius: 999px; vertical-align: .12em;
+  border: 1.5px solid var(--heading); color: var(--heading);
+  font-size: .62rem; line-height: 1.1rem; letter-spacing: .06em; text-transform: uppercase;
+}
+.theme-tag { padding: 0 .75rem; font-size: .8rem; line-height: 1.35; color: var(--muted); }
+
+/* the little preview inside each option paints itself with that theme's tokens */
+.tp { display: block; background: var(--cream); color: var(--ink); font-family: var(--text); border-bottom: 2px solid var(--line); }
+.tp-band { display: flex; align-items: center; justify-content: center; height: 3.7rem; background: var(--band-home-bg); }
+.tp-plate {
+  display: inline-block; padding: .32rem .85rem .26rem .75rem; white-space: nowrap;
+  background: var(--plate-bg); color: var(--plate-ink); border-radius: var(--plate-radius);
+  box-shadow: 0 0 0 2px var(--plate-accent);
+  font: var(--display-style) var(--display-weight) 1.02rem/1.1 var(--display); letter-spacing: var(--sign-spacing);
+}
+[data-theme="riad"] .tp-plate { padding-top: .6rem; }
+.tp-trim { display: block; height: var(--trim-h); background: var(--trim-home); -webkit-mask: var(--trim-mask); mask: var(--trim-mask); }
+.tp-page { display: block; padding: .5rem .55rem .6rem; }
+.tp-card {
+  display: flex; align-items: center; gap: .5rem; padding: .45rem .55rem;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: min(var(--radius), 10px);
+}
+.tp-num { font: var(--display-style) var(--display-weight) 1.15rem/1 var(--display); color: var(--cherry); }
+.tp-lines { flex: 1; display: grid; gap: .28rem; }
+.tp-lines i { display: block; height: .3rem; border-radius: 2px; background: var(--ink); opacity: .2; }
+.tp-lines i + i { width: 62%; }
+.tp-foot { display: flex; align-items: center; justify-content: space-between; margin-top: .5rem; }
+.tp-stars { color: var(--cherry); font-size: .78rem; letter-spacing: .06em; line-height: 1; }
+.tp-btn { width: 2.8rem; height: 1rem; border-radius: var(--pill-r); background: var(--cherry); }
+
+/* a short cross-fade when switching themes */
+html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
+  transition: background-color .4s ease, color .4s ease, border-color .4s ease, box-shadow .4s ease, fill .4s ease !important;
+}
   </style>
+
+  <script>
+// Themes, chosen in Settings. Applied here, before anything is drawn, so the app never
+// flashes the wrong colors. The choice is also kept with the other settings.
+(function () {
+  var T = window.RB_THEMES = {
+    diner: {
+      name: 'Diner \u201956', tagline: 'Aqua & cherry red, checkerboard trim, order tickets',
+      color: ['#8FD3CC', '#24524E'], fonts: '',
+      steps: 'Order up', stepHint: 'Tap a ticket when that step is done.'
+    },
+    patisserie: {
+      name: 'P\u00e2tisserie', tagline: 'A striped rose awning, raspberry, cocoa & pistachio',
+      color: ['#F6CCD6', '#5A2F3B'],
+      fonts: 'family=Playfair+Display:ital,wght@1,700;1,800&family=Jost:wght@400;600;700;800',
+      steps: 'La m\u00e9thode', stepHint: 'Tap a step when it\u2019s done.'
+    },
+    cabin: {
+      name: 'Fjord Cabin', tagline: 'Lingonberry & navy wool with a Fair Isle knit border',
+      color: ['#A8302A', '#7E211C'],
+      fonts: 'family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Figtree:wght@400;600;700;800',
+      steps: 'By the fire', stepHint: 'Tap a step when it\u2019s done.'
+    },
+    herbarium: {
+      name: 'Herbarium', tagline: 'Pressed botanicals: moss, violet & parchment labels',
+      color: ['#B9C49E', '#2E3A24'],
+      fonts: 'family=IM+Fell+English:ital@0;1&family=Alegreya:wght@400;700;800',
+      steps: 'Preparation', stepHint: 'Tap a label when that step is done.'
+    },
+    speakeasy: {
+      name: 'Speakeasy', tagline: 'Onyx & gold Art Deco with Roman-numeral steps',
+      color: ['#14151A', '#0A0B0E'],
+      fonts: 'family=Limelight&family=Josefin+Sans:wght@400;600;700',
+      steps: 'The method', stepHint: 'Tap a step when it\u2019s done.'
+    },
+    riad: {
+      name: 'Riad', tagline: 'Majorelle blue, saffron zellige & arched doorways',
+      color: ['#2A3FA0', '#1A2463'],
+      fonts: 'family=Reem+Kufi:wght@500;700&family=Readex+Pro:wght@400;600;700',
+      steps: 'Step by step', stepHint: 'Tap a step when it\u2019s done.'
+    }
+  };
+  var loaded = {};
+  window.rbLoadThemeFonts = function (ids) {
+    ids.forEach(function (id) {
+      var t = T[id];
+      if (!t || !t.fonts || loaded[id]) return;
+      loaded[id] = true;
+      var l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?' + t.fonts + '&display=swap';
+      document.head.appendChild(l);
+    });
+  };
+  window.rbApplyTheme = function (id) {
+    if (!T[id]) id = 'diner';
+    document.documentElement.setAttribute('data-theme', id);
+    window.rbLoadThemeFonts([id]);
+    var metas = document.querySelectorAll('meta[name="theme-color"]');
+    if (metas[0]) metas[0].setAttribute('content', T[id].color[0]);
+    if (metas[1]) metas[1].setAttribute('content', T[id].color[1]);
+    try { localStorage.setItem('recipe-box-theme', id); } catch (e) { /* storage blocked; the setting still saves */ }
+    return id;
+  };
+  var saved = 'diner';
+  try { saved = localStorage.getItem('recipe-box-theme') || 'diner'; } catch (e) { /* use the default */ }
+  window.rbApplyTheme(saved);
+})();
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#view">Skip to content</a>
@@ -824,7 +1254,7 @@ main:focus, main:focus-visible { outline: none; } /* focused on each screen chan
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v14';
+const APP_VERSION = 'v15';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -2962,7 +3392,7 @@ const RECIPE_TABS = [['recipe', 'Recipe'], ['photos', 'Photos'], ['notes', 'Note
 const state = {
   recipes: [],
   grocery: [],                 // { id, text, checked, recipeId, recipeTitle, addedAt }
-  settings: { groupBy: 'aisle', installTipDismissed: false },
+  settings: { groupBy: 'aisle', installTipDismissed: false, theme: document.documentElement.getAttribute('data-theme') || 'diner' },
   filter: { q: '', cat: 'all', sort: 'az' },
   scale: {},                   // recipeId -> factor, for this session
   units: {},                   // recipeId -> { ingredientIndex: unit view }, for this session
@@ -2972,6 +3402,15 @@ const state = {
 
 const view = document.getElementById('view');
 const toastEl = document.getElementById('toast');
+
+// Themes (defined in the head so they apply before the first paint).
+const THEMES = window.RB_THEMES;
+const THEME_GROUPS = [
+  ['Bright & cheerful', ['diner', 'patisserie']],
+  ['Warm & rustic', ['cabin', 'herbarium']],
+  ['Rich & dramatic', ['speakeasy', 'riad']],
+];
+const theme = () => THEMES[state.settings.theme] || THEMES.diner;
 
 const ICONS = {
   paste: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="4.5" width="14" height="16" rx="2.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4.5V3.6c0-.6.4-1.1 1-1.1h4c.6 0 1 .5 1 1.1v.9M9 11h6M9 15h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -3382,7 +3821,7 @@ function renderRecipe(id) {
 
     <section class="sec plain" aria-labelledby="stepHead">
       <div class="sec-head">
-        <h2 id="stepHead" class="sec-title cherry">Order up</h2>
+        <h2 id="stepHead" class="sec-title cherry">${esc(theme().steps)}</h2>
         ${canWake ? `<button class="btn btn-chip" data-action="wake" aria-pressed="false">${ICONS.sun}Screen on</button>` : ''}
       </div>
       ${r.steps.length ? `
@@ -3392,7 +3831,7 @@ function renderRecipe(id) {
             <p>${esc(st)}</p>
           </li>`).join('')}
         </ol>
-        <p class="hint">Tap a ticket when that step is done.</p>`
+        <p class="hint">${esc(theme().stepHint)}</p>`
         : '<p class="hint">No steps yet.</p>'}
     </section>
     </div>
@@ -4020,7 +4459,43 @@ function renderList() {
 
 // ---------- settings & backup ----------
 
+// One option in the theme picker: a small live preview painted in that theme's own colors.
+function themeOption(id) {
+  const t = THEMES[id];
+  const on = id === state.settings.theme;
+  return `
+    <button class="theme-opt" role="radio" aria-checked="${on}" data-action="set-theme" data-theme-id="${id}">
+      <span class="tp" data-theme="${id}" aria-hidden="true">
+        <span class="tp-band"><span class="tp-plate">Recipe Box</span></span>
+        <span class="tp-trim"></span>
+        <span class="tp-page">
+          <span class="tp-card"><span class="tp-num">${id === 'speakeasy' ? 'I' : '1'}</span><span class="tp-lines"><i></i><i></i></span></span>
+          <span class="tp-foot"><span class="tp-stars">★★★★</span><span class="tp-btn"></span></span>
+        </span>
+      </span>
+      <span class="theme-name">${esc(t.name)}${id === 'diner' ? ' <span class="theme-badge">Original</span>' : ''}</span>
+      <span class="theme-tag">${esc(t.tagline)}</span>
+    </button>`;
+}
+
+async function setTheme(id) {
+  if (!THEMES[id] || id === state.settings.theme) return;
+  const root = document.documentElement;
+  if (!reducedMotion()) {
+    root.classList.add('theme-fade');
+    clearTimeout(setTheme.timer);
+    setTheme.timer = setTimeout(() => root.classList.remove('theme-fade'), 450);
+  }
+  state.settings.theme = window.rbApplyTheme(id);
+  view.querySelectorAll('.theme-opt').forEach(b => b.setAttribute('aria-checked', b.dataset.themeId === id));
+  const now = document.getElementById('themeNow');
+  if (now) now.textContent = THEMES[id].name;
+  await saveSettings();
+  toast(`${THEMES[id].name} theme on`);
+}
+
 async function renderSettings() {
+  window.rbLoadThemeFonts(Object.keys(THEMES)); // so every preview shows its own lettering
   let usage = '';
   try {
     const est = await navigator.storage.estimate();
@@ -4034,6 +4509,21 @@ async function renderSettings() {
   view.innerHTML = `
     ${band(`<div class="band-bar"><a class="back" href="#/">Recipes</a></div><h1 class="sign">Settings</h1>`, 'band-form')}
     <section class="settings">
+
+      <section class="card sec" aria-labelledby="themeHead">
+        <div class="sec-head">
+          <h2 id="themeHead" class="sec-title">Theme</h2>
+          <span class="theme-now" id="themeNow">${esc(theme().name)}</span>
+        </div>
+        <p class="hint theme-intro">Changes the colors, lettering and trim everywhere in Recipe Box. Light and dark follow your phone.</p>
+        <div role="radiogroup" aria-labelledby="themeHead">
+          ${THEME_GROUPS.map(([label, ids], g) => `
+            <div class="theme-group" role="group" aria-labelledby="themeGroup${g}">
+              <h3 class="theme-group-title" id="themeGroup${g}">${esc(label)}</h3>
+              <div class="theme-grid">${ids.map(themeOption).join('')}</div>
+            </div>`).join('')}
+        </div>
+      </section>
 
       <section class="card sec" aria-labelledby="webSetupHead">
         <h2 id="webSetupHead" class="sec-title">Import from NYT Cooking</h2>
@@ -4310,6 +4800,7 @@ function currentRecipe() {
 }
 
 const actions = {
+  'set-theme': el => setTheme(el.dataset.themeId),
   'dismiss-install': async () => { state.settings.installTipDismissed = true; await saveSettings(); document.querySelector('.notice')?.remove(); },
   'filter': el => {
     state.filter.cat = el.dataset.cat;
@@ -4643,6 +5134,7 @@ async function boot() {
     state.recipes = recipes || [];
     state.grocery = grocery || [];
     state.settings = { ...state.settings, ...(settings || {}) };
+    state.settings.theme = window.rbApplyTheme(state.settings.theme);
   } catch (err) {
     console.error(err);
     window.__recipeBoxStarted = true;
