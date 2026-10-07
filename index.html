@@ -2674,7 +2674,26 @@ html[data-theme="aloha"]:not([data-view="page"]) .band-settings { background: va
 .mode-seg label { flex: 1; }
 .mode-seg span { justify-content: center; padding: 0 .5rem; }
 .mode-field .hint { margin: .55rem 0 0; }
-.tag-field { margin-top: 1.1rem; }
+.switches { margin-top: 1.1rem; border-top: 2px dashed var(--dash); }
+.switch-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .75rem 0; border-bottom: 2px dashed var(--dash); cursor: pointer;
+}
+.switch-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.switch-row b { display: block; font-weight: 800; color: var(--ink); }
+.switch-row small { display: block; margin-top: .15rem; font-size: .85rem; line-height: 1.35; color: var(--muted); }
+.switch {
+  -webkit-appearance: none; appearance: none; flex: none; position: relative; margin: 0; cursor: pointer;
+  width: 3.1rem; height: 1.9rem; border-radius: 999px; background: var(--line);
+  transition: background .2s ease;
+}
+.switch::after {
+  content: ''; position: absolute; top: .2rem; left: .2rem; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: #FFFFFF; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s ease;
+}
+.switch:checked { background: var(--cherry); }
+.switch:checked::after { transform: translateX(1.2rem); }
+.switch:focus-visible { outline: 3px solid var(--heading); outline-offset: 2px; }
 .theme-dots { display: inline-flex; padding-left: .3rem; }
 .theme-dots i { width: .95rem; height: .95rem; margin-left: -.3rem; border-radius: 50%; box-shadow: 0 0 0 2px var(--card); }
 .theme-dots i:nth-child(1) { background: var(--aqua); }
@@ -2754,8 +2773,6 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
 .gx-titles { text-align: center; }
 .gx-titles h2 { margin: 0; font: 800 1rem/1.2 var(--text); letter-spacing: .01em; }
 .gx-titles p { margin: .15rem 0 0; font: 700 .76rem/1.2 var(--text); opacity: .6; }
-.gx-count { justify-self: end; white-space: nowrap; font: 800 .8rem/1 var(--text); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
-.gx-count i { font-style: normal; opacity: .45; }
 
 .gx-rail {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
@@ -2984,10 +3001,25 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
   background: var(--card); color: var(--ink); font: 800 1.05rem/1 var(--text); text-decoration: none;
   touch-action: manipulation;
 }
-.ck-exit { padding: 0 1.15rem 0 .85rem; }
-.ck-tools { display: flex; gap: .4rem; }
-.ck-tool { min-width: 3rem; padding: 0 .75rem; }
+.ck-exit { padding: 0 .95rem 0 .7rem; }
+.ck-tools { display: flex; gap: .35rem; }
+.ck-tool { min-width: 2.75rem; padding: 0 .55rem; }
 .ck-tool.big { font-size: 1.3rem; }
+.ck-tool.ck-ing-btn {
+  gap: .4rem; padding: 0 1rem 0 .8rem; min-height: 3.1rem;
+  background: var(--cherry); color: var(--cherry-ink); font-size: 1.05rem;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .22);
+}
+.ck-tool.ck-ing-btn svg { width: 24px; height: 24px; }
+.ck-tool.ck-ing-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, .22); }
+@media (max-width: 389px) {
+  .ck-top { gap: .3rem; }
+  .ck-tools { gap: .25rem; }
+  .ck-tool { min-width: 2.4rem; padding: 0 .4rem; }
+  .ck-exit { padding: 0 .8rem 0 .6rem; }
+  .ck-tool.ck-ing-btn { padding: 0 .75rem 0 .6rem; gap: .3rem; }
+}
+@media (max-width: 345px) { .ck-tool.ck-ing-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
 .ck-tool:disabled { opacity: .45; cursor: default; }
 
 /* progress: one segment per screen, tap to jump */
@@ -3097,22 +3129,9 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 .ck-next:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .2); }
 .ck-nav.solo .ck-next { font-size: 1.6rem; }
 
-/* timer picker */
-.ck-panel-body .ck-label { margin: .2rem 0 .5rem; }
-.ck-timers { display: grid; grid-template-columns: repeat(4, 1fr); gap: .45rem; margin: 0 0 1.1rem; }
-.ck-timers.here { grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); }
-.ck-timers button {
-  min-height: 3.2rem; border-radius: var(--radius); cursor: pointer; touch-action: manipulation;
-  border: 2.5px solid var(--ink); background: var(--card); color: var(--ink); font: 800 1.15rem var(--text);
-}
-.ck-timers.here button { border-color: var(--cherry); color: var(--cherry); }
-.ck-timers button:active { background: var(--cherry); border-color: var(--cherry); color: var(--cherry-ink); }
-.ck-timer-own { display: flex; align-items: center; gap: .5rem; margin: 0 0 1rem; }
-.ck-timer-own label { font-weight: 800; color: var(--muted); }
-.ck-timer-own input { flex: 1; min-width: 0; min-height: 3rem; font-size: 1.1rem; }
-.ck-timer-own .btn { min-height: 3rem; }
 
-/* full-screen panels inside cook mode (ingredients, new timer) */
+
+/* the full-screen ingredients panel inside cook mode */
 .ck-panel { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--cream); }
 .ck-panel[hidden] { display: none; }
 .ck-panel-head {
@@ -3121,6 +3140,38 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 }
 .ck-panel-head h2 { margin: 0; font: var(--display-style) var(--display-weight) 1.6rem/1.1 var(--display); letter-spacing: var(--sign-spacing); }
 .ck-panel-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 1rem var(--ck-pad) calc(var(--safe-bottom) + 1.5rem); }
+
+/* ---------- world languages off: everything in English ---------- */
+:root[data-lang="en"][data-theme="herbarium"] { --plate-kicker: 'From the herbarium'; }
+:root[data-lang="en"][data-theme="patisserie"] { --plate-kicker: 'Homemade pastry'; }
+:root[data-lang="en"][data-theme="cabin"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="riad"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="mercado"] { --plate-kicker: 'Enjoy your meal!'; }
+:root[data-lang="en"][data-theme="izakaya"] { --plate-kicker: 'Welcome in'; }
+:root[data-lang="en"][data-theme="jaipur"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="kente"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="cabane"] { --plate-kicker: 'Welcome to the shack'; }
+:root[data-lang="en"][data-theme="paladar"] { --plate-kicker: '★ Havana ★'; }
+:root[data-lang="en"][data-theme="sacred"] { --plate-kicker: 'Good day'; }
+:root[data-lang="en"][data-theme="copacabana"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="azulejo"] { --plate-kicker: 'Enjoy your meal'; }
+:root[data-lang="en"][data-theme="limonaia"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="vyshyvanka"] { --plate-kicker: 'Enjoy your meal!'; }
+:root[data-lang="en"][data-theme="iznik"] { --plate-kicker: 'Enjoy your meal'; }
+:root[data-lang="en"][data-theme="bogolan"] { --plate-kicker: 'Hello'; }
+:root[data-lang="en"][data-theme="tibeb"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="shuka"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="ndebele"] { --plate-kicker: 'Hello'; }
+:root[data-lang="en"][data-theme="isfahan"] { --plate-kicker: 'Enjoy your meal'; }
+:root[data-lang="en"][data-theme="ikat"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="bojagi"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="shu"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="lanterns"] { --plate-kicker: 'Enjoy your meal'; }
+:root[data-lang="en"][data-theme="batik"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"][data-theme="masi"] { --plate-kicker: 'Hello!'; }
+:root[data-lang="en"][data-theme="aloha"] { --plate-kicker: 'Welcome'; }
+:root[data-lang="en"] [data-theme="izakaya"] .ticket-num, :root[data-lang="en"][data-theme="izakaya"] .ticket-num { font-size: 0; }
+:root[data-lang="en"] [data-theme="izakaya"] .ticket-num::before, :root[data-lang="en"][data-theme="izakaya"] .ticket-num::before { content: counter(rb-step); }
   </style>
 
   <script>
@@ -3264,8 +3315,16 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
     remember('recipe-box-mode', mode);
     return mode;
   };
+  // 'world' (each theme in its own languages) or 'en' (English everywhere).
+  window.rbApplyLang = function (lang) {
+    if (lang !== 'en') lang = 'world';
+    root.setAttribute('data-lang', lang);
+    remember('recipe-box-lang', lang);
+    return lang;
+  };
   window.rbApplyMode(recall('recipe-box-mode', 'auto'));
   window.rbApplyTheme(recall('recipe-box-theme', 'diner'));
+  window.rbApplyLang(recall('recipe-box-lang', 'world'));
 })();
   </script>
 </head>
@@ -3370,7 +3429,7 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v24';
+const APP_VERSION = 'v25';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -6725,6 +6784,60 @@ const PLACES = {
 };
 const PLACE_ORDER = Object.keys(PLACES).sort((a, b) => PLACES[a].lon - PLACES[b].lon);
 const place = id => PLACES[id] || PLACES.diner;
+
+// ---------- English everywhere ----------
+// With world languages off (Settings › Appearance), every theme reads in English: its name, its
+// step heading, the welcome on the sign (in CSS, under html[data-lang="en"]), its city and its
+// card note, and step numbers in plain digits. Dish names in the city notes stay as they are.
+const ENGLISH = {
+  names: { mercado: 'Market', patisserie: 'Pastry Shop', riad: 'Courtyard House', izakaya: 'Japanese Pub', cabane: 'Sugar Shack',
+    paladar: 'Family Restaurant', azulejo: 'Painted Tiles', limonaia: 'Lemon House', vyshyvanka: 'Embroidery', iznik: 'Iznik Tiles',
+    bogolan: 'Mud Cloth', tibeb: 'Woven Border', shuka: 'Maasai Cloth', bojagi: 'Patchwork Wrap', shu: 'Sichuan Brocade', masi: 'Bark Cloth' },
+  steps: { mercado: 'Step by step', patisserie: 'The method', izakaya: 'Method', jaipur: 'Method', cabane: 'The recipe',
+    paladar: 'Let’s get to work', sacred: 'Let’s cook', copacabana: 'Let’s get to work', azulejo: 'Preparation', limonaia: 'The method',
+    vyshyvanka: 'Preparation', iznik: 'Method', tibeb: 'Preparation', shuka: 'Let’s cook!', isfahan: 'Method', ikat: 'Preparation',
+    bojagi: 'How to make it', shu: 'Method', lanterns: 'How to make it', batik: 'How to make it', aloha: 'Preparation' },
+  cities: { cabane: 'Quebec City', lanterns: 'Hoi An' },
+  countries: { iznik: 'Turkey' },
+  notes: {
+    riad: 'Majorelle blue and saffron tilework behind arched doors',
+    izakaya: 'Indigo door curtains and a vermilion name seal in the lantern-lit alleys',
+    jaipur: 'The Pink City’s saffron tie-dye and block-print paisley',
+    paladar: 'Cement-tile floors and shuttered pastel fronts in Old Havana',
+    sacred: 'Diamond patterns woven by the Chinchero cooperatives above the Sacred Valley',
+    azulejo: 'Hand-painted tiles on Alfama’s house fronts and tiled stairways',
+    limonaia: 'Lemon terraces and hand-painted pottery above the Amalfi Coast',
+    vyshyvanka: 'Embroidered linen shirts, stitched in beet red and black',
+    iznik: 'Tulip and carnation tiles of Rustem Pasha Mosque, by the Spice Bazaar',
+    bogolan: 'Mud cloth: cotton dyed with fermented river mud along the Niger',
+    tibeb: 'Woven borders on white cotton shawls, and coffee roasted at the table',
+    shuka: 'Red Maasai cloth and beaded collars at the Maasai Market',
+    isfahan: 'Turquoise domes and tilework around Imam Square',
+    ikat: 'Tie-dyed silk and needlework along the Silk Road',
+    bojagi: 'Wrapping cloths, pieced from silk scraps, in Insadong',
+    shu: 'Brocade looms, Sichuan pepper and long afternoons in the teahouses',
+    lanterns: 'Silk lanterns along the Thu Bon river on full-moon nights',
+    batik: 'Cloth hand-drawn in hot wax with a little copper pen, in the sultan’s city',
+    masi: 'Bark cloth, stenciled in rust and black, for feasts and weddings',
+    aloha: 'Hibiscus shirts and flower garlands on the Waikiki shore',
+  },
+};
+const ORIGINAL = {};
+const english = () => state.settings.english === true;
+function applyLanguage(on) {
+  window.rbApplyLang(on ? 'en' : 'world');
+  for (const id of Object.keys(THEMES)) {
+    const t = THEMES[id], p = PLACES[id];
+    const o = ORIGINAL[id] || (ORIGINAL[id] = { name: t.name, steps: t.steps, city: p?.city, country: p?.country, note: p?.note });
+    t.name = (on && ENGLISH.names[id]) || o.name;
+    t.steps = (on && ENGLISH.steps[id]) || o.steps;
+    if (p) {
+      p.city = (on && ENGLISH.cities[id]) || o.city;
+      p.country = (on && ENGLISH.countries[id]) || o.country;
+      p.note = (on && ENGLISH.notes[id]) || o.note;
+    }
+  }
+}
 const coords = p => `${Math.abs(p.lat).toFixed(2)}° ${p.lat >= 0 ? 'N' : 'S'} · ${Math.abs(p.lon).toFixed(2)}° ${p.lon >= 0 ? 'E' : 'W'}`;
 
 // Land, as a dot every degree: one row per degree of latitude, each "count,start,length,start,length…" in hex.
@@ -7385,7 +7498,7 @@ class GlobeView {
       const bw = Math.ceil(Math.max(nameW, subW) + (big ? 22 : 14) + (!big && s.home ? 10 : 0));
       const bh = big ? 40 : 20;
       const lead = (big ? 30 : 15) * (.4 + .6 * s.fade);
-      const want = (showAll || big || s.home) && s.fade > .35 && !(big && state.settings.cityTag === false);
+      const want = (showAll || big || s.home) && s.fade > .35 && (big ? state.settings.cityTag !== false : state.settings.cityNames !== false);
       let choice = -1, box = null;
       if (want) {
         const order = [L.dir, ...DIRS.keys()];
@@ -7589,17 +7702,17 @@ function themeWindowMarkup() {
 
 const globeUI = { open: false, closing: false };
 
-function globeCard(id) {
+function globeCard(id, clone = false) {
   const p = place(id), t = THEMES[id], on = id === state.settings.theme;
   return `
-    <article class="gx-card" data-theme="${id}" data-place="${id}" aria-label="${esc(p.city)}, ${esc(p.country)}: ${esc(t.name)}">
+    <article class="gx-card" data-theme="${id}" data-place="${id}" ${clone ? 'data-clone aria-hidden="true"' : `aria-label="${esc(p.city)}, ${esc(p.country)}: ${esc(t.name)}"`}>
       <span class="gx-prev" aria-hidden="true">
         <span class="tp">
           <span class="tp-band"><span class="tp-plate">Recipe Box</span></span>
           <span class="tp-trim"></span>
           <span class="tp-page">
-            <span class="tp-card"><span class="tp-num">${{ speakeasy: 'I', izakaya: '一' }[id] || '1'}</span><span class="tp-lines"><i></i><i></i></span></span>
-            <span class="tp-card"><span class="tp-num">${{ speakeasy: 'II', izakaya: '二' }[id] || '2'}</span><span class="tp-lines"><i></i><i></i></span></span>
+            <span class="tp-card"><span class="tp-num">${(english() ? {} : { speakeasy: 'I', izakaya: '一' })[id] || '1'}</span><span class="tp-lines"><i></i><i></i></span></span>
+            <span class="tp-card"><span class="tp-num">${(english() ? {} : { speakeasy: 'II', izakaya: '二' })[id] || '2'}</span><span class="tp-lines"><i></i><i></i></span></span>
             <span class="tp-foot"><span class="tp-stars">★★★★</span><span class="tp-btn"></span></span>
           </span>
         </span>
@@ -7609,7 +7722,7 @@ function globeCard(id) {
         <span class="gx-city">${esc(p.city)}</span>
         <span class="gx-theme">${esc(t.name)}</span>
         <span class="gx-note">${esc(p.note)}</span>
-        <button class="btn btn-primary gx-use" data-use="${id}" aria-pressed="${on}">${on ? useLabelOn() : `Cook in ${esc(p.city)}`}</button>
+        <button class="btn btn-primary gx-use" data-use="${id}" aria-pressed="${on}"${clone ? ' tabindex="-1"' : ''}>${on ? useLabelOn() : `Cook in ${esc(p.city)}`}</button>
       </span>
     </article>`;
 }
@@ -7637,9 +7750,9 @@ function openGlobe() {
     <header class="gx-head">
       <button class="gx-close" aria-label="Close the globe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       <div class="gx-titles"><h2 id="gxTitle">Tastes of the World</h2><p>Swipe the cards or spin the globe</p></div>
-      <span class="gx-count" aria-hidden="true"><b>01</b><i> / ${String(PLACE_ORDER.length).padStart(2, '0')}</i></span>
+      <span aria-hidden="true"></span>
     </header>
-    <div class="gx-rail" role="group" aria-label="Themes">${PLACE_ORDER.map(globeCard).join('')}</div>`;
+    <div class="gx-rail" role="group" aria-label="Themes">${globeCard(PLACE_ORDER[PLACE_ORDER.length - 1], true)}${PLACE_ORDER.map(id => globeCard(id)).join('')}${globeCard(PLACE_ORDER[0], true)}</div>`;
   document.body.appendChild(el);
 
   const canvas = el.querySelector('.gx-canvas');
@@ -7657,7 +7770,7 @@ function openGlobe() {
   if (mini) { v.cam.lat = mini.cam.lat; v.cam.lon = mini.cam.lon; } else { v.cam.lat = place(home).lat - LIFT; v.cam.lon = place(home).lon; }
 
   layoutGlobe();
-  rail.scrollLeft = startIdx * globeUI.stride;
+  rail.scrollLeft = (startIdx + 1) * globeUI.stride;
   globeUI.scrollX = rail.scrollLeft;
   globeUI.fromLayout = mini && fromRect ? (() => {
     const cr = mini.canvas.getBoundingClientRect();
@@ -7718,10 +7831,11 @@ function wireGlobe() {
     if (e.key === 'Escape') { e.preventDefault(); closeGlobe(); return; }
     if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.target.closest('input, textarea')) {
       e.preventDefault();
-      goToPlace(PLACE_ORDER[clamp(g.idx + (e.key === 'ArrowRight' ? 1 : -1), 0, PLACE_ORDER.length - 1)]);
+      const N = PLACE_ORDER.length;
+      goToPlace(PLACE_ORDER[(g.idx + (e.key === 'ArrowRight' ? 1 : -1) + N) % N]);
     }
     if (e.key === 'Tab') { // keep focus inside the globe
-      const f = [...el.querySelectorAll('button')].filter(b => !b.disabled);
+      const f = [...el.querySelectorAll('button')].filter(b => !b.disabled && !b.closest('[data-clone]'));
       const first = f[0], last = f[f.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -7732,7 +7846,11 @@ function wireGlobe() {
   rail.addEventListener('scroll', () => {
     g.scrollX = rail.scrollLeft;
     if (performance.now() > g.programmatic) { g.flight = null; g.mode = 'rail'; }
+    clearTimeout(g.wrapTimer);
+    g.wrapTimer = setTimeout(wrapRail, 140);
   }, { passive: true });
+  rail.addEventListener('touchstart', () => { g.railTouch = true; clearTimeout(g.wrapTimer); }, { passive: true });
+  rail.addEventListener('touchend', () => { g.railTouch = false; clearTimeout(g.wrapTimer); g.wrapTimer = setTimeout(wrapRail, 140); }, { passive: true });
   rail.addEventListener('click', e => {
     const use = e.target.closest('[data-use]');
     if (use) { usePlace(use.dataset.use); return; }
@@ -7784,7 +7902,7 @@ function wireGlobe() {
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', end);
 
-  g.onResize = () => { layoutGlobe(); if (g.idx >= 0) rail.scrollLeft = g.idx * g.stride; g.scrollX = rail.scrollLeft; };
+  g.onResize = () => { layoutGlobe(); if (g.idx >= 0) rail.scrollLeft = (g.idx + 1) * g.stride; g.scrollX = rail.scrollLeft; };
   window.addEventListener('resize', g.onResize);
 }
 
@@ -7801,7 +7919,10 @@ function goToPlace(id) {
   g.mode = 'rail';
   g.programmatic = performance.now() + (g.flight ? g.flight.dur : 0) + 700;
   setFocus(i);
-  g.rail.scrollTo({ left: i * g.stride, behavior: still ? 'auto' : 'smooth' });
+  const N = PLACE_ORDER.length, here = g.scrollX / g.stride;
+  const slots = [i + 1, ...(i === 0 ? [N + 1] : []), ...(i === N - 1 ? [0] : [])];
+  const slot = slots.reduce((a, b) => (Math.abs(b - here) < Math.abs(a - here) ? b : a));
+  g.rail.scrollTo({ left: slot * g.stride, behavior: still ? 'auto' : 'smooth' });
   if (!g.flight) { v.cam.lat = place(id).lat - LIFT; v.cam.lon = wrapLon(place(id).lon, v.cam.lon); }
 }
 
@@ -7814,9 +7935,7 @@ function setFocus(i) {
   v.focusId = id;
   v.setPalette(id);
   if (!(id in v.glowFor)) v.glowFor[id] = 0;
-  g.cards.forEach((c, k) => c.classList.toggle('is-on', k === i));
-  const n = g.el.querySelector('.gx-count b');
-  if (n) n.textContent = String(i + 1).padStart(2, '0');
+  g.cards.forEach(c => c.classList.toggle('is-on', c.dataset.place === id));
 }
 
 async function usePlace(id) {
@@ -7863,9 +7982,13 @@ function globeFrame(now, dt) {
   v.labelFade = smoothstep(.5, 1, T.t);
 
   // which card is in the middle of the rail
-  const f = clamp(g.scrollX / g.stride, 0, PLACE_ORDER.length - 1);
-  const i0 = Math.floor(f), frac = f - i0, i1 = Math.min(PLACE_ORDER.length - 1, i0 + 1);
-  if (!g.flight) setFocus(Math.round(f));
+  // slots 1..N are the cards; slot 0 and N+1 are copies of the last and first
+  const N = PLACE_ORDER.length;
+  const f = clamp(g.scrollX / g.stride, 0, N + 1);
+  const s0 = Math.min(N, Math.floor(f)), frac = f - s0;
+  const slotPlace = sl => ((sl - 1) % N + N) % N;
+  const i0 = slotPlace(s0), i1 = slotPlace(s0 + 1);
+  if (!g.flight) setFocus(slotPlace(Math.round(f)));
 
   let zoomTo = 1;
   if (g.flight) {
@@ -7923,6 +8046,21 @@ function globeFrame(now, dt) {
   if (!resting || now - v.lastDraw > 30) v.draw(now, dt);
 
   if (g.closing && T.t <= 0) finishCloseGlobe();
+}
+
+// Resting on a copy at either end: hop to the real card, so the rail goes round and round.
+function wrapRail() {
+  const g = globeUI;
+  if (!g.open || !g.rail || g.railTouch || g.drag) return;
+  const N = PLACE_ORDER.length, f = g.rail.scrollLeft / g.stride, slot = Math.round(f);
+  if (Math.abs(f - slot) > .02) { g.wrapTimer = setTimeout(wrapRail, 120); return; } // still gliding into place
+  if (slot !== 0 && slot !== N + 1) return;
+  const to = slot === 0 ? N : 1;
+  g.rail.style.scrollSnapType = 'none';
+  g.rail.scrollLeft = to * g.stride;
+  g.scrollX = g.rail.scrollLeft;
+  g.rail.getBoundingClientRect();
+  g.rail.style.scrollSnapType = '';
 }
 
 function closeGlobe(instant = false) {
@@ -8550,13 +8688,20 @@ async function renderSettings() {
           </div>
           <p class="hint">Automatic follows your iPhone’s Light and Dark setting.</p>
         </fieldset>
-        <fieldset class="mode-field tag-field">
-          <legend>City tag on the globe</legend>
-          <div class="seg mode-seg">
-            ${[['on', 'Show'], ['off', 'Hide']].map(([v, label]) => `<label><input type="radio" name="cityTag" value="${v}" ${(state.settings.cityTag !== false) === (v === 'on') ? 'checked' : ''}><span>${label}</span></label>`).join('')}
-          </div>
-          <p class="hint">The name tag that floats above the city you’re looking at. The card below still names it.</p>
-        </fieldset>
+        <div class="switches">
+          <label class="switch-row">
+            <span><b>World languages</b><small>Welcome signs, step headings and theme names in each kitchen’s own language. Off puts everything in English.</small></span>
+            <input type="checkbox" role="switch" class="switch" data-setting="worldLang" ${english() ? '' : 'checked'}>
+          </label>
+          <label class="switch-row">
+            <span><b>Chosen city tag</b><small>The name that floats above the city you’re on in the globe.</small></span>
+            <input type="checkbox" role="switch" class="switch" data-setting="cityTag" ${state.settings.cityTag !== false ? 'checked' : ''}>
+          </label>
+          <label class="switch-row">
+            <span><b>Other city names</b><small>The small names on every other city.</small></span>
+            <input type="checkbox" role="switch" class="switch" data-setting="cityNames" ${state.settings.cityNames !== false ? 'checked' : ''}>
+          </label>
+        </div>
         <p class="hint appearance-world">Kitchen themes are on the globe now: tap ${ICONS.globe} beside Settings, or open <a href="#/world">Tastes of the World</a>.</p>
       </section>
 
@@ -8595,7 +8740,7 @@ async function renderSettings() {
 
       <section class="card sec" aria-labelledby="timerHead">
         <h2 id="timerHead" class="sec-title">Timers</h2>
-        <p>In cook mode, tap a highlighted time like <b>25 minutes</b> to start that timer on your iPhone. The timer button at the top lets you pick any length. Both need a one-time shortcut.</p>
+        <p>In cook mode, tap a highlighted time like <b>25 minutes</b> to start that timer on your iPhone. This needs a one-time shortcut.</p>
         <details class="setup">
           <summary>Set up the Recipe Timer shortcut</summary>
           <ol class="sc">
@@ -9108,7 +9253,17 @@ view.addEventListener('input', e => {
 view.addEventListener('change', async e => {
   const t = e.target;
   if (t.name === 'appearance') { await setMode(t.value); return; }
-  if (t.name === 'cityTag') { state.settings.cityTag = t.value === 'on'; await saveSettings(); return; }
+  if (t.dataset.setting === 'cityTag' || t.dataset.setting === 'cityNames') { state.settings[t.dataset.setting] = t.checked; await saveSettings(); return; }
+  if (t.dataset.setting === 'worldLang') {
+    state.settings.english = !t.checked;
+    applyLanguage(state.settings.english);
+    await saveSettings();
+    const y = window.scrollY;
+    render();
+    requestAnimationFrame(() => window.scrollTo(0, y));
+    toast(state.settings.english ? 'Everything in English' : 'World languages on');
+    return;
+  }
   if (t.dataset.categoryFor) { await setCategory(t.dataset.categoryFor, t.value); renderContents(); return; }
   if (t.hasAttribute('data-photo-input')) { const r = currentRecipe(); if (r) await addDishPhotos(r, t.files); t.value = ''; return; }
   if (t.id === 'sort') { state.filter.sort = t.value; renderContents(); }
@@ -9335,10 +9490,8 @@ function stepUses(r, step) {
 // ---------- iPhone timers ----------
 // A web app can't run the iPhone's timer itself, and iOS has no web link into the Clock app
 // (clock-timer:// is refused as an invalid address). So every timer runs the user's
-// "Recipe Timer" shortcut with the length in seconds: a highlighted time in a step starts that
-// length, and the timer button at the top offers a quick pick of lengths.
+// "Recipe Timer" shortcut with the length in seconds when you tap a highlighted time in a step.
 const TIMER_SHORTCUT = 'Recipe Timer';
-const TIMER_PICKS = [1, 2, 3, 5, 8, 10, 12, 15, 20, 25, 30, 40, 45, 60, 90, 120]; // minutes
 function startClockTimer(sec) {
   sec = Math.round(sec);
   if (!(sec > 0)) return;
@@ -9375,8 +9528,7 @@ function renderCook(id) {
         <div class="ck-tools">
           <button class="ck-tool" data-action="ck-size" data-d="-1" aria-label="Smaller text" ${size === 0 ? 'disabled' : ''}>A−</button>
           <button class="ck-tool big" data-action="ck-size" data-d="1" aria-label="Larger text" ${size === COOK_SIZES - 1 ? 'disabled' : ''}>A+</button>
-          ${hasIngredients(r) ? `<button class="ck-tool" data-action="ck-ing" aria-label="Ingredients" aria-haspopup="dialog">${ICONS.basket}</button>` : ''}
-          <button class="ck-tool" data-action="ck-clock" aria-label="Start an iPhone timer" aria-haspopup="dialog">${ICONS.timer}</button>
+          ${hasIngredients(r) ? `<button class="ck-tool ck-ing-btn" data-action="ck-ing" aria-haspopup="dialog">${ICONS.basket}<span>Ingredients</span></button>` : ''}
         </div>
       </header>
       <div class="ck-progress" id="ckProgress" role="group" aria-label="Steps"></div>
@@ -9502,31 +9654,7 @@ function openCookPanel(kind) {
   const panel = document.getElementById('ckPanel');
   const head = title => `<div class="ck-panel-head"><h2 id="ckPanelTitle">${title}</h2>
     <button class="ck-exit" data-action="ck-panel-close">${ICONS.close}Close</button></div>`;
-  if (kind === 'timer') {
-    // times mentioned in the step on screen come first
-    const pos = cook.pos[r.id];
-    const here = pos >= 0 && pos < r.steps.length ? findDurations(r.steps[pos]) : [];
-    const seen = new Set();
-    const fromStep = here.flatMap(d => (d.hi ? [d.sec, d.hi] : [d.sec])).filter(sec => !seen.has(sec) && seen.add(sec));
-    panel.innerHTML = `${head('Timer')}
-      <div class="ck-panel-body">
-        ${fromStep.length ? `<h3 class="ck-label">From this step</h3>
-          <div class="ck-timers here">${fromStep.map(sec => `<button data-action="ck-timer" data-sec="${sec}">${esc(fmtSpan(sec))}</button>`).join('')}</div>` : ''}
-        <h3 class="ck-label">Minutes</h3>
-        <div class="ck-timers">${TIMER_PICKS.map(m => `<button data-action="ck-timer" data-sec="${m * 60}" aria-label="${esc(fmtSpan(m * 60))}">${m}</button>`).join('')}</div>
-        <form class="ck-timer-own" id="ckTimerOwn">
-          <label for="ckTimerMin">Other</label>
-          <input id="ckTimerMin" type="number" inputmode="numeric" min="1" max="1440" placeholder="min">
-          <button class="btn btn-primary" type="submit">Start</button>
-        </form>
-        <p class="hint">Starts the timer on your iPhone with the Recipe Timer shortcut (set it up once in Settings › Timers).</p>
-      </div>`;
-    panel.querySelector('#ckTimerOwn').addEventListener('submit', e => {
-      e.preventDefault();
-      const m = parseFloat(panel.querySelector('#ckTimerMin').value);
-      if (m > 0) { closeCookPanel(); startClockTimer(Math.min(1440, m) * 60); }
-    });
-  } else {
+  {
     panel.innerHTML = `${head('Ingredients')}
       <div class="ck-panel-body"><ul class="ck-ings">${cookIngredientRows(r)}</ul></div>`;
   }
@@ -9538,7 +9666,7 @@ function closeCookPanel() {
   const panel = document.getElementById('ckPanel');
   if (!panel || panel.hidden) return false;
   panel.hidden = true; panel.innerHTML = '';
-  document.querySelector(`[data-action="${panel.dataset.kind === 'timer' ? 'ck-clock' : 'ck-ing'}"]`)?.focus({ preventScroll: true });
+  document.querySelector('[data-action="ck-ing"]')?.focus({ preventScroll: true });
   return true;
 }
 
@@ -9556,7 +9684,6 @@ Object.assign(actions, {
     await saveSettings();
   },
   'ck-ing': () => openCookPanel('ingredients'),
-  'ck-clock': () => openCookPanel('timer'),
   'ck-panel-close': () => closeCookPanel(),
   'ck-check': el => {
     const r = cookRecipe(); if (!r) return;
@@ -9577,7 +9704,7 @@ Object.assign(actions, {
     refreshCookLists(r, i);
   },
   'test-clock-timer': () => startClockTimer(10),
-  'ck-timer': el => { closeCookPanel(); startClockTimer(Number(el.dataset.sec)); },
+  'ck-timer': el => startClockTimer(Number(el.dataset.sec)),
   'ck-made': async el => {
     const r = cookRecipe(); if (!r) return;
     r.timesMade = (r.timesMade || 0) + 1;
@@ -9629,6 +9756,7 @@ async function boot() {
     state.settings = { ...state.settings, ...(settings || {}) };
     state.settings.mode = window.rbApplyMode(state.settings.mode);
     state.settings.theme = window.rbApplyTheme(state.settings.theme);
+    applyLanguage(state.settings.english);
   } catch (err) {
     console.error(err);
     window.__recipeBoxStarted = true;
