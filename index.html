@@ -3172,6 +3172,23 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 :root[data-lang="en"][data-theme="aloha"] { --plate-kicker: 'Welcome'; }
 :root[data-lang="en"] [data-theme="izakaya"] .ticket-num, :root[data-lang="en"][data-theme="izakaya"] .ticket-num { font-size: 0; }
 :root[data-lang="en"] [data-theme="izakaya"] .ticket-num::before, :root[data-lang="en"][data-theme="izakaya"] .ticket-num::before { content: counter(rb-step); }
+/* ---------- sharing through GitHub ---------- */
+.sync-form { margin-top: .9rem; }
+.sync-form .field-error { margin: -.4rem 0 .8rem; }
+.shared-head p { margin: 0 0 .4rem; }
+.shared-head .action-row { margin-top: .6rem; }
+.shared-search { margin: .9rem 0 0; }
+.shared-item label > span { display: block; min-width: 0; }
+.shared-item b { display: block; font-weight: 800; overflow-wrap: anywhere; }
+.shared-item small { display: block; margin-top: .1rem; font-size: .85rem; line-height: 1.35; color: var(--muted); }
+.shared-mode {
+  flex: none; max-width: 9.5rem; min-height: 2.5rem; padding: 0 .55rem;
+  font: 800 .88rem var(--text); color: var(--heading);
+  background: var(--cream); border: 2px solid var(--line); border-radius: 10px; cursor: pointer;
+}
+.shared-bar { position: sticky; bottom: calc(var(--tabs-h) + var(--safe-bottom) + .6rem); z-index: 5; margin: 0 0 1rem; }
+.shared-bar .btn { box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
+.shared-bar .btn:disabled { opacity: 1; background: var(--line); color: var(--muted); box-shadow: none; }
   </style>
 
   <script>
@@ -3429,7 +3446,7 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
   document.head.appendChild(link);
 })();
 
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v26';
 // ================================================================
 // Storage (IndexedDB)
 // ================================================================
@@ -5820,7 +5837,7 @@ function renderScreen() {
   closeGlobe(true);
   for (const id of ['sheet', 'photoViewer']) { const d = document.getElementById(id); if (d && d.open) d.close(); }
   const r = route();
-  const tab = { home: 'home', recipe: 'home', cook: 'home', settings: 'home', world: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
+  const tab = { home: 'home', recipe: 'home', cook: 'home', settings: 'home', shared: 'home', world: 'home', edit: 'new', new: 'new', list: 'list' }[r.name] || 'home';
   document.querySelectorAll('.tab').forEach(t => {
     if (t.dataset.tab === tab) t.setAttribute('aria-current', 'page');
     else t.removeAttribute('aria-current');
@@ -5834,6 +5851,7 @@ function renderScreen() {
     case 'edit': renderForm(r.id); break;
     case 'list': renderList(); break;
     case 'settings': renderSettings(); break;
+    case 'shared': renderShared(); break;
     case 'world': renderWorld(); break;
     case 'cook': renderCook(r.id); break;
     default: location.replace('#/'); return;
@@ -8753,6 +8771,8 @@ async function renderSettings() {
         </details>
       </section>
 
+      ${syncSettingsCard()}
+
       <section class="card sec" aria-labelledby="backupHead">
         <h2 id="backupHead" class="sec-title">Backups</h2>
         <p>Recipes live only on this phone. Save a backup now and then to keep them safe or move them to a new phone.</p>
@@ -8913,6 +8933,488 @@ async function restoreBackup(file) {
   } catch {
     toast("That file isn't a Recipe Box backup.");
   }
+}
+
+// ================================================================
+// Sharing through GitHub
+// ================================================================
+// Two phones share one private GitHub repository. Uploading sends this phone's whole
+// library and replaces the last upload; Get recipes lists what was last uploaded so
+// you can pick which recipes to bring in. Grocery lists stay on each phone.
+//   library.json        who uploaded, when, and one line per recipe
+//   recipes/<id>.json   each recipe in full, photos included
+// Recipes that haven't changed since the last upload aren't sent again.
+
+const GH_API = 'https://api.github.com';
+const SHARE_INDEX = 'library.json';
+
+class GitHubError extends Error {
+  constructor(message, status) { super(message); this.status = status; }
+}
+
+function syncConfig() {
+  const s = state.settings.sync;
+  return s && s.repo && s.token ? s : null;
+}
+
+// Accepts "owner/name", a github.com link, or either with ".git" on the end.
+function parseRepo(text) {
+  const t = String(text || '').trim()
+    .replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/\.git$/i, '').replace(/\/+$/, '');
+  const m = t.match(/^([\w.-]+)\/([\w.-]+)$/);
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+function ghProblem(status, message = '') {
+  if (status === 401) return 'GitHub didn’t accept the access key. It may be mistyped or expired. Make a new key and connect again.';
+  if (status === 403 && /rate limit/i.test(message)) return 'GitHub asked us to slow down. Wait a minute, then try again.';
+  if (status === 403) return 'This access key isn’t allowed to change the repository. On GitHub, set the key’s Contents permission to Read and write.';
+  if (status === 404) return 'GitHub can’t find that repository. Check its name, and that the access key was given that repository.';
+  if (status === 409) return 'The repository is empty. On GitHub, add a README file to it, then try again.';
+  return `GitHub had a problem (${status}). Try again in a moment.`;
+}
+
+async function gh(path, { method = 'GET', body, raw = false, cfg = syncConfig() } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    let res;
+    try {
+      res = await fetch(GH_API + path, {
+        method,
+        cache: 'no-store',
+        headers: {
+          Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
+          Authorization: `Bearer ${cfg.token}`,
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch {
+      throw new GitHubError('Can’t reach GitHub. Check that you’re online, then try again.', 0);
+    }
+    if (res.ok) {
+      if (res.status === 204) return null;
+      return raw ? res.text() : res.json();
+    }
+    let message = '';
+    try { message = (await res.json()).message || ''; } catch { /* no details */ }
+    // A short "slow down" from GitHub: wait as asked, then try once more.
+    const wait = Number(res.headers.get('retry-after'));
+    if ((res.status === 403 || res.status === 429) && wait > 0 && wait <= 60 && attempt < 1) {
+      await new Promise(r => setTimeout(r, wait * 1000));
+      continue;
+    }
+    throw new GitHubError(ghProblem(res.status, message), res.status);
+  }
+}
+
+// The id Git gives a file's contents, so unchanged recipes can be skipped.
+async function gitBlobSha(text) {
+  try {
+    const enc = new TextEncoder();
+    const body = enc.encode(text), head = enc.encode(`blob ${body.length}\0`);
+    const all = new Uint8Array(head.length + body.length);
+    all.set(head); all.set(body, head.length);
+    const d = await crypto.subtle.digest('SHA-1', all);
+    return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch { return null; } // no crypto here: just send everything
+}
+
+function recipeFile(id, used) {
+  const base = 'recipes/' + (String(id).replace(/[^\w-]/g, '_').slice(0, 80) || 'recipe');
+  let path = base + '.json', n = 2;
+  while (used.has(path)) path = `${base}-${n++}.json`;
+  used.add(path);
+  return path;
+}
+
+async function headCommit(cfg) {
+  try {
+    const ref = await gh(`/repos/${cfg.repo}/git/ref/heads/${encodeURIComponent(cfg.branch)}`, { cfg });
+    return ref.object.sha;
+  } catch (e) {
+    if (e.status === 409 || e.status === 404) {
+      // 404 here (with the repo itself found) also means "no commits yet"
+      throw new GitHubError(ghProblem(409), 409);
+    }
+    throw e;
+  }
+}
+
+// The last upload: who sent it, when, and its list of recipes. null if nothing's been uploaded.
+async function readShared(cfg = syncConfig()) {
+  const commit = await headCommit(cfg);
+  try {
+    const text = await gh(`/repos/${cfg.repo}/contents/${SHARE_INDEX}?ref=${commit}`, { raw: true, cfg });
+    const lib = JSON.parse(text);
+    if (!lib || !Array.isArray(lib.recipes)) throw new Error('bad');
+    return { commit, lib };
+  } catch (e) {
+    if (e.status === 404) return { commit, lib: null };
+    if (e instanceof GitHubError) throw e;
+    throw new GitHubError('The shared library on GitHub isn’t readable. Upload from either phone to replace it.', -1);
+  }
+}
+
+async function pushLibrary(onProgress = () => {}) {
+  const cfg = syncConfig();
+  const recipes = [...state.recipes].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  for (let attempt = 0; attempt < 3; attempt++) {
+    onProgress(0, 'Checking GitHub…');
+    const head = await headCommit(cfg);
+    const commit = await gh(`/repos/${cfg.repo}/git/commits/${head}`, { cfg });
+    const tree = await gh(`/repos/${cfg.repo}/git/trees/${commit.tree.sha}?recursive=1`, { cfg });
+    const have = new Map(tree.tree.filter(t => t.type === 'blob').map(t => [t.path, t.sha]));
+
+    const used = new Set(), index = [], changes = [];
+    for (const r of recipes) {
+      const path = recipeFile(r.id, used);
+      const text = JSON.stringify(r);
+      const sha = await gitBlobSha(text);
+      index.push({
+        id: r.id, title: r.title || 'Untitled', category: r.category || '',
+        updatedAt: r.updatedAt || r.createdAt || 0, photos: (r.photos || []).length, file: path,
+      });
+      if (!sha || have.get(path) !== sha) changes.push({ path, content: text });
+    }
+    // Recipes no longer in this library leave the shared copy too (GitHub's history keeps them).
+    for (const p of have.keys()) if (p.startsWith('recipes/') && !used.has(p)) changes.push({ path: p, remove: true });
+    const lib = {
+      app: 'recipe-box', version: 1, uploadedAt: Date.now(), uploadedBy: cfg.name || '',
+      appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', recipes: index,
+    };
+    changes.push({ path: SHARE_INDEX, content: JSON.stringify(lib, null, 1) });
+
+    // Send the files a few megabytes at a time, each batch building on the last.
+    const total = changes.reduce((n, c) => n + (c.content ? c.content.length : 0), 0) || 1;
+    let base = commit.tree.sha, batch = [], size = 0, sent = 0;
+    const flush = async () => {
+      const t = await gh(`/repos/${cfg.repo}/git/trees`, {
+        method: 'POST', cfg,
+        body: {
+          base_tree: base,
+          tree: batch.map(c => c.remove
+            ? { path: c.path, mode: '100644', type: 'blob', sha: null }
+            : { path: c.path, mode: '100644', type: 'blob', content: c.content }),
+        },
+      });
+      base = t.sha;
+      sent += size;
+      onProgress(sent / total, 'Uploading…');
+      batch = []; size = 0;
+    };
+    onProgress(0, 'Uploading…');
+    for (const c of changes) {
+      const n = c.content ? c.content.length : 0;
+      if (batch.length && size + n > 4e6) await flush();
+      batch.push(c); size += n;
+    }
+    await flush();
+
+    const who = cfg.name ? ` from ${cfg.name}` : '';
+    const made = await gh(`/repos/${cfg.repo}/git/commits`, {
+      method: 'POST', cfg,
+      body: { message: `Recipe Box: ${plural(recipes.length, 'recipe')}${who}`, tree: base, parents: [head] },
+    });
+    try {
+      await gh(`/repos/${cfg.repo}/git/refs/heads/${encodeURIComponent(cfg.branch)}`, {
+        method: 'PATCH', cfg, body: { sha: made.sha, force: false },
+      });
+    } catch (e) {
+      // The other phone uploaded in the same moment: start over on top of theirs.
+      if (e.status === 422 && attempt < 2) continue;
+      throw e;
+    }
+    onProgress(1, 'Done');
+    return { count: recipes.length };
+  }
+  throw new GitHubError('The upload kept colliding with another one. Try again.', -1);
+}
+
+// ---------- settings: connect, upload ----------
+
+function syncSettingsCard() {
+  const cfg = syncConfig();
+  const howTo = `
+    <details class="setup">
+      <summary>How to make the repository and key</summary>
+      <ol class="sc">
+        <li>On <b>github.com</b>, tap <b>+</b> › <b>New repository</b>. Name it, choose <b>Private</b>, tick <b>Add a README file</b>, and tap <b>Create repository</b>.</li>
+        <li>Open your picture › <b>Settings</b> › <b>Developer settings</b> › <b>Personal access tokens</b> › <b>Fine-grained tokens</b> › <b>Generate new token</b>.</li>
+        <li>Under <b>Repository access</b>, choose <b>Only select repositories</b> and pick the new one. Under <b>Permissions</b>, set <b>Contents</b> to <b>Read and write</b>.</li>
+        <li>Tap <b>Generate token</b> and copy it. Paste it below on both phones.</li>
+      </ol>
+    </details>`;
+  if (!cfg) return `
+    <section class="card sec" aria-labelledby="shareHead">
+      <h2 id="shareHead" class="sec-title">Share with another phone</h2>
+      <p>Keep a shared copy of your recipes in a private GitHub repository. <b>Upload</b> sends your whole library; on the other phone, <b>Get recipes</b> lets you pick which ones to bring in. Grocery lists stay on each phone.</p>
+      <form id="syncForm" class="sync-form" novalidate>
+        <div class="field">
+          <label for="syncRepo">Repository</label>
+          <input id="syncRepo" name="repo" placeholder="your-name/recipe-box-data" autocapitalize="off" autocorrect="off" spellcheck="false" value="${esc((state.settings.sync || {}).repo || '')}">
+        </div>
+        <div class="field">
+          <label for="syncKey">Access key</label>
+          <input id="syncKey" name="token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="syncName">This phone’s name</label>
+          <input id="syncName" name="name" placeholder="Like Mason or Alex" value="${esc((state.settings.sync || {}).name || '')}">
+        </div>
+        <p class="field-error" id="syncError" role="alert" hidden></p>
+        <button class="btn btn-primary" type="submit" id="syncConnect">Connect</button>
+      </form>
+      ${howTo}
+    </section>`;
+  const last = cfg.lastPush ? `You last uploaded ${plural(cfg.lastPush.count, 'recipe')} on ${fmtWhen(cfg.lastPush.at)}.` : 'You haven’t uploaded from this phone yet.';
+  return `
+    <section class="card sec" aria-labelledby="shareHead">
+      <h2 id="shareHead" class="sec-title">Share with another phone</h2>
+      <p>Connected to <b>${esc(cfg.repo)}</b>${cfg.name ? ` as <b>${esc(cfg.name)}</b>` : ''}.</p>
+      <div class="action-row">
+        <button class="btn btn-primary" data-action="sync-push" id="syncPush">Upload my recipes</button>
+        <a class="btn btn-secondary" href="#/shared">Get recipes</a>
+      </div>
+      <div class="progress" id="syncProgress" hidden>
+        <div class="progress-track"><span class="progress-fill" id="syncFill"></span></div>
+        <p class="progress-label" id="syncLabel"></p>
+      </div>
+      <p class="hint" id="syncLast">${last} Uploading replaces the shared copy with everything on this phone.</p>
+      <button class="text-btn" data-action="sync-disconnect">Disconnect this phone</button>
+    </section>`;
+}
+
+const fmtWhen = ts => new Date(ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+async function connectSync(form) {
+  const err = document.getElementById('syncError');
+  const btn = document.getElementById('syncConnect');
+  const say = msg => { err.textContent = msg; err.hidden = !msg; };
+  const repo = parseRepo(form.repo.value);
+  const token = form.token.value.trim();
+  const name = form.name.value.trim().slice(0, 40);
+  if (!repo) return say('Type the repository as your-name/repository-name.');
+  if (!token) return say('Paste the access key from GitHub.');
+  say('');
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  try {
+    const cfg = { repo, token, name };
+    const info = await gh(`/repos/${repo}`, { cfg });
+    cfg.repo = info.full_name || repo;
+    cfg.branch = info.default_branch || 'main';
+    const { lib } = await readShared(cfg); // also confirms the repo has a first commit
+    state.settings.sync = cfg;
+    await saveSettings();
+    toast(lib ? `Connected. ${plural(lib.recipes.length, 'shared recipe')} waiting in Get recipes.` : 'Connected. Upload your recipes to share them.');
+    state.shared = null;
+    renderSettings();
+  } catch (e) {
+    console.error(e);
+    say(e instanceof GitHubError ? e.message : 'Connecting didn’t work. Try again.');
+    btn.disabled = false; btn.textContent = 'Connect';
+  }
+}
+
+async function uploadLibrary() {
+  const cfg = syncConfig(); if (!cfg) return;
+  const btn = document.getElementById('syncPush');
+  const box = document.getElementById('syncProgress');
+  const show = (f, label) => {
+    if (!box) return;
+    box.hidden = false;
+    document.getElementById('syncFill').style.width = `${Math.round(f * 100)}%`;
+    document.getElementById('syncLabel').textContent = label;
+  };
+  if (btn) btn.disabled = true;
+  try {
+    show(0, 'Checking GitHub…');
+    // Uploading replaces the last upload: point out anything in it this phone doesn't have.
+    const { lib } = await readShared(cfg);
+    if (lib) {
+      const mine = new Set(state.recipes.map(r => r.id));
+      const titles = new Set(state.recipes.map(r => normTitle(r.title)));
+      const missing = lib.recipes.filter(x => !mine.has(x.id) && !titles.has(normTitle(x.title)));
+      if (missing.length) {
+        const names = missing.slice(0, 3).map(x => `“${x.title}”`).join(', ') + (missing.length > 3 ? ` and ${missing.length - 3} more` : '');
+        const from = lib.uploadedBy ? ` from ${lib.uploadedBy}` : '';
+        if (!confirm(`The shared copy${from} has ${plural(missing.length, 'recipe')} that ${missing.length === 1 ? 'isn’t' : 'aren’t'} on this phone: ${names}. Uploading replaces the shared copy, so ${missing.length === 1 ? 'it' : 'they'} won’t be in it any more.\n\nUpload anyway?`)) {
+          box.hidden = true;
+          toast('Tap Get recipes to bring them in first.');
+          return;
+        }
+      }
+    }
+    if (!state.recipes.length && !confirm('This phone has no recipes. Uploading now empties the shared copy. Upload anyway?')) { box.hidden = true; return; }
+    const { count } = await pushLibrary(show);
+    cfg.lastPush = { at: Date.now(), count };
+    await saveSettings();
+    state.shared = null;
+    toast(`Uploaded ${plural(count, 'recipe')}`);
+    const last = document.getElementById('syncLast');
+    if (last) last.textContent = `You last uploaded ${plural(count, 'recipe')} on ${fmtWhen(cfg.lastPush.at)}. Uploading replaces the shared copy with everything on this phone.`;
+    setTimeout(() => { if (box) box.hidden = true; }, 1200);
+  } catch (e) {
+    console.error(e);
+    if (box) box.hidden = true;
+    toast(e instanceof GitHubError ? e.message : 'The upload didn’t finish. Try again.');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ---------- Get recipes: pick from the last upload ----------
+
+const normTitle = t => String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+function sharedMatch(x) {
+  const byId = state.recipes.find(r => r.id === x.id);
+  if (byId) return { local: byId, how: 'id' };
+  const byTitle = state.recipes.find(r => normTitle(r.title) === normTitle(x.title));
+  return byTitle ? { local: byTitle, how: 'title' } : null;
+}
+
+function sharedStatus(x, m) {
+  if (!m) return 'New to this phone';
+  if (m.how === 'title') return 'You have a recipe with this name';
+  const mine = m.local.updatedAt || m.local.createdAt || 0, theirs = x.updatedAt || 0;
+  if (mine === theirs) return 'Same as yours';
+  return theirs > mine ? 'Their copy is newer' : 'Your copy is newer';
+}
+
+async function loadShared() {
+  const cfg = syncConfig(); if (!cfg) return;
+  state.shared = { loading: true, picks: new Map(), q: '' };
+  try {
+    const { commit, lib } = await readShared(cfg);
+    state.shared = { commit, lib, picks: new Map(), q: '' };
+  } catch (e) {
+    console.error(e);
+    state.shared = { error: e instanceof GitHubError ? e.message : 'Couldn’t read the shared recipes. Try again.', picks: new Map(), q: '' };
+  }
+  if (route().name === 'shared') renderShared();
+}
+
+function renderShared() {
+  const cfg = syncConfig();
+  const top = band(`<h1 class="sign">Shared recipes</h1>`, 'band-form', { left: backTo('#/settings', 'Settings'), title: 'Shared recipes' });
+  if (!cfg) {
+    view.innerHTML = `${top}<section class="card sec">
+      <p>Connect this phone to your shared GitHub repository first.</p>
+      <a class="btn btn-primary" href="#/settings">Open Settings</a></section>`;
+    return;
+  }
+  const s = state.shared;
+  if (!s) { view.innerHTML = `${top}<section class="card sec"><p class="hint">Checking GitHub…</p></section>`; loadShared(); return; }
+  if (s.loading) { view.innerHTML = `${top}<section class="card sec"><p class="hint">Checking GitHub…</p></section>`; return; }
+  if (s.error) {
+    view.innerHTML = `${top}<section class="card sec"><p>${esc(s.error)}</p>
+      <button class="btn btn-primary" data-action="shared-refresh">Try again</button></section>`;
+    return;
+  }
+  if (!s.lib || !s.lib.recipes.length) {
+    view.innerHTML = `${top}<section class="card sec">
+      <p>${s.lib ? 'The last upload had no recipes in it.' : 'Nothing has been uploaded yet.'} On the other phone, open Settings and tap <b>Upload my recipes</b>.</p>
+      <button class="btn btn-secondary" data-action="shared-refresh">Check again</button></section>`;
+    return;
+  }
+  const { lib } = s;
+  const from = lib.uploadedBy ? `${esc(lib.uploadedBy)} uploaded` : 'Uploaded:';
+  view.innerHTML = `${top}
+    <section class="card sec shared-head">
+      <p><b>${from} ${plural(lib.recipes.length, 'recipe')}</b> on ${esc(fmtWhen(lib.uploadedAt))}.</p>
+      <p class="hint">Tick the recipes you want. If you already have one, choose whether theirs replaces yours or comes in as a second copy.</p>
+      <div class="action-row">
+        <button class="btn btn-chip" data-action="shared-select" data-which="new">Select all new</button>
+        <button class="btn btn-chip" data-action="shared-select" data-which="all">Select all</button>
+        <button class="btn btn-chip" data-action="shared-select" data-which="none">Clear</button>
+        <button class="btn btn-chip" data-action="shared-refresh">Refresh</button>
+      </div>
+      ${lib.recipes.length > 8 ? `<div class="field shared-search"><label for="sharedSearch" class="sr-only">Search shared recipes</label>
+        <input id="sharedSearch" type="search" placeholder="Search shared recipes" value="${esc(s.q)}" autocomplete="off"></div>` : ''}
+    </section>
+    <section class="card g-card"><ul class="g-list shared-list" id="sharedList"></ul></section>
+    <div class="shared-bar"><button class="btn btn-primary btn-wide" data-action="shared-add" id="sharedAdd"></button></div>`;
+  drawSharedList();
+}
+
+function drawSharedList() {
+  const s = state.shared, list = document.getElementById('sharedList');
+  if (!list || !s || !s.lib) return;
+  const q = normTitle(s.q);
+  const rows = s.lib.recipes.filter(x => !q || normTitle(`${x.title} ${x.category}`).includes(q));
+  list.innerHTML = rows.length ? rows.map(x => {
+    const m = sharedMatch(x), pick = s.picks.get(x.id);
+    const mode = pick ? pick.mode : (m && m.how === 'id' ? 'replace' : 'copy');
+    const sub = [x.category, sharedStatus(x, m)].filter(Boolean).join(' · ');
+    return `<li class="g-item shared-item${m ? ' has-match' : ''}">
+      <label><input type="checkbox" data-shared-pick="${esc(x.id)}" ${pick ? 'checked' : ''}>
+        <span><b>${esc(x.title)}</b><small>${esc(sub)}</small></span></label>
+      ${m ? `<select class="shared-mode" data-shared-mode="${esc(x.id)}" aria-label="If you already have ${esc(x.title)}">
+        <option value="replace" ${mode === 'replace' ? 'selected' : ''}>Replace mine</option>
+        <option value="copy" ${mode === 'copy' ? 'selected' : ''}>Keep both</option>
+      </select>` : ''}
+    </li>`;
+  }).join('') : '<li class="empty-note">No shared recipes match.</li>';
+  updateSharedButton();
+}
+
+function updateSharedButton() {
+  const btn = document.getElementById('sharedAdd'); if (!btn || !state.shared) return;
+  const n = state.shared.picks.size;
+  btn.disabled = !n || !!state.shared.busy;
+  btn.textContent = state.shared.busy || (n ? `Bring in ${plural(n, 'recipe')}` : 'Tick recipes to bring in');
+}
+
+function pickShared(id, on) {
+  const s = state.shared; if (!s || !s.lib) return;
+  const x = s.lib.recipes.find(r => r.id === id); if (!x) return;
+  if (!on) { s.picks.delete(id); return; }
+  const sel = document.querySelector(`[data-shared-mode="${CSS.escape(id)}"]`);
+  const m = sharedMatch(x);
+  s.picks.set(id, { mode: sel ? sel.value : (m && m.how === 'id' ? 'replace' : 'copy') });
+}
+
+async function bringInShared() {
+  const s = state.shared, cfg = syncConfig();
+  if (!s || !s.lib || !cfg || !s.picks.size) return;
+  const chosen = s.lib.recipes.filter(x => s.picks.has(x.id));
+  let added = 0, replaced = 0, failed = 0;
+  for (let i = 0; i < chosen.length; i++) {
+    const x = chosen[i];
+    s.busy = `Bringing in ${i + 1} of ${chosen.length}…`; updateSharedButton();
+    try {
+      const text = await gh(`/repos/${cfg.repo}/contents/${x.file.split('/').map(encodeURIComponent).join('/')}?ref=${s.commit}`, { raw: true, cfg });
+      const theirs = { ingredients: [], steps: [], images: [], photos: [], rating: 0, timesMade: 0, notes: '', createdAt: Date.now(), ...JSON.parse(text) };
+      if (!theirs.title) throw new Error('no title');
+      const m = sharedMatch(x);
+      const mode = s.picks.get(x.id).mode;
+      let rec;
+      if (m && mode === 'replace') { rec = { ...theirs, id: m.local.id }; replaced++; }
+      else if (m) {
+        const tag = s.lib.uploadedBy ? `${s.lib.uploadedBy}’s` : 'shared';
+        rec = { ...theirs, id: uid(), title: `${theirs.title} (${tag} copy)`, createdAt: Date.now() };
+        added++;
+      } else { rec = theirs; added++; }
+      await db.putRecipe(rec); // keeps their "last edited" time, so it shows as the same next time
+      const k = state.recipes.findIndex(r => r.id === rec.id);
+      if (k >= 0) state.recipes[k] = rec; else state.recipes.push(rec);
+      s.picks.delete(x.id);
+    } catch (e) {
+      console.error(e);
+      failed++;
+      if (e instanceof GitHubError && e.status !== 404) { toast(e.message); break; }
+      if (/quota/i.test(e && e.name)) { toast('This phone is out of storage.'); break; }
+    }
+  }
+  s.busy = null;
+  cfg.lastPull = Date.now();
+  await saveSettings();
+  const parts = [];
+  if (added) parts.push(`Added ${plural(added, 'recipe')}`);
+  if (replaced) parts.push(`${added ? 'replaced' : 'Replaced'} ${replaced}`);
+  if (failed && !parts.length) toast(`Couldn’t bring in ${plural(failed, 'recipe')}. Try again.`);
+  else if (parts.length) toast(parts.join(', ') + (failed ? `. ${failed} didn’t come through.` : ''));
+  if (route().name === 'shared') drawSharedList();
 }
 
 // ---------- actions ----------
@@ -9148,6 +9650,27 @@ const actions = {
   },
 
   'backup': () => makeBackup(),
+  'sync-push': () => uploadLibrary(),
+  'sync-disconnect': async () => {
+    if (!confirm('Disconnect this phone from the shared recipes? Your recipes stay on this phone, and the shared copy stays on GitHub.')) return;
+    const { repo, name } = state.settings.sync || {};
+    state.settings.sync = { repo, name };
+    state.shared = null;
+    await saveSettings();
+    toast('Disconnected');
+    renderSettings();
+  },
+  'shared-refresh': () => { state.shared = null; renderShared(); },
+  'shared-select': el => {
+    const s = state.shared; if (!s || !s.lib) return;
+    const which = el.dataset.which;
+    if (which === 'none') s.picks.clear();
+    else for (const x of s.lib.recipes) {
+      if (which === 'all' || !sharedMatch(x)) { const m = sharedMatch(x); if (!s.picks.has(x.id)) s.picks.set(x.id, { mode: m && m.how === 'id' ? 'replace' : 'copy' }); }
+    }
+    drawSharedList();
+  },
+  'shared-add': () => bringInShared(),
   'delete-all': async () => {
     if (!confirm(`Delete all ${plural(state.recipes.length, 'recipe')} and clear the grocery list? This can't be undone.`)) return;
     await db.clearRecipes();
@@ -9222,6 +9745,7 @@ view.addEventListener('paste', e => {
 
 view.addEventListener('input', e => {
   if (e.target.id === 'search') { state.filter.q = e.target.value; renderContents(); }
+  if (e.target.id === 'sharedSearch' && state.shared) { state.shared.q = e.target.value; drawSharedList(); }
   if (e.target.classList.contains('notes-input')) autosize(e.target);
   if (e.target.classList.contains('row-input')) {
     autosize(e.target);
@@ -9265,6 +9789,13 @@ view.addEventListener('change', async e => {
     return;
   }
   if (t.dataset.categoryFor) { await setCategory(t.dataset.categoryFor, t.value); renderContents(); return; }
+  if (t.dataset.sharedPick !== undefined) { pickShared(t.dataset.sharedPick, t.checked); updateSharedButton(); return; }
+  if (t.dataset.sharedMode !== undefined) {
+    const p = state.shared && state.shared.picks.get(t.dataset.sharedMode);
+    if (p) p.mode = t.value;
+    else { pickShared(t.dataset.sharedMode, true); const box = t.closest('li')?.querySelector('[data-shared-pick]'); if (box) box.checked = true; updateSharedButton(); }
+    return;
+  }
   if (t.hasAttribute('data-photo-input')) { const r = currentRecipe(); if (r) await addDishPhotos(r, t.files); t.value = ''; return; }
   if (t.id === 'sort') { state.filter.sort = t.value; renderContents(); }
   else if (t.id === 'photoInput') {
@@ -9294,6 +9825,7 @@ view.addEventListener('change', async e => {
 view.addEventListener('submit', async e => {
   e.preventDefault();
   if (e.target.id === 'recipeForm') submitForm(e.target);
+  if (e.target.id === 'syncForm') connectSync(e.target);
   if (e.target.id === 'addItemForm') {
     const input = document.getElementById('newItem');
     const text = input.value.trim();
