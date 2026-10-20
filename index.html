@@ -2774,20 +2774,36 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
 .gx-titles h2 { margin: 0; font: 800 1rem/1.2 var(--text); letter-spacing: .01em; }
 .gx-titles p { margin: .15rem 0 0; font: 700 .76rem/1.2 var(--text); opacity: .6; }
 
+/* zoom buttons, just above the cards on the right (pinching works too) */
+.gx-zoom {
+  position: absolute; z-index: 2; right: .8rem; top: calc(var(--gx-rail-top, 70vh) - 6.6rem);
+  display: flex; flex-direction: column; gap: .45rem;
+  transition: opacity .4s ease .3s;
+}
+.gx-zbtn {
+  display: grid; place-items: center; width: 2.6rem; height: 2.6rem; padding: 0;
+  border: 0; border-radius: 50%; cursor: pointer; color: #FFFFFF;
+  background: rgba(20, 24, 40, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: opacity .2s ease;
+}
+.gx-zbtn:disabled { opacity: .35; cursor: default; }
+.gx-zbtn:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.gx.gx-enter .gx-zoom, .gx.gx-leave .gx-zoom { opacity: 0; transition-delay: 0s; transition-duration: .2s; }
+
+/* the cards all sit in one spot; script slides each one sideways (the translate property),
+   wrapping round, so the rail has no ends and swiping goes on forever */
 .gx-rail {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  display: flex; gap: var(--gx-gap, 12px); overflow-x: auto; overflow-y: hidden;
-  padding: 1.25rem var(--gx-pad, 24px) calc(var(--safe-bottom) + 1.1rem);
-  scroll-snap-type: x mandatory; scroll-padding-inline: var(--gx-pad, 24px);
-  scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  display: grid; overflow: hidden; touch-action: none;
+  padding: 1.25rem 0 calc(var(--safe-bottom) + 1.1rem);
   transition: opacity .45s ease .28s, transform .6s cubic-bezier(.2, .8, .2, 1) .22s;
 }
-.gx-rail::-webkit-scrollbar { display: none; }
 .gx.gx-enter .gx-rail, .gx.gx-leave .gx-rail { opacity: 0; transform: translateY(2.5rem); transition-delay: 0s; transition-duration: .3s; }
 .gx.gx-enter .gx-head, .gx.gx-leave .gx-head { opacity: 0; transform: translateY(-.75rem); transition-delay: 0s; transition-duration: .25s; }
 
 .gx-card {
-  flex: 0 0 var(--gx-card-w, 320px); scroll-snap-align: center; scroll-snap-stop: always;
+  grid-area: 1 / 1; justify-self: center; width: var(--gx-card-w, 320px); will-change: translate;
   display: grid; grid-template-columns: 8.25rem minmax(0, 1fr); height: 11rem; overflow: hidden;
   border-radius: 20px; background: var(--card); color: var(--ink); font-family: var(--text);
   box-shadow: 0 22px 44px -20px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .1);
@@ -2820,7 +2836,7 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
   .gx-note { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gx, .gx-rail, .gx-head, .gx-card { transition: none; }
+  .gx, .gx-rail, .gx-head, .gx-card, .gx-zoom { transition: none; }
   .gx-card.just-chosen { animation: none; }
 }
 
@@ -2949,6 +2965,17 @@ html.hdr-past body::before { visibility: hidden; }
 
 .checker { position: sticky; top: var(--nav-h); z-index: 9; background: var(--trim-bar, var(--trim)); }
 .band-home + .checker { background: var(--trim-home-bar, var(--trim-home)); }
+/* Once the trim reaches the bar it hands over to an identical copy that lives inside the fixed
+   bar, so the two move as one piece. (On iPhone a sticky strip under a fixed bar can lag a
+   frame behind on a fast scroll, which made the trim jitter and flash a seam.) */
+.nav-trim {
+  position: absolute; left: 0; right: 0; top: var(--nav-h); height: var(--trim-h);
+  background: var(--trim-bar, var(--trim)); -webkit-mask: var(--trim-mask); mask: var(--trim-mask);
+  visibility: hidden; pointer-events: none;
+}
+html[data-view="home"] .nav-trim { background: var(--trim-home-bar, var(--trim-home)); }
+.navbar.trim-pinned .nav-trim { visibility: visible; }
+.navbar.trim-pinned ~ .checker { visibility: hidden; }
 
 /* see-through trims get the page color behind them, since they pin over the content */
 [data-theme="herbarium"], [data-theme="jaipur"], [data-theme="mercado"] {
@@ -3189,6 +3216,459 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 .shared-bar { position: sticky; bottom: calc(var(--tabs-h) + var(--safe-bottom) + .6rem); z-index: 5; margin: 0 0 1rem; }
 .shared-bar .btn { box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
 .shared-bar .btn:disabled { opacity: 1; background: var(--line); color: var(--muted); box-shadow: none; }
+
+/* ================================================================
+   Third set: Seattle, Park City, Austin, Toronto, Amsterdam, Munich, Salzburg, Vienna.
+   ================================================================ */
+/* ---------- Pike Place: a neon market sign over evergreens in the rain ---------- */
+[data-theme="pikeplace"] {
+  --cream: #F5F4EF; --card: #FFFFFF; --aqua: #1E4A3D; --aqua-deep: #22313A; --heading: #1E5A48; --cherry: #C3302A;
+  --cherry-ink: #FFFFFF; --ink: #1B2326; --muted: #515C60; --line: #E0E4E1; --dash: #D6DBD6; --star-off: #E3E5E0;
+  --tab: #172024; --tab-text: #B7C3C6; --mustard: #C9961E; --display: 'Oswald', 'Arial Narrow', sans-serif;
+  --text: 'Source Sans 3', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 700; --display-style: normal;
+  --radius: 10px; --pill-r: 8px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.09)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #22313A;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.1)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #1E4A3D;
+  --band-ink: #F2F0EA; --band-home-ink: #F2F0EA; --sign-ink: #F2F0EA; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .35); --sign-spacing: .02em;
+  --plate-bg: #191D20; --plate-ink: #FF6B5F; --plate-border: 2px solid #C9C3B4;
+  --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #C9C3B4, 0 14px 24px -10px rgba(0, 0, 0, .6); --plate-radius: 8px;
+  --plate-pad: .85rem 1.5rem .75rem; --plate-kicker: 'Public Market';
+  --plate-sign-shadow: 0 0 4px rgba(255, 90, 78, .9), 0 0 14px rgba(255, 60, 50, .55); --plate-accent: #C9C3B4;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%232E5566'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%23143528'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.35)'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 26px; --trim-mask: none;
+  --pill-light-bg: #F2F0EA; --pill-light-ink: #1B2326;
+  --rating-bg: #F2F0EA; --rating-on: #C3302A; --rating-off: #E3E5E0; --rating-focus: #1E5A48; --tab-active: #8FD3B4;
+  --tab-badge: #C3302A; --tab-badge-ink: #FFFFFF; --fav-on: #FF8A80; --label-bg: #191D20; --label-ink: #F2F0EA;
+  --kicker: #F4C35A;
+  color-scheme: light;
+}
+/* ---------- Trail Map: ski-run signs over a topo map and snowy Wasatch peaks ---------- */
+[data-theme="trailmap"] {
+  --cream: #F6F8FA; --card: #FFFFFF; --aqua: #2C5A8C; --aqua-deep: #1E2F4A; --heading: #1E3F66; --cherry: #C9492F;
+  --cherry-ink: #FFFFFF; --ink: #17212E; --muted: #4F5B69; --line: #DCE4EC; --dash: #D3DCE6; --star-off: #E1E7EE;
+  --tab: #142033; --tab-text: #B7C3D3; --mustard: #C98E14; --display: 'Bowlby One', 'Arial Black', sans-serif;
+  --text: 'Barlow', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 400; --display-style: normal;
+  --radius: 8px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.09)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #1E2F4A;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.12)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #2C5A8C;
+  --band-ink: #F6F8FA; --band-home-ink: #F6F8FA; --sign-ink: #F6F8FA; --sign-shadow: 3px 3px 0 #C9492F; --sign-spacing: .01em;
+  --plate-bg: #FFFFFF; --plate-ink: #1E2F4A; --plate-border: 3px solid #1E2F4A;
+  --plate-ring: 0 0 0 4px #FFFFFF, 0 0 0 6px #E87A5D, 0 14px 22px -10px rgba(0, 0, 0, .5); --plate-radius: 8px;
+  --plate-pad: .8rem 1.5rem .7rem; --plate-kicker: 'Fresh tracks'; --plate-sign-shadow: none; --plate-accent: #1E2F4A;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%231E2F4A'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23F6F8FA'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%23C9D6E3'/%3E%3C/svg%3E"); --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%232C5A8C'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23F6F8FA'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%23C9D6E3'/%3E%3C/svg%3E");
+  --trim-h: 26px; --trim-mask: none; --pill-light-bg: #FFFFFF; --pill-light-ink: #17212E;
+  --rating-bg: #FFFFFF; --rating-on: #C9492F; --rating-off: #E1E7EE; --rating-focus: #1E3F66; --tab-active: #F2A487;
+  --tab-badge: #C9492F; --tab-badge-ink: #FFFFFF; --fav-on: #FF9C82; --label-bg: #1E2F4A; --label-ink: #F6F8FA;
+  --kicker: #C9492F;
+  color-scheme: light;
+}
+/* ---------- Honky-Tonk: a screen-printed gig poster, a sunburst and a Lone Star ---------- */
+[data-theme="honkytonk"] {
+  --cream: #FBF3E4; --card: #FFFDF8; --aqua: #E8742A; --aqua-deep: #1F6F78; --heading: #1D5F68; --cherry: #B9441A;
+  --cherry-ink: #FFFFFF; --ink: #1F2A44; --muted: #5A5F6E; --line: #EDE0CA; --dash: #E3D3B6; --star-off: #EDE2D0;
+  --tab: #1F2A44; --tab-text: #C9CFDD; --mustard: #C98A14; --display: 'Rye', 'Rockwell', Georgia, serif;
+  --text: 'Libre Franklin', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 400; --display-style: normal;
+  --radius: 6px; --pill-r: 6px;
+  --band-bg: radial-gradient(rgba(255, 255, 255, .09) 1.2px, transparent 1.7px) 0 0 / 9px 9px, #1F6F78;
+  --band-home-bg: repeating-conic-gradient(from 0deg at 50% 260px, #E8742A 0deg 7.5deg, #F0893D 7.5deg 15deg);
+  --band-ink: #FFF4E2; --band-home-ink: #1F2A44; --sign-ink: #FFF4E2; --sign-shadow: 3px 3px 0 #1F2A44; --sign-spacing: .01em;
+  --plate-bg: #FFF1D6; --plate-ink: #1F2A44; --plate-border: 3px solid #1F2A44;
+  --plate-ring: 5px 5px 0 0 #2A9D8F, 0 14px 22px -10px rgba(0, 0, 0, .45); --plate-radius: 4px;
+  --plate-pad: .8rem 1.5rem .7rem; --plate-kicker: '★ Howdy, y’all ★'; --plate-sign-shadow: 2px 2px 0 #F0A15E; --plate-accent: #1F2A44;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 28 24'%3E%3Crect width='28' height='24' fill='%231F2A44'/%3E%3Crect y='2' width='28' height='1.2' fill='%23FFF1D6'/%3E%3Crect y='20.8' width='28' height='1.2' fill='%23FFF1D6'/%3E%3Cpath d='M14.00,6.20L15.39,10.48L19.90,10.48L16.25,13.13L17.64,17.42L14.00,14.77L10.36,17.42L11.75,13.13L8.10,10.48L12.61,10.48Z' fill='%23FFF1D6'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 24px; --trim-mask: none;
+  --pill-light-bg: #FFF4E2; --pill-light-ink: #1F2A44;
+  --rating-bg: #FFF4E2; --rating-on: #B9441A; --rating-off: #EDE2D0; --rating-focus: #1D5F68; --tab-active: #F5B26B;
+  --tab-badge: #B9441A; --tab-badge-ink: #FFFFFF; --fav-on: #FFA06E; --label-bg: #1F2A44; --label-ink: #FFF4E2;
+  --kicker: #B9441A;
+  color-scheme: light;
+}
+/* ---------- Subway Tile: station tile walls, Line 1 yellow and a red streetcar ---------- */
+[data-theme="subway"] {
+  --cream: #F5F4F0; --card: #FFFFFF; --aqua: #2F8F83; --aqua-deep: #1F2A30; --heading: #1C6C63; --cherry: #D2271B;
+  --cherry-ink: #FFFFFF; --ink: #1A1D1F; --muted: #565C60; --line: #E0E2E0; --dash: #D7D8D2; --star-off: #E3E3DE;
+  --tab: #16191B; --tab-text: #C3C8CA; --mustard: #C9A000; --display: 'League Spartan', 'Futura', 'Helvetica Neue', sans-serif;
+  --text: 'Albert Sans', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 800; --display-style: normal;
+  --radius: 4px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%231F2A30'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.08)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%232F8F83'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.22)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px;
+  --band-ink: #F5F4F0; --band-home-ink: #F5F4F0; --sign-ink: #F5F4F0; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .3); --sign-spacing: -.01em;
+  --plate-bg: #F7F4EC; --plate-ink: #1A1A1A; --plate-border: 0 solid transparent;
+  --plate-ring: 0 0 0 3px #F7F4EC, 0 0 0 5px #1A1A1A, 0 14px 22px -10px rgba(0, 0, 0, .5); --plate-radius: 3px;
+  --plate-pad: .8rem 1.6rem .75rem; --plate-kicker: 'Next stop'; --plate-sign-shadow: none; --plate-accent: #1A1A1A;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%231A1A1A'/%3E%3Crect y='7' width='40' height='6' fill='%23F2C300'/%3E%3Ccircle cx='20' cy='10' r='5' fill='%23FFFFFF' stroke='%231A1A1A' stroke-width='2'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 20px; --trim-mask: none;
+  --pill-light-bg: #FFFFFF; --pill-light-ink: #1A1D1F;
+  --rating-bg: #FFFFFF; --rating-on: #D2271B; --rating-off: #E3E3DE; --rating-focus: #1C6C63; --tab-active: #F2C300;
+  --tab-badge: #D2271B; --tab-badge-ink: #FFFFFF; --fav-on: #FF7A70; --label-bg: #1A1A1A; --label-ink: #F5F4F0;
+  --kicker: #D2271B;
+  color-scheme: light;
+}
+/* ---------- Grachten: gabled canal houses, Delft-blue tiles and tulip orange ---------- */
+[data-theme="grachten"] {
+  --cream: #FAF7F1; --card: #FFFFFF; --aqua: #1F5550; --aqua-deep: #1D2F5E; --heading: #1F3F8F; --cherry: #B9461A;
+  --cherry-ink: #FFFFFF; --ink: #1C2230; --muted: #555C6B; --line: #E3E6EE; --dash: #DCD8CC; --star-off: #E6E3DC;
+  --tab: #172447; --tab-text: #BAC4DD; --mustard: #C98C1A; --display: 'Abril Fatface', 'Didot', Georgia, serif;
+  --text: 'Red Hat Text', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 400; --display-style: normal;
+  --radius: 6px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect x='.5' y='.5' width='39' height='39' fill='none' stroke='rgba(255,255,255,0.08)'/%3E%3Cpath d='M20 13L27 20L20 27L13 20Z' fill='none' stroke='rgba(255,255,255,0.08)'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E") 0 0 / 40px 40px, #1D2F5E;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cpath d='M4 6h10M28 14h12M14 20h7M38 3h5' stroke='rgba(255,255,255,0.12)' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 48px 24px, #1F5550;
+  --band-ink: #FAF7F1; --band-home-ink: #FAF7F1; --sign-ink: #FAF7F1; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .3); --sign-spacing: .01em;
+  --plate-bg: #FFFFFF; --plate-ink: #1F3F8F; --plate-border: 3px solid #1F3F8F;
+  --plate-ring: 0 0 0 3px #FFFFFF, 0 0 0 5px #E8742A, 0 14px 22px -10px rgba(0, 0, 0, .5); --plate-radius: 4px;
+  --plate-pad: .8rem 1.5rem .7rem; --plate-kicker: 'Eet smakelijk'; --plate-sign-shadow: none; --plate-accent: #1F3F8F;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%231D2F5E'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%238C3B2A'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%232E3A35'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%23C98C3A'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%2335574A'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3C/svg%3E");
+  --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%231F5550'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%238C3B2A'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%232E3A35'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%23C98C3A'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%231D2F5E'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,255,255,.85)'/%3E%3C/svg%3E");
+  --trim-h: 30px; --trim-mask: none; --pill-light-bg: #FFFFFF; --pill-light-ink: #1C2230;
+  --rating-bg: #FFFFFF; --rating-on: #B9461A; --rating-off: #E6E3DC; --rating-focus: #1F3F8F; --tab-active: #F59A5C;
+  --tab-badge: #B9461A; --tab-badge-ink: #FFFFFF; --fav-on: #FFA06E; --label-bg: #1D2F5E; --label-ink: #FAF7F1;
+  --kicker: #B9461A;
+  color-scheme: light;
+}
+/* ---------- Biergarten: Bavarian lozenges, a gingerbread heart and bunting ---------- */
+[data-theme="biergarten"] {
+  --cream: #F9F6EF; --card: #FFFFFF; --aqua: #4A97D9; --aqua-deep: #173F73; --heading: #173F73; --cherry: #8B4A22;
+  --cherry-ink: #FFFFFF; --ink: #1D2433; --muted: #575D6A; --line: #E1E6EE; --dash: #DDD6C8; --star-off: #E6E1D6;
+  --tab: #12305A; --tab-text: #BFCDE3; --mustard: #C98E14; --display: 'Grenze Gotisch', 'Old English Text MT', Georgia, serif;
+  --text: 'Source Sans 3', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 700; --display-style: normal;
+  --radius: 10px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 30px 20px, #173F73;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23FFFFFF'/%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='%234A97D9'/%3E%3C/svg%3E") 0 0 / 30px 20px;
+  --band-ink: #F9F6EF; --band-home-ink: #173F73; --sign-ink: #F9F6EF; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .3); --sign-spacing: .01em;
+  --plate-bg: #8B4A22; --plate-ink: #FFF6E8; --plate-border: 3px dotted #FFF4E0;
+  --plate-ring: 0 0 0 5px #8B4A22, 0 0 0 7.5px #E86A92, 0 14px 22px -10px rgba(0, 0, 0, .5); --plate-radius: 999px;
+  --plate-pad: .85rem 1.8rem .8rem; --plate-kicker: 'Servus!'; --plate-sign-shadow: 2px 2px 0 #5E2F12; --plate-accent: #E86A92;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22' viewBox='0 0 40 22'%3E%3Cpath d='M0 3Q10 6 20 3Q30 6 40 3' fill='none' stroke='%238B5A2B' stroke-width='1'/%3E%3Cpath d='M3 4.4L17 4.4L10 18Z' fill='%234A97D9'/%3E%3Cpath d='M23 4.4L37 4.4L30 18Z' fill='%23FFFFFF' stroke='%234A97D9' stroke-width='.8'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 22px; --trim-mask: none;
+  --trim-bar: var(--trim), var(--cream); --trim-home-bar: var(--trim-home), var(--cream);
+  --pill-light-bg: #FFFFFF; --pill-light-ink: #1D2433;
+  --rating-bg: #FFFFFF; --rating-on: #8B4A22; --rating-off: #E6E1D6; --rating-focus: #173F73; --tab-active: #8CC4F2;
+  --tab-badge: #E86A92; --tab-badge-ink: #2A0712; --fav-on: #FF9BB8; --label-bg: #173F73; --label-ink: #FFFFFF;
+  --kicker: #FFD0DE;
+  color-scheme: light;
+}
+/* ---------- Getreidegasse: gilded wrought-iron guild signs on baroque apricot ---------- */
+[data-theme="getreidegasse"] {
+  --cream: #FBF6EC; --card: #FFFFFF; --aqua: #DE9F52; --aqua-deep: #1E1F22; --heading: #2F5A4C; --cherry: #9A2E2A;
+  --cherry-ink: #FFFFFF; --ink: #221D16; --muted: #5E574D; --line: #EDE4D2; --dash: #E3D6BD; --star-off: #EDE4D4;
+  --tab: #1E1F22; --tab-text: #CFC6B4; --mustard: #B8861F; --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --text: 'Figtree', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 700; --display-style: normal;
+  --radius: 10px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 0L40 40M40 0L0 40' stroke='rgba(201,160,74,.14)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='3.2' fill='none' stroke='rgba(201,160,74,.14)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 40px, #1E1F22;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='56' viewBox='0 0 40 56'%3E%3Crect x='5' y='5' width='30' height='46' rx='3' fill='none' stroke='rgba(255,255,255,0.24)' stroke-width='1'/%3E%3Crect x='10' y='10' width='20' height='36' rx='10' fill='none' stroke='rgba(255,255,255,0.168)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 56px, #DE9F52;
+  --band-ink: #F3E7CC; --band-home-ink: #2A1E12; --sign-ink: #F3E7CC; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .35); --sign-spacing: .03em;
+  --plate-bg: #1E1F22; --plate-ink: #E2C06B; --plate-border: 1.5px solid #C9A04A;
+  --plate-ring: 0 0 0 5px #1E1F22, 0 0 0 6.5px #C9A04A, 0 14px 22px -10px rgba(0, 0, 0, .55); --plate-radius: 22px;
+  --plate-pad: .9rem 1.7rem .75rem; --plate-kicker: 'Grüß Gott'; --plate-sign-shadow: 0 1px 0 #6E5420; --plate-accent: #C9A04A;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect y='7' width='32' height='1.6' fill='%231E1F22'/%3E%3Crect y='26.4' width='32' height='1.6' fill='%231E1F22'/%3E%3Crect x='3.2' y='4' width='1.6' height='24' fill='%231E1F22'/%3E%3Cpath d='M1.7999999999999998 4.6L4 0L6.2 4.6Z' fill='%23C9A04A'/%3E%3Crect x='19.2' y='4' width='1.6' height='24' fill='%231E1F22'/%3E%3Cpath d='M17.8 4.6L20 0L22.2 4.6Z' fill='%23C9A04A'/%3E%3Cpath d='M11.2 26C7 22 7 16.5 10 14.5M12.8 26C17 22 17 16.5 14 14.5' fill='none' stroke='%231E1F22' stroke-width='1.3'/%3E%3Ccircle cx='12' cy='12.6' r='1.5' fill='%23C9A04A'/%3E%3Cpath d='M27.2 26C23 22 23 16.5 26 14.5M28.8 26C33 22 33 16.5 30 14.5' fill='none' stroke='%231E1F22' stroke-width='1.3'/%3E%3Ccircle cx='28' cy='12.6' r='1.5' fill='%23C9A04A'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 30px; --trim-mask: none;
+  --trim-bar: var(--trim), var(--cream); --trim-home-bar: var(--trim-home), var(--cream);
+  --pill-light-bg: #FFFDF7; --pill-light-ink: #221D16;
+  --rating-bg: #FFFDF7; --rating-on: #9A2E2A; --rating-off: #EDE4D4; --rating-focus: #2F5A4C; --tab-active: #E2C06B;
+  --tab-badge: #9A2E2A; --tab-badge-ink: #FFFFFF; --fav-on: #F08A80; --label-bg: #1E1F22; --label-ink: #F3E7CC;
+  --kicker: #C9A04A;
+  color-scheme: light;
+}
+/* ---------- Secession: Wiener Werkstätte squares, Klimt gold and Sachertorte brown ---------- */
+[data-theme="secession"] {
+  --cream: #F6F3EC; --card: #FFFFFF; --aqua: #141414; --aqua-deep: #3A2420; --heading: #5A3326; --cherry: #9E2B2B;
+  --cherry-ink: #FFFFFF; --ink: #1A1A1A; --muted: #5B5650; --line: #E5E0D6; --dash: #DAD3C5; --star-off: #E7E2D8;
+  --tab: #141414; --tab-text: #CFC8B8; --mustard: #B8901F; --display: 'Federo', 'Futura', 'Helvetica Neue', sans-serif;
+  --text: 'Jost', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 400; --display-style: normal;
+  --radius: 0px; --pill-r: 0px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(201,163,63,.16)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #3A2420;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(255,255,255,.16)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #141414;
+  --band-ink: #F6EEDF; --band-home-ink: #F6F3EC; --sign-ink: #F6EEDF; --sign-shadow: none; --sign-spacing: .04em;
+  --plate-bg: linear-gradient(135deg, #E8CB6C, #B98E2E 55%, #E3C566); --plate-ink: #141414; --plate-border: 0 solid transparent;
+  --plate-ring: 0 0 0 3px #141414, 0 0 0 4.5px #F6F3EC, 0 0 0 7px #141414, 0 14px 22px -10px rgba(0, 0, 0, .6); --plate-radius: 0px;
+  --plate-pad: .85rem 1.6rem .7rem; --plate-kicker: 'Mahlzeit!'; --plate-sign-shadow: none; --plate-accent: #141414;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='18' viewBox='0 0 20 18'%3E%3Crect width='20' height='18' fill='%23141414'/%3E%3Crect y='1.2' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect y='16' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect x='3' y='6' width='6' height='6' fill='%23F6F3EC'/%3E%3Crect x='13' y='7' width='4' height='4' fill='%23C9A33F'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 18px; --trim-mask: none;
+  --pill-light-bg: #FFFFFF; --pill-light-ink: #1A1A1A;
+  --rating-bg: #FFFFFF; --rating-on: #9E2B2B; --rating-off: #E7E2D8; --rating-focus: #5A3326; --tab-active: #E3C566;
+  --tab-badge: #C9A33F; --tab-badge-ink: #141414; --fav-on: #F08A80; --label-bg: #141414; --label-ink: #F6F3EC;
+  --kicker: #141414;
+  color-scheme: light;
+}
+[data-mode="dark"][data-theme="pikeplace"], [data-mode="dark"] [data-theme="pikeplace"] {
+    --cream: #0F1416; --card: #182024; --aqua: #173A30; --aqua-deep: #182329; --heading: #8FD6B8; --cherry: #F0645A;
+    --cherry-ink: #2A0705; --ink: #ECEFEA; --muted: #A6B1B0; --line: #25323A; --dash: #2E3B42; --star-off: #34424A;
+    --tab: #080C0E; --tab-text: #9FACAF; --mustard: #E6B44E;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.06)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #182329; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.07)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #173A30;
+    --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #8E897D, 0 14px 24px -10px rgba(0, 0, 0, .8); --plate-border: 2px solid #8E897D;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%231C3640'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%230B2119'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.18)'/%3E%3C/svg%3E");
+    --rating-off: #DCE0DC; --tab-badge: #F0645A; --tab-badge-ink: #2A0705; --label-bg: #0A0D0F;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="trailmap"], [data-mode="dark"] [data-theme="trailmap"] {
+    --cream: #0E141C; --card: #172130; --aqua: #1C3A5C; --aqua-deep: #121D2E; --heading: #9CC3EE; --cherry: #F07A5C;
+    --cherry-ink: #2A0B04; --ink: #EDF1F6; --muted: #A5B1C0; --line: #243246; --dash: #2D3B50; --star-off: #34445A;
+    --tab: #070B11; --tab-text: #9DAABB; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #121D2E; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.09)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #1C3A5C;
+    --plate-bg: #EDF1F6; --plate-ring: 0 0 0 4px #EDF1F6, 0 0 0 6px #E87A5D, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%23121D2E'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23D5DEE8'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%238FA2B8'/%3E%3C/svg%3E"); --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%231C3A5C'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23D5DEE8'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%238FA2B8'/%3E%3C/svg%3E");
+    --rating-off: #DCE4EC; --tab-badge: #F07A5C; --tab-badge-ink: #2A0B04; --label-bg: #0B1220; --kicker: #D9563A;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="honkytonk"], [data-mode="dark"] [data-theme="honkytonk"] {
+    --cream: #13120F; --card: #1E1C18; --aqua: #8A3F14; --aqua-deep: #134247; --heading: #7FCFD6; --cherry: #F08A4B;
+    --cherry-ink: #2A0E02; --ink: #F5EEE2; --muted: #B4AB9C; --line: #322D25; --dash: #3B352C; --star-off: #463F35;
+    --tab: #0A0907; --tab-text: #ABA392; --mustard: #E6B24A;
+    --band-bg: radial-gradient(rgba(255, 255, 255, .06) 1.2px, transparent 1.7px) 0 0 / 9px 9px, #134247;
+    --band-home-bg: repeating-conic-gradient(from 0deg at 50% 260px, #8A3F14 0deg 7.5deg, #9A4A1B 7.5deg 15deg);
+    --band-home-ink: #FFF4E2; --plate-bg: #F5E6C8;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 28 24'%3E%3Crect width='28' height='24' fill='%230B0F1A'/%3E%3Crect y='2' width='28' height='1.2' fill='%23E9D8B4'/%3E%3Crect y='20.8' width='28' height='1.2' fill='%23E9D8B4'/%3E%3Cpath d='M14.00,6.20L15.39,10.48L19.90,10.48L16.25,13.13L17.64,17.42L14.00,14.77L10.36,17.42L11.75,13.13L8.10,10.48L12.61,10.48Z' fill='%23E9D8B4'/%3E%3C/svg%3E");
+    --rating-off: #E6DCCB; --tab-badge: #F08A4B; --tab-badge-ink: #2A0E02; --label-bg: #0B0F1A; --kicker: #B9441A;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="subway"], [data-mode="dark"] [data-theme="subway"] {
+    --cream: #101213; --card: #1A1E20; --aqua: #1C5A53; --aqua-deep: #141B1F; --heading: #7FD6CB; --cherry: #F05A4E;
+    --cherry-ink: #2A0402; --ink: #EEF0EE; --muted: #A8AEB0; --line: #283034; --dash: #30383C; --star-off: #384044;
+    --tab: #08090A; --tab-text: #A3A9AB; --mustard: #E6C24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%23141B1F'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%231C5A53'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.14)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px;
+    --plate-bg: #E9E5DA; --plate-ring: 0 0 0 3px #E9E5DA, 0 0 0 5px #0A0A0A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%230A0A0A'/%3E%3Crect y='7' width='40' height='6' fill='%23D9AE00'/%3E%3Ccircle cx='20' cy='10' r='5' fill='%23E9E5DA' stroke='%230A0A0A' stroke-width='2'/%3E%3C/svg%3E");
+    --rating-off: #DDDDD6; --tab-badge: #F05A4E; --tab-badge-ink: #2A0402; --label-bg: #0A0A0A; --kicker: #D2271B;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="grachten"], [data-mode="dark"] [data-theme="grachten"] {
+    --cream: #0F1218; --card: #181D27; --aqua: #163C39; --aqua-deep: #141F3E; --heading: #A9BEF2; --cherry: #F0844B;
+    --cherry-ink: #2A0E02; --ink: #EEF0F4; --muted: #A8AEBC; --line: #262D3C; --dash: #303746; --star-off: #383F50;
+    --tab: #080A10; --tab-text: #A0A8BE; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect x='.5' y='.5' width='39' height='39' fill='none' stroke='rgba(255,255,255,0.06)'/%3E%3Cpath d='M20 13L27 20L20 27L13 20Z' fill='none' stroke='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E") 0 0 / 40px 40px, #141F3E; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cpath d='M4 6h10M28 14h12M14 20h7M38 3h5' stroke='rgba(255,255,255,0.08)' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 48px 24px, #163C39;
+    --plate-bg: #EEF0F4; --plate-ring: 0 0 0 3px #EEF0F4, 0 0 0 5px #E8742A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%23141F3E'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%236E2E21'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%2320292A'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%239C6C2C'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%2328433A'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3C/svg%3E");
+    --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%23163C39'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%236E2E21'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%2320292A'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%239C6C2C'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%23141F3E'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3C/svg%3E");
+    --rating-off: #DDE0E8; --tab-badge: #F0844B; --tab-badge-ink: #2A0E02; --label-bg: #0A1024;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="biergarten"], [data-mode="dark"] [data-theme="biergarten"] {
+    --cream: #0F131B; --card: #181E2A; --aqua: #1E4E80; --aqua-deep: #10294C; --heading: #9CC6F2; --cherry: #D9894F;
+    --cherry-ink: #2A1203; --ink: #EEF1F6; --muted: #A6AEBD; --line: #263042; --dash: #2F384A; --star-off: #384254;
+    --tab: #070A10; --tab-text: #A0ABC0; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 30px 20px, #10294C; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%231E4E80'/%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='%232A64A0'/%3E%3C/svg%3E") 0 0 / 30px 20px;
+    --band-home-ink: #EEF1F6; --plate-bg: #7A3F1C; --plate-ring: 0 0 0 5px #7A3F1C, 0 0 0 7.5px #D9567E, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22' viewBox='0 0 40 22'%3E%3Cpath d='M0 3Q10 6 20 3Q30 6 40 3' fill='none' stroke='%23B08A60' stroke-width='1'/%3E%3Cpath d='M3 4.4L17 4.4L10 18Z' fill='%234A97D9'/%3E%3Cpath d='M23 4.4L37 4.4L30 18Z' fill='%23DDE6F2' stroke='%234A97D9' stroke-width='.8'/%3E%3C/svg%3E");
+    --rating-off: #DCE2EC; --tab-badge: #E86A92; --label-bg: #0A1A33;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="getreidegasse"], [data-mode="dark"] [data-theme="getreidegasse"] {
+    --cream: #121110; --card: #1C1A18; --aqua: #7A5226; --aqua-deep: #141516; --heading: #8FCBB6; --cherry: #E0605A;
+    --cherry-ink: #2A0605; --ink: #F3EEE6; --muted: #B2AA9C; --line: #2E2A25; --dash: #383229; --star-off: #423B32;
+    --tab: #0A0A0B; --tab-text: #ABA392; --mustard: #E2B04A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 0L40 40M40 0L0 40' stroke='rgba(201,160,74,.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='3.2' fill='none' stroke='rgba(201,160,74,.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 40px, #141516; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='56' viewBox='0 0 40 56'%3E%3Crect x='5' y='5' width='30' height='46' rx='3' fill='none' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Crect x='10' y='10' width='20' height='36' rx='10' fill='none' stroke='rgba(255,255,255,0.084)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 56px, #7A5226;
+    --band-home-ink: #F6E9D2; --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect y='7' width='32' height='1.6' fill='%23C9A04A'/%3E%3Crect y='26.4' width='32' height='1.6' fill='%23C9A04A'/%3E%3Crect x='3.2' y='4' width='1.6' height='24' fill='%23C9A04A'/%3E%3Cpath d='M1.7999999999999998 4.6L4 0L6.2 4.6Z' fill='%23E2C06B'/%3E%3Crect x='19.2' y='4' width='1.6' height='24' fill='%23C9A04A'/%3E%3Cpath d='M17.8 4.6L20 0L22.2 4.6Z' fill='%23E2C06B'/%3E%3Cpath d='M11.2 26C7 22 7 16.5 10 14.5M12.8 26C17 22 17 16.5 14 14.5' fill='none' stroke='%23C9A04A' stroke-width='1.3'/%3E%3Ccircle cx='12' cy='12.6' r='1.5' fill='%23E2C06B'/%3E%3Cpath d='M27.2 26C23 22 23 16.5 26 14.5M28.8 26C33 22 33 16.5 30 14.5' fill='none' stroke='%23C9A04A' stroke-width='1.3'/%3E%3Ccircle cx='28' cy='12.6' r='1.5' fill='%23E2C06B'/%3E%3C/svg%3E");
+    --rating-off: #E6DED0; --tab-badge: #E0605A; --tab-badge-ink: #2A0605; --label-bg: #0A0A0B;
+    color-scheme: dark;
+  }
+[data-mode="dark"][data-theme="secession"], [data-mode="dark"] [data-theme="secession"] {
+    --cream: #100F0E; --card: #1B1918; --aqua: #0A0A0A; --aqua-deep: #2A1A17; --heading: #E3C566; --cherry: #E0625A;
+    --cherry-ink: #2A0605; --ink: #F3EFE8; --muted: #B0AAA0; --line: #2C2926; --dash: #36322D; --star-off: #403B35;
+    --tab: #060606; --tab-text: #ABA597; --mustard: #E2B84A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(201,163,63,.12)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #2A1A17; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(255,255,255,.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #0A0A0A;
+    --plate-ring: 0 0 0 3px #0A0A0A, 0 0 0 4.5px #C9A33F, 0 0 0 7px #0A0A0A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='18' viewBox='0 0 20 18'%3E%3Crect width='20' height='18' fill='%230A0A0A'/%3E%3Crect y='1.2' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect y='16' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect x='3' y='6' width='6' height='6' fill='%23D8D2C6'/%3E%3Crect x='13' y='7' width='4' height='4' fill='%23C9A33F'/%3E%3C/svg%3E");
+    --rating-off: #E2DCD0; --label-bg: #000000;
+    color-scheme: dark;
+  }
+@media (prefers-color-scheme: dark) {
+  [data-mode="auto"][data-theme="pikeplace"], [data-mode="auto"] [data-theme="pikeplace"] {
+    --cream: #0F1416; --card: #182024; --aqua: #173A30; --aqua-deep: #182329; --heading: #8FD6B8; --cherry: #F0645A;
+    --cherry-ink: #2A0705; --ink: #ECEFEA; --muted: #A6B1B0; --line: #25323A; --dash: #2E3B42; --star-off: #34424A;
+    --tab: #080C0E; --tab-text: #9FACAF; --mustard: #E6B44E;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.06)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #182329; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.07)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #173A30;
+    --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #8E897D, 0 14px 24px -10px rgba(0, 0, 0, .8); --plate-border: 2px solid #8E897D;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%231C3640'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%230B2119'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.18)'/%3E%3C/svg%3E");
+    --rating-off: #DCE0DC; --tab-badge: #F0645A; --tab-badge-ink: #2A0705; --label-bg: #0A0D0F;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="trailmap"], [data-mode="auto"] [data-theme="trailmap"] {
+    --cream: #0E141C; --card: #172130; --aqua: #1C3A5C; --aqua-deep: #121D2E; --heading: #9CC3EE; --cherry: #F07A5C;
+    --cherry-ink: #2A0B04; --ink: #EDF1F6; --muted: #A5B1C0; --line: #243246; --dash: #2D3B50; --star-off: #34445A;
+    --tab: #070B11; --tab-text: #9DAABB; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #121D2E; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='48' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.09)' stroke-width='1'%3E%3Cpath d='M0 8Q15 2 30 8T60 8T90 8T120 8'/%3E%3Cpath d='M0 22Q10 17 20 22T40 22T60 22T80 22T100 22T120 22'/%3E%3Cpath d='M0 38Q30 30 60 38T120 38'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 120px 48px, #1C3A5C;
+    --plate-bg: #EDF1F6; --plate-ring: 0 0 0 4px #EDF1F6, 0 0 0 6px #E87A5D, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%23121D2E'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23D5DEE8'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%238FA2B8'/%3E%3C/svg%3E"); --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='26' viewBox='0 0 48 26'%3E%3Crect width='48' height='26' fill='%231C3A5C'/%3E%3Cpath d='M0 26V18L9 9L15 14L24 3L33 13L39 8L48 18V26Z' fill='%23D5DEE8'/%3E%3Cpath d='M0 26V22L6 18L14 23L22 17L30 22L38 16L48 22V26Z' fill='%238FA2B8'/%3E%3C/svg%3E");
+    --rating-off: #DCE4EC; --tab-badge: #F07A5C; --tab-badge-ink: #2A0B04; --label-bg: #0B1220; --kicker: #D9563A;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="honkytonk"], [data-mode="auto"] [data-theme="honkytonk"] {
+    --cream: #13120F; --card: #1E1C18; --aqua: #8A3F14; --aqua-deep: #134247; --heading: #7FCFD6; --cherry: #F08A4B;
+    --cherry-ink: #2A0E02; --ink: #F5EEE2; --muted: #B4AB9C; --line: #322D25; --dash: #3B352C; --star-off: #463F35;
+    --tab: #0A0907; --tab-text: #ABA392; --mustard: #E6B24A;
+    --band-bg: radial-gradient(rgba(255, 255, 255, .06) 1.2px, transparent 1.7px) 0 0 / 9px 9px, #134247;
+    --band-home-bg: repeating-conic-gradient(from 0deg at 50% 260px, #8A3F14 0deg 7.5deg, #9A4A1B 7.5deg 15deg);
+    --band-home-ink: #FFF4E2; --plate-bg: #F5E6C8;
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 28 24'%3E%3Crect width='28' height='24' fill='%230B0F1A'/%3E%3Crect y='2' width='28' height='1.2' fill='%23E9D8B4'/%3E%3Crect y='20.8' width='28' height='1.2' fill='%23E9D8B4'/%3E%3Cpath d='M14.00,6.20L15.39,10.48L19.90,10.48L16.25,13.13L17.64,17.42L14.00,14.77L10.36,17.42L11.75,13.13L8.10,10.48L12.61,10.48Z' fill='%23E9D8B4'/%3E%3C/svg%3E");
+    --rating-off: #E6DCCB; --tab-badge: #F08A4B; --tab-badge-ink: #2A0E02; --label-bg: #0B0F1A; --kicker: #B9441A;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="subway"], [data-mode="auto"] [data-theme="subway"] {
+    --cream: #101213; --card: #1A1E20; --aqua: #1C5A53; --aqua-deep: #141B1F; --heading: #7FD6CB; --cherry: #F05A4E;
+    --cherry-ink: #2A0402; --ink: #EEF0EE; --muted: #A8AEB0; --line: #283034; --dash: #30383C; --star-off: #384044;
+    --tab: #08090A; --tab-text: #A3A9AB; --mustard: #E6C24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%23141B1F'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.06)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%231C5A53'/%3E%3Cpath d='M0 .5H32M0 8.5H32M.5 0V8M16.5 8V16' stroke='rgba(255,255,255,0.14)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 32px 16px;
+    --plate-bg: #E9E5DA; --plate-ring: 0 0 0 3px #E9E5DA, 0 0 0 5px #0A0A0A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%230A0A0A'/%3E%3Crect y='7' width='40' height='6' fill='%23D9AE00'/%3E%3Ccircle cx='20' cy='10' r='5' fill='%23E9E5DA' stroke='%230A0A0A' stroke-width='2'/%3E%3C/svg%3E");
+    --rating-off: #DDDDD6; --tab-badge: #F05A4E; --tab-badge-ink: #2A0402; --label-bg: #0A0A0A; --kicker: #D2271B;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="grachten"], [data-mode="auto"] [data-theme="grachten"] {
+    --cream: #0F1218; --card: #181D27; --aqua: #163C39; --aqua-deep: #141F3E; --heading: #A9BEF2; --cherry: #F0844B;
+    --cherry-ink: #2A0E02; --ink: #EEF0F4; --muted: #A8AEBC; --line: #262D3C; --dash: #303746; --star-off: #383F50;
+    --tab: #080A10; --tab-text: #A0A8BE; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect x='.5' y='.5' width='39' height='39' fill='none' stroke='rgba(255,255,255,0.06)'/%3E%3Cpath d='M20 13L27 20L20 27L13 20Z' fill='none' stroke='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='20' cy='20' r='1.6' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E") 0 0 / 40px 40px, #141F3E; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cpath d='M4 6h10M28 14h12M14 20h7M38 3h5' stroke='rgba(255,255,255,0.08)' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 48px 24px, #163C39;
+    --plate-bg: #EEF0F4; --plate-ring: 0 0 0 3px #EEF0F4, 0 0 0 5px #E8742A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%23141F3E'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%236E2E21'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%2320292A'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%239C6C2C'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%2328433A'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3C/svg%3E");
+    --trim-home: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='30' viewBox='0 0 72 30'%3E%3Crect width='72' height='30' fill='%23163C39'/%3E%3Cpath d='M0 30V12H3V9H6V6H12V9H15V12H18V30Z' fill='%236E2E21'/%3E%3Cpath d='M18 30V12C18 10 21 10 21 7C21 4 24 3 27 3C30 3 33 4 33 7C33 10 36 10 36 12V30Z' fill='%2320292A'/%3E%3Cpath d='M36 30V14H39V8H42V5H48V8H51V14H54V30Z' fill='%239C6C2C'/%3E%3Cpath d='M54 30V13L63 4L72 13V30Z' fill='%23141F3E'/%3E%3Crect x='4' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='15' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='4' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='11' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='7.5' y='8.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='14' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='22' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='29' y='22' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='25.5' y='6.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='40' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='47' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='43.5' y='9.5' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='16' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='58' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='65' y='23' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3Crect x='61.5' y='9' width='3' height='4.5' fill='rgba(255,230,160,.75)'/%3E%3C/svg%3E");
+    --rating-off: #DDE0E8; --tab-badge: #F0844B; --tab-badge-ink: #2A0E02; --label-bg: #0A1024;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="biergarten"], [data-mode="auto"] [data-theme="biergarten"] {
+    --cream: #0F131B; --card: #181E2A; --aqua: #1E4E80; --aqua-deep: #10294C; --heading: #9CC6F2; --cherry: #D9894F;
+    --cherry-ink: #2A1203; --ink: #EEF1F6; --muted: #A6AEBD; --line: #263042; --dash: #2F384A; --star-off: #384254;
+    --tab: #070A10; --tab-text: #A0ABC0; --mustard: #E6B24A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 30px 20px, #10294C; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='20' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%231E4E80'/%3E%3Cpath d='M15 0L30 10L15 20L0 10Z' fill='%232A64A0'/%3E%3C/svg%3E") 0 0 / 30px 20px;
+    --band-home-ink: #EEF1F6; --plate-bg: #7A3F1C; --plate-ring: 0 0 0 5px #7A3F1C, 0 0 0 7.5px #D9567E, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='22' viewBox='0 0 40 22'%3E%3Cpath d='M0 3Q10 6 20 3Q30 6 40 3' fill='none' stroke='%23B08A60' stroke-width='1'/%3E%3Cpath d='M3 4.4L17 4.4L10 18Z' fill='%234A97D9'/%3E%3Cpath d='M23 4.4L37 4.4L30 18Z' fill='%23DDE6F2' stroke='%234A97D9' stroke-width='.8'/%3E%3C/svg%3E");
+    --rating-off: #DCE2EC; --tab-badge: #E86A92; --label-bg: #0A1A33;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="getreidegasse"], [data-mode="auto"] [data-theme="getreidegasse"] {
+    --cream: #121110; --card: #1C1A18; --aqua: #7A5226; --aqua-deep: #141516; --heading: #8FCBB6; --cherry: #E0605A;
+    --cherry-ink: #2A0605; --ink: #F3EEE6; --muted: #B2AA9C; --line: #2E2A25; --dash: #383229; --star-off: #423B32;
+    --tab: #0A0A0B; --tab-text: #ABA392; --mustard: #E2B04A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 0L40 40M40 0L0 40' stroke='rgba(201,160,74,.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='3.2' fill='none' stroke='rgba(201,160,74,.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 40px, #141516; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='56' viewBox='0 0 40 56'%3E%3Crect x='5' y='5' width='30' height='46' rx='3' fill='none' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Crect x='10' y='10' width='20' height='36' rx='10' fill='none' stroke='rgba(255,255,255,0.084)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 56px, #7A5226;
+    --band-home-ink: #F6E9D2; --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect y='7' width='32' height='1.6' fill='%23C9A04A'/%3E%3Crect y='26.4' width='32' height='1.6' fill='%23C9A04A'/%3E%3Crect x='3.2' y='4' width='1.6' height='24' fill='%23C9A04A'/%3E%3Cpath d='M1.7999999999999998 4.6L4 0L6.2 4.6Z' fill='%23E2C06B'/%3E%3Crect x='19.2' y='4' width='1.6' height='24' fill='%23C9A04A'/%3E%3Cpath d='M17.8 4.6L20 0L22.2 4.6Z' fill='%23E2C06B'/%3E%3Cpath d='M11.2 26C7 22 7 16.5 10 14.5M12.8 26C17 22 17 16.5 14 14.5' fill='none' stroke='%23C9A04A' stroke-width='1.3'/%3E%3Ccircle cx='12' cy='12.6' r='1.5' fill='%23E2C06B'/%3E%3Cpath d='M27.2 26C23 22 23 16.5 26 14.5M28.8 26C33 22 33 16.5 30 14.5' fill='none' stroke='%23C9A04A' stroke-width='1.3'/%3E%3Ccircle cx='28' cy='12.6' r='1.5' fill='%23E2C06B'/%3E%3C/svg%3E");
+    --rating-off: #E6DED0; --tab-badge: #E0605A; --tab-badge-ink: #2A0605; --label-bg: #0A0A0B;
+    color-scheme: dark;
+  }
+  [data-mode="auto"][data-theme="secession"], [data-mode="auto"] [data-theme="secession"] {
+    --cream: #100F0E; --card: #1B1918; --aqua: #0A0A0A; --aqua-deep: #2A1A17; --heading: #E3C566; --cherry: #E0625A;
+    --cherry-ink: #2A0605; --ink: #F3EFE8; --muted: #B0AAA0; --line: #2C2926; --dash: #36322D; --star-off: #403B35;
+    --tab: #060606; --tab-text: #ABA597; --mustard: #E2B84A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(201,163,63,.12)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #2A1A17; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Crect x='1.5' y='1.5' width='11' height='11' fill='none' stroke='rgba(255,255,255,.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 14px 14px, #0A0A0A;
+    --plate-ring: 0 0 0 3px #0A0A0A, 0 0 0 4.5px #C9A33F, 0 0 0 7px #0A0A0A, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='18' viewBox='0 0 20 18'%3E%3Crect width='20' height='18' fill='%230A0A0A'/%3E%3Crect y='1.2' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect y='16' width='20' height='.8' fill='%23C9A33F'/%3E%3Crect x='3' y='6' width='6' height='6' fill='%23D8D2C6'/%3E%3Crect x='13' y='7' width='4' height='4' fill='%23C9A33F'/%3E%3C/svg%3E");
+    --rating-off: #E2DCD0; --label-bg: #000000;
+    color-scheme: dark;
+  }
+}
+/* Pike Place */
+[data-theme="pikeplace"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .3em; text-shadow: 0 0 6px rgba(244, 195, 90, .7); }
+[data-theme="pikeplace"] .ticket { border: 1.5px solid var(--line); border-radius: 10px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.7rem 1fr; padding: 1rem; }
+[data-theme="pikeplace"] .ticket::before { display: none; }
+[data-theme="pikeplace"] .ticket-num {
+  display: grid; place-items: center; width: 2.35rem; height: 2.35rem; border-radius: 7px;
+  background: #191D20; color: #FF6B5F; font-size: 1.25rem; text-shadow: 0 0 5px rgba(255, 90, 78, .85);
+  box-shadow: inset 0 0 0 1.5px #C9C3B4;
+}
+[data-theme="pikeplace"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); text-shadow: none; box-shadow: none; }
+[data-theme="pikeplace"] .tp-num { text-shadow: none; }
+/* Trail Map */
+[data-theme="trailmap"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .22em; }
+/* steps marked like ski runs: green circle, blue square, black diamond, round and round */
+[data-theme="trailmap"] .ticket { border: 1.5px solid var(--line); border-radius: 8px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.7rem 1fr; padding: 1rem; }
+[data-theme="trailmap"] .ticket::before { display: none; }
+[data-theme="trailmap"] .ticket-num {
+  position: relative; isolation: isolate; display: grid; place-items: center; width: 2.3rem; height: 2.3rem;
+  color: #FFFFFF; font: 700 1.05rem/1 var(--text);
+}
+[data-theme="trailmap"] .ticket-num::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: #2E8B57; }
+[data-theme="trailmap"] .ticket:nth-child(3n+2) .ticket-num::after { border-radius: 3px; background: #2F6FC0; }
+[data-theme="trailmap"] .ticket:nth-child(3n) .ticket-num::after { inset: 4px; border-radius: 2px; transform: rotate(45deg); background: #17212E; }
+[data-mode="dark"] [data-theme="trailmap"] .ticket:nth-child(3n) .ticket-num::after, [data-mode="dark"][data-theme="trailmap"] .ticket:nth-child(3n) .ticket-num::after { box-shadow: 0 0 0 1.5px #A5B1C0; }
+[data-theme="trailmap"] .ticket.done .ticket-num { color: var(--muted); }
+[data-theme="trailmap"] .ticket.done .ticket-num::after { background: var(--line); box-shadow: none; }
+/* Honky-Tonk */
+[data-theme="honkytonk"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .14em; }
+/* each step on a guitar pick */
+[data-theme="honkytonk"] .ticket { border: 2px solid var(--ink); border-radius: 4px; box-shadow: 4px 4px 0 #2A9D8F; grid-template-columns: 2.8rem 1fr; padding: 1rem; }
+[data-mode="dark"] [data-theme="honkytonk"] .ticket, [data-mode="dark"][data-theme="honkytonk"] .ticket { border-color: var(--line); box-shadow: 4px 4px 0 #134247; }
+[data-theme="honkytonk"] .ticket::before { display: none; }
+[data-theme="honkytonk"] .ticket-num {
+  display: grid; place-items: center; width: 38px; height: 38px; padding-bottom: 6px;
+  clip-path: path('M19 38C8 31 0 19 1 10C2 3 9 0 19 0C29 0 36 3 37 10C38 19 30 31 19 38Z');
+  background: #E8742A; color: #1F2A44; font: 800 1.05rem/1 var(--text);
+}
+[data-theme="honkytonk"] .ticket:nth-child(even) .ticket-num { background: #2A9D8F; color: #FFFFFF; }
+[data-theme="honkytonk"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); }
+[data-theme="honkytonk"] .band-home .band-sub { display: inline-block; margin-top: 1rem; padding: .2rem .8rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); opacity: 1; }
+html[data-theme="honkytonk"]:not([data-view="page"]) .nav-title > span { display: inline-block; max-width: 100%; vertical-align: middle; padding: .2rem .75rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); }
+html[data-theme="honkytonk"]:not([data-view="page"]) .band-settings { background: var(--label-bg); color: var(--label-ink); width: 2.5rem; height: 2.5rem; margin-right: .2rem; }
+/* Subway Tile */
+[data-theme="subway"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .24em; }
+/* the steps are stops on a yellow line */
+[data-theme="subway"] .tickets { position: relative; }
+[data-theme="subway"] .tickets::before { content: ''; position: absolute; left: calc(1rem + 1.1rem - 3px); top: 1.5rem; bottom: 1.5rem; width: 6px; background: #F2C300; border-radius: 3px; }
+[data-theme="subway"] .ticket { border: 1.5px solid var(--line); border-radius: 4px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.6rem 1fr; padding: 1rem; }
+[data-theme="subway"] .ticket::before { display: none; }
+[data-theme="subway"] .ticket-num {
+  display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%;
+  background: #FFFFFF; color: #1A1A1A; border: 3.5px solid #1A1A1A; font: 800 1rem/1 var(--text);
+}
+[data-mode="dark"] [data-theme="subway"] .ticket-num, [data-mode="dark"][data-theme="subway"] .ticket-num { background: #E9E5DA; border-color: #F2C300; }
+[data-theme="subway"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); border-color: var(--line); }
+/* Grachten */
+[data-theme="grachten"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .08em; text-transform: none; font: italic 700 .82rem/1.1 var(--text); }
+/* step numbers on Delft-blue house-number tiles */
+[data-theme="grachten"] .ticket { border: 1.5px solid var(--line); border-radius: 6px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.7rem 1fr; padding: 1rem; }
+[data-theme="grachten"] .ticket::before { display: none; }
+[data-theme="grachten"] .ticket-num {
+  display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: 4px;
+  background: #1F3F8F; color: #FFFFFF; font-size: 1.2rem; box-shadow: inset 0 0 0 2px #1F3F8F, inset 0 0 0 3.5px #FFFFFF;
+}
+[data-theme="grachten"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); box-shadow: none; }
+/* Biergarten */
+[data-theme="biergarten"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .1em; text-transform: none; font: italic 700 .9rem/1.1 var(--text); }
+/* step numbers on beer coasters */
+[data-theme="biergarten"] .ticket { border: 1.5px solid var(--line); border-radius: 10px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.8rem 1fr; padding: 1rem; }
+[data-theme="biergarten"] .ticket::before { display: none; }
+[data-theme="biergarten"] .ticket-num {
+  display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  background: #FFFFFF; color: #173F73; font: 800 1.1rem/1 var(--text);
+  box-shadow: inset 0 0 0 2px #4A97D9, inset 0 0 0 4px #FFFFFF, inset 0 0 0 5.5px #4A97D9, 0 1px 3px rgba(0, 0, 0, .15);
+}
+[data-theme="biergarten"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); box-shadow: none; }
+[data-theme="biergarten"] .band-home .band-sub { display: inline-block; margin-top: 1rem; padding: .2rem .8rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); opacity: 1; }
+html[data-theme="biergarten"]:not([data-view="page"]) .nav-title > span { display: inline-block; max-width: 100%; vertical-align: middle; padding: .2rem .75rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); }
+html[data-theme="biergarten"]:not([data-view="page"]) .band-settings { background: var(--label-bg); color: var(--label-ink); width: 2.5rem; height: 2.5rem; margin-right: .2rem; }
+/* Getreidegasse */
+[data-theme="getreidegasse"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .12em; text-transform: none; font: italic 600 .9rem/1.1 var(--text); }
+/* step numbers in little gilded cartouches */
+[data-theme="getreidegasse"] .ticket { border: 1.5px solid var(--line); border-radius: 10px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.8rem 1fr; padding: 1rem; }
+[data-theme="getreidegasse"] .ticket::before { display: none; }
+[data-theme="getreidegasse"] .ticket-num {
+  display: grid; place-items: center; width: 2.45rem; height: 2.15rem; border-radius: 50%; padding-top: .1em;
+  background: #1E1F22; color: #E2C06B; font-size: 1.1rem; box-shadow: inset 0 0 0 2px #1E1F22, inset 0 0 0 3.2px #C9A04A;
+}
+[data-theme="getreidegasse"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); box-shadow: none; }
+[data-theme="getreidegasse"] .band-home .band-sub { display: inline-block; margin-top: 1rem; padding: .2rem .8rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); opacity: 1; }
+html[data-theme="getreidegasse"]:not([data-view="page"]) .nav-title > span { display: inline-block; max-width: 100%; vertical-align: middle; padding: .2rem .75rem; border-radius: 999px; background: var(--label-bg); color: var(--label-ink); }
+html[data-theme="getreidegasse"]:not([data-view="page"]) .band-settings { background: var(--label-bg); color: var(--label-ink); width: 2.5rem; height: 2.5rem; margin-right: .2rem; }
+/* Secession */
+[data-theme="secession"] .sign-plate::before { color: var(--kicker); opacity: .85; letter-spacing: .3em; }
+/* step numbers framed in black and gold squares */
+[data-theme="secession"] .ticket { border: 1.5px solid var(--line); border-radius: 0; box-shadow: 3px 3px 0 var(--dash); grid-template-columns: 2.7rem 1fr; padding: 1rem; }
+[data-theme="secession"] .ticket::before { display: none; }
+[data-theme="secession"] .ticket-num {
+  display: grid; place-items: center; width: 2.2rem; height: 2.2rem; margin: 3px;
+  background: #141414; color: #E3C566; font-size: 1.15rem; box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px #C9A33F;
+}
+[data-theme="secession"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); box-shadow: none; }
+:root[data-lang="en"][data-theme="grachten"] { --plate-kicker: "Enjoy your meal"; }
+:root[data-lang="en"][data-theme="biergarten"] { --plate-kicker: "Hello!"; }
+:root[data-lang="en"][data-theme="getreidegasse"] { --plate-kicker: "Hello"; }
+:root[data-lang="en"][data-theme="secession"] { --plate-kicker: "Enjoy your meal!"; }
+/* ---------- Izakaya, refreshed: seigaiha waves on the indigo, a family crest on each noren panel ---------- */
+[data-theme="izakaya"] {
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%23262E5E'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%23262E5E' stroke='rgba(255,255,255,0.13)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%232E3770'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%232E3770' stroke='rgba(255,255,255,0.15)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px;
+  --trim: radial-gradient(circle at calc(50% - 2.5px) 44%, transparent 0 3.2px, #F5EFE3 3.7px 6.4px, transparent 6.9px) 50% 0 / 25% 100% repeat-x, linear-gradient(transparent calc(100% - 4px), rgba(0, 0, 0, .28) 0), var(--band-bg);
+  --trim-home: radial-gradient(circle at calc(50% - 2.5px) 44%, transparent 0 3.2px, #F5EFE3 3.7px 6.4px, transparent 6.9px) 50% 0 / 25% 100% repeat-x, linear-gradient(transparent calc(100% - 4px), rgba(0, 0, 0, .28) 0), var(--band-home-bg);
+}
+[data-mode="dark"][data-theme="izakaya"], [data-mode="dark"] [data-theme="izakaya"] { --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%231B2246'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%23222A55'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px; }
+@media (prefers-color-scheme: dark) {
+  [data-mode="auto"][data-theme="izakaya"], [data-mode="auto"] [data-theme="izakaya"] { --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%231B2246'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%231B2246' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%23222A55'/%3E%3Ccircle cx='20' cy='0' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='19' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='9' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='4' fill='%23222A55' stroke='rgba(255,255,255,0.12)' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 40px 20px; }
+}
+/* paper-lantern step numbers: vermilion with black caps */
+[data-theme="izakaya"] .ticket-num::before {
+  border-radius: 46% / 40%; box-shadow: inset 0 3px 0 #1F1D1A, inset 0 -3px 0 #1F1D1A;
+}
   </style>
 
   <script>
@@ -3220,7 +3700,7 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
     kente: { name: 'Kente', tagline: 'Woven Ghanaian kente in gold, green & red',
       color: ['#E8B020', '#B98A1A'], fonts: 'family=Unbounded:wght@700;800&family=Manrope:wght@400;600;700;800',
       steps: 'Let\u2019s cook', stepHint: STEP },
-    izakaya: { name: 'Izakaya', tagline: 'An indigo noren, a vermilion hanko seal & kanji steps',
+    izakaya: { name: 'Izakaya', tagline: 'Indigo noren with family crests, seigaiha waves & a vermilion hanko',
       color: ['#2E3770', '#222A55'], fonts: 'family=Shippori+Mincho+B1:wght@800&family=Zen+Kaku+Gothic+New:wght@400;700;900',
       steps: '\u4f5c\u308a\u65b9 \u00b7 Method', stepHint: STEP },
     jaipur: { name: 'Jaipur', tagline: 'Saffron bandhani, block-print paisley & marigold steps',
@@ -3285,7 +3765,31 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
       steps: "The steps", stepHint: STEP },
     aloha: { name: "Aloha", tagline: "Hibiscus aloha print, a plumeria lei & Pacific teal",
       color: ["#127A86", "#0A4B55"], fonts: "family=Pacifico&family=Quicksand:wght@400;600;700",
-      steps: "Hoʻomākaukau", stepHint: STEP }
+      steps: "Hoʻomākaukau", stepHint: STEP },
+    pikeplace: { name: "Pike Place", tagline: "A neon market sign, evergreen rain & Puget Sound blue",
+      color: ["#1E4A3D", "#173A30"], fonts: "family=Oswald:wght@600;700&family=Source+Sans+3:wght@400;600;700;800",
+      steps: "The method", stepHint: STEP },
+    trailmap: { name: "Trail Map", tagline: "Ski-run trail signs, a topo map & alpenglow over the peaks",
+      color: ["#2C5A8C", "#1C3A5C"], fonts: "family=Bowlby+One&family=Barlow:wght@400;600;700;800",
+      steps: "The run", stepHint: STEP },
+    honkytonk: { name: "Honky-Tonk", tagline: "Screen-printed gig posters, a burnt-orange sunburst & a Lone Star",
+      color: ["#E8742A", "#8A3F14"], fonts: "family=Rye&family=Libre+Franklin:wght@400;600;700;800",
+      steps: "The set list", stepHint: STEP },
+    subway: { name: "Subway Tile", tagline: "Station tile walls, Line 1 yellow & red-rocket streetcars",
+      color: ["#2F8F83", "#1C5A53"], fonts: "family=League+Spartan:wght@700;800&family=Albert+Sans:wght@400;600;700;800",
+      steps: "All stops", stepHint: STEP },
+    grachten: { name: "Grachten", tagline: "Gabled canal houses, Delft-blue tiles & tulip orange",
+      color: ["#1F5550", "#163C39"], fonts: "family=Abril+Fatface&family=Red+Hat+Text:wght@400;600;700",
+      steps: "Bereiding", stepHint: STEP },
+    biergarten: { name: "Biergarten", tagline: "Blue-and-white lozenges, gingerbread hearts & pretzel brown",
+      color: ["#4A97D9", "#1E4E80"], fonts: "family=Grenze+Gotisch:wght@700&family=Source+Sans+3:wght@400;600;700;800",
+      steps: "Und so geht’s", stepHint: STEP },
+    getreidegasse: { name: "Getreidegasse", tagline: "Gilded wrought-iron guild signs, baroque apricot & copper-dome green",
+      color: ["#DE9F52", "#7A5226"], fonts: "family=Cinzel:wght@700&family=Figtree:wght@400;600;700;800",
+      steps: "So wird’s gemacht", stepHint: STEP },
+    secession: { name: "Secession", tagline: "Wiener Werkstätte squares, Klimt gold & Sachertorte brown",
+      color: ["#141414", "#0A0A0A"], fonts: "family=Federo&family=Jost:wght@400;600;700;800",
+      steps: "Zubereitung", stepHint: STEP }
   };
   var root = document.documentElement;
   var loaded = {};
@@ -5767,14 +6271,14 @@ window.visualViewport?.addEventListener('resize', settleSoon);
 // is plain scrolling and sticky positioning; this only measures the header once per screen
 // (and whenever it changes size) and flips a couple of classes as you scroll.
 const rootEl = document.documentElement;
-const hdr = { band: null, nav: null, title: null, threshold: Infinity, end: Infinity, collapsed: null, scrolled: null, past: null, stretch: 1 };
+const hdr = { band: null, nav: null, title: null, threshold: Infinity, end: Infinity, pin: Infinity, collapsed: null, scrolled: null, past: null, pinned: null, stretch: 1 };
 const hdrResize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => measureHeader()) : null;
 function measureHeader() {
   const band = view.querySelector('.band');
   if (band !== hdr.band) {
     hdrResize?.disconnect();
     if (band) hdrResize?.observe(band);
-    hdr.band = band; hdr.collapsed = hdr.scrolled = hdr.past = null; hdr.stretch = 1;
+    hdr.band = band; hdr.collapsed = hdr.scrolled = hdr.past = hdr.pinned = null; hdr.stretch = 1;
   }
   hdr.nav = view.querySelector('.navbar');
   const home = !band || band.classList.contains('band-home');
@@ -5782,7 +6286,7 @@ function measureHeader() {
     rootEl.dataset.view = home ? 'home' : 'page';
     window.rbPaintBars();
   }
-  if (!band) { rootEl.style.setProperty('--hdr-h', '0px'); hdr.threshold = hdr.end = Infinity; return updateHeader(); }
+  if (!band) { rootEl.style.setProperty('--hdr-h', '0px'); hdr.threshold = hdr.end = hdr.pin = Infinity; return updateHeader(); }
   // offsets, not boxes, so the pull-down stretch on the title doesn't skew them
   const top = band.offsetTop, navH = hdr.nav ? hdr.nav.querySelector('.nav-row').offsetHeight : 0;
   const bottom = top + band.offsetHeight;
@@ -5790,6 +6294,9 @@ function measureHeader() {
   hdr.title = band.querySelector('.sign-plate, .sign');
   hdr.threshold = hdr.title ? top + hdr.title.offsetTop + hdr.title.offsetHeight * .8 - navH : 0;
   hdr.end = bottom - navH;
+  // where the trim locks under the bar (the bar's exact height, since it can be a fraction of a pixel)
+  const navExact = hdr.nav ? hdr.nav.querySelector('.nav-row').getBoundingClientRect().height : 0;
+  hdr.pin = bottom - navExact;
   updateHeader();
 }
 function updateHeader() {
@@ -5798,6 +6305,8 @@ function updateHeader() {
   if (collapsed !== hdr.collapsed) { hdr.collapsed = collapsed; hdr.nav?.classList.toggle('is-collapsed', collapsed); }
   const scrolled = y > 2;
   if (scrolled !== hdr.scrolled) { hdr.scrolled = scrolled; hdr.nav?.classList.toggle('is-scrolled', scrolled); }
+  const pinned = y >= hdr.pin - .25;
+  if (pinned !== hdr.pinned) { hdr.pinned = pinned; hdr.nav?.classList.toggle('trim-pinned', pinned); }
   // well past the header the pinned pattern can rest (a bounce at the bottom then shows the page color)
   const past = y > hdr.end + 240;
   if (past !== hdr.past) { hdr.past = past; rootEl.classList.toggle('hdr-past', past); }
@@ -5877,6 +6386,7 @@ function band(inner, cls = '', nav = {}) {
     <div class="navbar">
       <div class="nav-bg" aria-hidden="true"><i></i></div>
       <div class="nav-edge" aria-hidden="true"><i></i></div>
+      <div class="nav-trim" aria-hidden="true"></div>
       <div class="nav-row">
         <div class="nav-side nav-left">${left}</div>
         <div class="nav-title" aria-hidden="true"><span>${esc(title)}</span></div>
@@ -6756,7 +7266,7 @@ const PLACES = {
   kente:      { city: 'Kumasi', country: 'Ghana', lat: 6.69, lon: -1.62, glow: '#F4C232', night: '#0C1D11',
                 note: 'Kente in gold, green and red, woven in nearby Bonwire' },
   izakaya:    { city: 'Tokyo', country: 'Japan', lat: 35.68, lon: 139.65, glow: '#FF6D4D', night: '#0D1130',
-                note: 'Indigo noren and a vermilion hanko in the lantern-lit alleys' },
+                note: 'Crested indigo noren and red lanterns in the alleys under the train tracks' },
   jaipur:     { city: 'Jaipur', country: 'India', lat: 26.91, lon: 75.79, glow: '#FF9A2E', night: '#230F22',
                 note: 'The Pink City’s saffron bandhani and block-print paisley' },
   cabane:     { city: "Québec City", country: "Canada", lat: 46.81, lon: -71.21, glow: '#FFB04D', night: '#1E0E0A',
@@ -6799,6 +7309,22 @@ const PLACES = {
                 note: "Masi bark cloth, stenciled in rust and black, for feasts and weddings" },
   aloha:      { city: "Honolulu", country: "United States", lat: 21.31, lon: -157.86, glow: '#FF7A6B', night: '#06202A',
                 note: "Hibiscus aloha shirts and plumeria leis on the Waikīkī shore" },
+  pikeplace: { city: "Seattle", country: "United States", lat: 47.61, lon: -122.34, glow: "#FF6B5F", night: "#0B1618",
+                note: "The neon Public Market sign, salmon on ice and evergreens in the rain" },
+  trailmap: { city: "Park City", country: "United States", lat: 40.65, lon: -111.5, glow: "#7FB8FF", night: "#0A1528",
+                note: "Trail-map signs, a silver-mining Main Street and powder days in the Wasatch" },
+  honkytonk: { city: "Austin", country: "United States", lat: 30.27, lon: -97.74, glow: "#FF9A3D", night: "#1A0F0A",
+                note: "Screen-printed gig posters and brisket smoke in the Live Music Capital" },
+  subway: { city: "Toronto", country: "Canada", lat: 43.65, lon: -79.38, glow: "#4FD1C1", night: "#08181A",
+                note: "Station tile walls, Line 1 yellow and red streetcars along Queen Street" },
+  grachten: { city: "Amsterdam", country: "Netherlands", lat: 52.37, lon: 4.9, glow: "#FF8A3D", night: "#0A1A1F",
+                note: "Gabled canal houses, Delft-blue house tiles and tulips by the water" },
+  biergarten: { city: "Munich", country: "Germany", lat: 48.14, lon: 11.58, glow: "#6FB4FF", night: "#0A1630",
+                note: "Blue-and-white lozenges, gingerbread hearts and chestnut-shaded beer gardens" },
+  getreidegasse: { city: "Salzburg", country: "Austria", lat: 47.8, lon: 13.04, glow: "#F4A35C", night: "#14110C",
+                note: "Wrought-iron guild signs, gilded over Mozart’s street in the old town" },
+  secession: { city: "Vienna", country: "Austria", lat: 48.21, lon: 16.37, glow: "#F2D27A", night: "#121010",
+                note: "Hoffmann’s black-and-white squares and Klimt’s gold, over coffee and Sachertorte" },
 };
 const PLACE_ORDER = Object.keys(PLACES).sort((a, b) => PLACES[a].lon - PLACES[b].lon);
 const place = id => PLACES[id] || PLACES.diner;
@@ -6810,16 +7336,16 @@ const place = id => PLACES[id] || PLACES.diner;
 const ENGLISH = {
   names: { mercado: 'Market', patisserie: 'Pastry Shop', riad: 'Courtyard House', izakaya: 'Japanese Pub', cabane: 'Sugar Shack',
     paladar: 'Family Restaurant', azulejo: 'Painted Tiles', limonaia: 'Lemon House', vyshyvanka: 'Embroidery', iznik: 'Iznik Tiles',
-    bogolan: 'Mud Cloth', tibeb: 'Woven Border', shuka: 'Maasai Cloth', bojagi: 'Patchwork Wrap', shu: 'Sichuan Brocade', masi: 'Bark Cloth' },
+    bogolan: 'Mud Cloth', tibeb: 'Woven Border', shuka: 'Maasai Cloth', bojagi: 'Patchwork Wrap', shu: 'Sichuan Brocade', masi: 'Bark Cloth', grachten: "Canal Houses", biergarten: "Beer Garden", getreidegasse: "Guild Signs" },
   steps: { mercado: 'Step by step', patisserie: 'The method', izakaya: 'Method', jaipur: 'Method', cabane: 'The recipe',
     paladar: 'Let’s get to work', sacred: 'Let’s cook', copacabana: 'Let’s get to work', azulejo: 'Preparation', limonaia: 'The method',
     vyshyvanka: 'Preparation', iznik: 'Method', tibeb: 'Preparation', shuka: 'Let’s cook!', isfahan: 'Method', ikat: 'Preparation',
-    bojagi: 'How to make it', shu: 'Method', lanterns: 'How to make it', batik: 'How to make it', aloha: 'Preparation' },
+    bojagi: 'How to make it', shu: 'Method', lanterns: 'How to make it', batik: 'How to make it', aloha: 'Preparation', grachten: "Preparation", biergarten: "Here’s how", getreidegasse: "How it’s done", secession: "Preparation" },
   cities: { cabane: 'Quebec City', lanterns: 'Hoi An' },
   countries: { iznik: 'Turkey' },
   notes: {
     riad: 'Majorelle blue and saffron tilework behind arched doors',
-    izakaya: 'Indigo door curtains and a vermilion name seal in the lantern-lit alleys',
+    izakaya: 'Indigo door curtains with family crests, and red lanterns in the alleys under the train tracks',
     jaipur: 'The Pink City’s saffron tie-dye and block-print paisley',
     paladar: 'Cement-tile floors and shuttered pastel fronts in Old Havana',
     sacred: 'Diamond patterns woven by the Chinchero cooperatives above the Sacred Valley',
@@ -7146,7 +7672,6 @@ class GlobeView {
     this.focusId = null; this.homeId = null;
     this.glowFor = {};   // id -> how lit its region is, 0..1
     this.labels = {};    // id -> { a, dir, ox, oy }
-    this.arc = null;     // { a, b, t, alpha }
     this.ripples = [];
     this.stars = makeStars(mini ? 60 : 170, mini ? 7 : 11);
     this.hits = [];
@@ -7195,6 +7720,9 @@ class GlobeView {
     return w;
   }
 
+  // the camera's own dip on a long trip, times however far you've pinched in
+  zoomNow() { return this.cam.zoom * (this.uz || 1); }
+
   setPalette(id, instant) {
     const p = place(id);
     this.nightTo = hexRgb(p.night); this.glowTo = hexRgb(p.glow);
@@ -7209,7 +7737,7 @@ class GlobeView {
   }
 
   project(v, B, lift = 1) {
-    const { cx, cy } = this.layout, R = this.layout.R * this.cam.zoom * lift;
+    const { cx, cy } = this.layout, R = this.layout.R * this.zoomNow() * lift;
     const x = vdot(v, B[0]), y = vdot(v, B[1]), z = vdot(v, B[2]);
     return { x: cx + R * x, y: cy - R * y, z, rx: x, ry: y };
   }
@@ -7224,7 +7752,7 @@ class GlobeView {
       this.glow = mixRgb(this.glow, this.glowTo, k);
     }
     const night = this.night, glow = this.glow;
-    const { cx, cy } = this.layout, R = this.layout.R * this.cam.zoom;
+    const { cx, cy } = this.layout, R = this.layout.R * this.zoomNow();
     const B = this.basis();
     const still = reducedMotion();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -7293,7 +7821,6 @@ class GlobeView {
     ctx.strokeStyle = rim; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.arc(cx, cy, R - .4, 0, 7); ctx.stroke();
 
-    this.drawArc(B, now);
     this.drawRipples(B, now);
     this.drawPins(B, now);
     this.lastDraw = now;
@@ -7366,45 +7893,6 @@ class GlobeView {
         }
         ctx.fill();
       }
-    }
-  }
-
-  // A flight path between two places, lifted off the surface, with a bright head while moving.
-  drawArc(B) {
-    const arc = this.arc;
-    if (!arc || arc.alpha < .01 || arc.t <= .001) return;
-    const { ctx } = this;
-    const ang = vangle(arc.a, arc.b);
-    if (ang < .01) return;
-    const alt = .05 + .2 * ang / Math.PI;
-    const steps = Math.max(12, Math.round(56 * arc.t));
-    const pts = [];
-    for (let k = 0; k <= steps; k++) {
-      const s = arc.t * k / steps;
-      const p = this.project(slerp(arc.a, arc.b, s), B, 1 + alt * Math.sin(Math.PI * s));
-      p.vis = p.z > 0 || p.rx * p.rx + p.ry * p.ry > 1 / ((1 + alt * Math.sin(Math.PI * s)) ** 2) + .0001;
-      p.s = k / steps;
-      pts.push(p);
-    }
-    const col = mixRgb(this.glow, [255, 255, 255], .25);
-    ctx.lineCap = 'round';
-    for (const [width, a] of [[6, .12], [1.8, .95]]) {
-      ctx.lineWidth = width;
-      for (let k = 1; k < pts.length; k++) {
-        const p0 = pts[k - 1], p1 = pts[k];
-        if (!p0.vis || !p1.vis) continue;
-        ctx.strokeStyle = rgba(col, a * arc.alpha * Math.pow(p1.s, 1.3));
-        ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
-      }
-    }
-    const head = pts[pts.length - 1];
-    if (arc.head && head.vis) {
-      const g = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 11);
-      g.addColorStop(0, `rgba(255,255,255,${.95 * arc.alpha})`);
-      g.addColorStop(.25, rgba(this.glow, .8 * arc.alpha));
-      g.addColorStop(1, rgba(this.glow, 0));
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(head.x, head.y, 11, 0, 7); ctx.fill();
     }
   }
 
@@ -7712,7 +8200,7 @@ function themeWindowMarkup() {
           <span class="gw-cta">Explore the globe <svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </span>
       </button>
-      <p class="hint theme-intro">Thirty kitchens, each in the city it comes from. Spin the globe and try one on.</p>
+      <p class="hint theme-intro">${PLACE_ORDER.length} kitchens, each in the city it comes from. Spin the globe and try one on.</p>
     </div>`;
 }
 
@@ -7767,10 +8255,14 @@ function openGlobe() {
     <canvas class="gx-canvas" aria-hidden="true"></canvas>
     <header class="gx-head">
       <button class="gx-close" aria-label="Close the globe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-      <div class="gx-titles"><h2 id="gxTitle">Tastes of the World</h2><p>Swipe the cards or spin the globe</p></div>
+      <div class="gx-titles"><h2 id="gxTitle">Tastes of the World</h2><p>Swipe the cards, pinch to zoom</p></div>
       <span aria-hidden="true"></span>
     </header>
-    <div class="gx-rail" role="group" aria-label="Themes">${globeCard(PLACE_ORDER[PLACE_ORDER.length - 1], true)}${PLACE_ORDER.map(id => globeCard(id)).join('')}${globeCard(PLACE_ORDER[0], true)}</div>`;
+    <div class="gx-zoom" role="group" aria-label="Zoom">
+      <button class="gx-zbtn" data-zoom="in" aria-label="Zoom in"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <button class="gx-zbtn" data-zoom="out" aria-label="Zoom out" disabled><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="gx-rail" role="group" aria-label="Themes">${PLACE_ORDER.map(id => globeCard(id)).join('')}</div>`;
   document.body.appendChild(el);
 
   const canvas = el.querySelector('.gx-canvas');
@@ -7778,7 +8270,9 @@ function openGlobe() {
   const cards = [...rail.querySelectorAll('.gx-card')];
   const v = new GlobeView(canvas);
   Object.assign(globeUI, { open: true, closing: false, el, v, rail, cards, from, idx: -1, landed: -1,
-    mode: 'rail', flight: null, drag: null, lastTouch: 0, programmatic: 0, trans: { t: 0, dir: 1, t0: performance.now() } });
+    mode: 'rail', flight: null, drag: null, swipe: null, slide: null, pinch: null, lastTouch: 0, pos: startIdx, drawnPos: NaN,
+    trans: { t: 0, dir: 1, t0: performance.now() } });
+  v.uz = 1;
 
   // start where the little window was, so the globe seems to grow out of it
   const mini = themeWindow && themeWindow.canvas.isConnected ? themeWindow : null;
@@ -7788,8 +8282,7 @@ function openGlobe() {
   if (mini) { v.cam.lat = mini.cam.lat; v.cam.lon = mini.cam.lon; } else { v.cam.lat = place(home).lat - LIFT; v.cam.lon = place(home).lon; }
 
   layoutGlobe();
-  rail.scrollLeft = (startIdx + 1) * globeUI.stride;
-  globeUI.scrollX = rail.scrollLeft;
+  placeCards();
   globeUI.fromLayout = mini && fromRect ? (() => {
     const cr = mini.canvas.getBoundingClientRect();
     return { cx: cr.left + mini.layout.cx, cy: cr.top + mini.layout.cy, R: mini.layout.R };
@@ -7826,16 +8319,15 @@ function layoutGlobe() {
   const cardW = Math.min(w - 48, 352);
   const gap = 12;
   el.style.setProperty('--gx-card-w', cardW + 'px');
-  el.style.setProperty('--gx-pad', (w - cardW) / 2 + 'px');
-  el.style.setProperty('--gx-gap', gap + 'px');
   g.stride = cardW + gap;
+  g.drawnPos = NaN;
   v.resize();
   const headEl = el.querySelector('.gx-head');
   const head = headEl.offsetTop + headEl.offsetHeight;
   // offsets ignore the rail's slide-in transform
   const railTop = rail.offsetTop ? rail.offsetTop + parseFloat(getComputedStyle(rail).paddingTop) : (h - 200);
   g.cardTop = railTop;
-  g.scrollX = rail.scrollLeft;
+  el.style.setProperty('--gx-rail-top', railTop + 'px');
   const room = railTop - head;
   const R = Math.max(80, Math.min(w * .47, room * .43));
   g.layout = { cx: w / 2, cy: head + room * .54, R };
@@ -7861,40 +8353,90 @@ function wireGlobe() {
     }
   };
   document.addEventListener('keydown', g.onKey); // on the document, since spinning the globe leaves focus on the page
-  rail.addEventListener('scroll', () => {
-    g.scrollX = rail.scrollLeft;
-    if (performance.now() > g.programmatic) { g.flight = null; g.mode = 'rail'; }
-    clearTimeout(g.wrapTimer);
-    g.wrapTimer = setTimeout(wrapRail, 140);
-  }, { passive: true });
-  rail.addEventListener('touchstart', () => { g.railTouch = true; clearTimeout(g.wrapTimer); }, { passive: true });
-  rail.addEventListener('touchend', () => { g.railTouch = false; clearTimeout(g.wrapTimer); g.wrapTimer = setTimeout(wrapRail, 140); }, { passive: true });
+  // the cards: drag them along, flick to glide a few, and they go round and round
+  rail.addEventListener('pointerdown', e => {
+    if (e.button > 0 || g.swipe) return;
+    g.swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, pos: g.pos, moved: false, pts: [[performance.now(), e.clientX]] };
+  });
+  rail.addEventListener('pointermove', e => {
+    const sw = g.swipe;
+    if (!sw || sw.id !== e.pointerId) return;
+    if (!sw.moved) {
+      if (Math.abs(e.clientX - sw.x) < 7) return;
+      sw.moved = true; sw.x = e.clientX; sw.pos = g.pos; // start from here, so the cards don't jump
+      try { rail.setPointerCapture(e.pointerId); } catch { /* the touch already ended */ }
+      g.slide = null; g.flight = null; g.mode = 'rail';
+    }
+    g.pos = sw.pos - (e.clientX - sw.x) / g.stride;
+    const now = performance.now();
+    sw.pts.push([now, e.clientX]);
+    while (sw.pts.length > 2 && now - sw.pts[0][0] > 90) sw.pts.shift();
+  });
+  const swipeEnd = e => {
+    const sw = g.swipe;
+    if (!sw || sw.id !== e.pointerId) return;
+    g.swipe = null;
+    if (!sw.moved) return; // a tap: the click does the rest
+    g.eatClick = performance.now() + 400;
+    const [t0, x0] = sw.pts[0], dtm = performance.now() - t0;
+    const vel = dtm > 0 && dtm < 160 ? -(e.clientX - x0) / g.stride / (dtm / 1000) : 0; // cards per second
+    let to = Math.round(g.pos + clamp(vel, -24, 24) * .22);
+    if (to === Math.round(g.pos) && Math.abs(vel) > .9) to = vel > 0 ? Math.floor(g.pos) + 1 : Math.ceil(g.pos) - 1; // a short flick still moves one
+    slideTo(to);
+  };
+  rail.addEventListener('pointerup', swipeEnd);
+  rail.addEventListener('pointercancel', swipeEnd);
+  rail.addEventListener('lostpointercapture', swipeEnd);
+  // trackpads and mouse wheels slide the cards too
+  rail.addEventListener('wheel', e => {
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (!d) return;
+    e.preventDefault();
+    g.slide = null; g.flight = null; g.mode = 'rail';
+    g.pos += d / g.stride;
+    clearTimeout(g.wheelTimer);
+    g.wheelTimer = setTimeout(() => slideTo(Math.round(g.pos)), 130);
+  }, { passive: false });
   rail.addEventListener('click', e => {
+    if (performance.now() < (g.eatClick || 0)) { e.preventDefault(); e.stopPropagation(); return; } // that was a swipe
     const use = e.target.closest('[data-use]');
     if (use) { usePlace(use.dataset.use); return; }
     const card = e.target.closest('.gx-card');
     if (card && card.dataset.place !== PLACE_ORDER[g.idx]) goToPlace(card.dataset.place);
-  });
+  }, true);
   rail.addEventListener('focusin', e => {
     const card = e.target.closest('.gx-card');
     if (card && card.dataset.place !== PLACE_ORDER[g.idx] && e.target.matches(':focus-visible')) goToPlace(card.dataset.place);
   });
 
-  // spinning the globe by hand
+  // spinning the globe by hand, and pinching to zoom
   const canvas = v.canvas;
+  const touches = new Map();
+  const spread = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
   canvas.addEventListener('pointerdown', e => {
     if (e.button > 0) return;
     canvas.setPointerCapture(e.pointerId);
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) { // a second finger: zoom instead of spin
+      g.drag = null; g.pinched = true;
+      g.pinch = { d0: spread(), uz0: v.uz };
+      v.cam.vlon = v.cam.vlat = 0;
+      return;
+    }
+    if (touches.size > 2) return;
     g.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: false, vlon: 0, vlat: 0 };
   });
   canvas.addEventListener('pointermove', e => {
+    const tp = touches.get(e.pointerId);
+    if (tp) { tp.x = e.clientX; tp.y = e.clientY; }
+    if (g.pinch && touches.size >= 2) { setZoom(g.pinch.uz0 * spread() / g.pinch.d0); g.lastTouch = performance.now(); return; }
     const d = g.drag;
     if (!d || d.id !== e.pointerId) return;
     const dx = e.clientX - d.x, dy = e.clientY - d.y;
     if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
     if (!d.moved) { d.moved = true; g.flight = null; g.mode = 'free'; }
     const now = performance.now(), dtm = Math.max(1, now - d.t);
-    const R = v.layout.R * v.cam.zoom;
+    const R = v.layout.R * v.zoomNow();
     const dlon = -dx / R / RAD, dlat = dy / R / RAD;
     v.cam.lon += dlon; v.cam.lat = clamp(v.cam.lat + dlat, -70, 75);
     d.vlon = d.vlon * .6 + (dlon / dtm * 1000) * .4;
@@ -7903,10 +8445,14 @@ function wireGlobe() {
     g.lastTouch = now;
   });
   const end = e => {
+    touches.delete(e.pointerId);
+    if (touches.size < 2) g.pinch = null;
+    if (g.pinched) { if (!touches.size) g.pinched = false; g.drag = null; return; } // a pinch never counts as a tap
     const d = g.drag;
     if (!d || d.id !== e.pointerId) return;
     g.drag = null;
     if (!d.moved) {
+      if (e.type !== 'pointerup') return;
       const r = canvas.getBoundingClientRect();
       const hit = v.hitTest(e.clientX - r.left, e.clientY - r.top);
       if (hit) goToPlace(hit);
@@ -7919,8 +8465,21 @@ function wireGlobe() {
   };
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', end);
+  // trackpad pinches arrive as ctrl + wheel; a plain wheel zooms too
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    setZoom(v.uz * Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0022)));
+    g.lastTouch = performance.now();
+  }, { passive: false });
+  el.querySelector('.gx-zoom').addEventListener('click', e => {
+    const b = e.target.closest('[data-zoom]');
+    if (!b) return;
+    let z = clamp((g.zoomTo ?? v.uz) * (b.dataset.zoom === 'in' ? 1.6 : 1 / 1.6), ZOOM_MIN, ZOOM_MAX);
+    if (z < 1.04) z = 1;
+    g.zoomTo = z;
+  });
 
-  g.onResize = () => { layoutGlobe(); if (g.idx >= 0) rail.scrollLeft = (g.idx + 1) * g.stride; g.scrollX = rail.scrollLeft; };
+  g.onResize = () => { layoutGlobe(); placeCards(); };
   window.addEventListener('resize', g.onResize);
 }
 
@@ -7929,19 +8488,52 @@ function goToPlace(id) {
   const g = globeUI, v = g.v;
   const i = PLACE_ORDER.indexOf(id);
   if (i < 0 || !g.open) return;
-  const fromF = llVec(v.cam.lat + LIFT, v.cam.lon);
+  const fromF = llVec(v.cam.lat + liftFor(v), v.cam.lon);
   const to = placeVec(id);
   const ang = vangle(fromF, to);
   const still = reducedMotion();
   g.flight = still || ang < .02 ? null : { from: fromF, to, t0: performance.now(), dur: 650 + 1100 * Math.min(1, ang / 2.2), ang, id };
   g.mode = 'rail';
-  g.programmatic = performance.now() + (g.flight ? g.flight.dur : 0) + 700;
   setFocus(i);
-  const N = PLACE_ORDER.length, here = g.scrollX / g.stride;
-  const slots = [i + 1, ...(i === 0 ? [N + 1] : []), ...(i === N - 1 ? [0] : [])];
-  const slot = slots.reduce((a, b) => (Math.abs(b - here) < Math.abs(a - here) ? b : a));
-  g.rail.scrollTo({ left: slot * g.stride, behavior: still ? 'auto' : 'smooth' });
-  if (!g.flight) { v.cam.lat = place(id).lat - LIFT; v.cam.lon = wrapLon(place(id).lon, v.cam.lon); }
+  // the card slides the short way round, so the last city and the first are neighbors
+  const N = PLACE_ORDER.length;
+  const d = ((i - g.pos) % N + N * 1.5) % N - N / 2;
+  slideTo(g.pos + d, still);
+  if (!g.flight) { v.cam.lat = place(id).lat - liftFor(v); v.cam.lon = wrapLon(place(id).lon, v.cam.lon); }
+}
+
+// Glide the cards to a whole position (any integer: the rail has no ends).
+function slideTo(to, instant = false) {
+  const g = globeUI;
+  to = Math.round(to);
+  if (instant || reducedMotion() || Math.abs(to - g.pos) < .001) { g.pos = to; g.slide = null; return; }
+  const dist = Math.abs(to - g.pos);
+  g.slide = { from: g.pos, to, t0: performance.now(), dur: Math.min(900, 280 + 150 * Math.sqrt(dist)) };
+}
+
+// Lay the cards out around the current position: the one in the middle, its neighbors
+// either side, and the rest of the world waiting off-screen, wrapping round both ways.
+function placeCards() {
+  const g = globeUI;
+  if (!g.cards || g.pos === g.drawnPos) return;
+  g.drawnPos = g.pos;
+  const N = g.cards.length, w = g.el.clientWidth, reach = w / 2 / g.stride + 1.2;
+  g.cards.forEach((c, i) => {
+    const off = ((i - g.pos) % N + N * 1.5) % N - N / 2;
+    const show = Math.abs(off) <= reach;
+    if (show) c.style.translate = `${(off * g.stride).toFixed(2)}px 0`;
+    if (show !== c.vis) { c.vis = show; c.style.visibility = show ? '' : 'hidden'; }
+  });
+}
+
+// How far the camera sits below the chosen city, so it stays above the cards (less when zoomed in).
+const liftFor = v => LIFT / (v.uz || 1);
+const ZOOM_MIN = 1, ZOOM_MAX = 5;
+function setZoom(z) {
+  const g = globeUI;
+  if (!g.v) return;
+  g.v.uz = clamp(z, ZOOM_MIN * .92, ZOOM_MAX * 1.08); // a little give at either end, eased back after
+  g.zoomTo = null;
 }
 
 function setFocus(i) {
@@ -7999,57 +8591,69 @@ function globeFrame(now, dt) {
   v.layout = { cx: from.cx + (to.cx - from.cx) * e, cy: from.cy + (to.cy - from.cy) * e, R: from.R + (to.R - from.R) * e };
   v.labelFade = smoothstep(.5, 1, T.t);
 
-  // which card is in the middle of the rail
-  // slots 1..N are the cards; slot 0 and N+1 are copies of the last and first
+  // zoom: the buttons ease toward their step, a pinch past either end settles back, closing zooms out
+  const zWant = g.closing ? 1 : g.zoomTo ?? (g.pinch ? v.uz : clamp(v.uz, ZOOM_MIN, ZOOM_MAX));
+  if (Math.abs(zWant - v.uz) > .0005) v.uz += (zWant - v.uz) * (1 - Math.exp(-dt * 9)); else v.uz = zWant;
+  const zb = `${v.uz <= ZOOM_MIN + .01}${v.uz >= ZOOM_MAX - .01}`;
+  if (g.zoomBtns !== zb) {
+    g.zoomBtns = zb;
+    g.el.querySelector('[data-zoom="out"]').disabled = v.uz <= ZOOM_MIN + .01;
+    g.el.querySelector('[data-zoom="in"]').disabled = v.uz >= ZOOM_MAX - .01;
+  }
+  const lift = liftFor(v);
+
+  // the cards glide to rest; the position can run on forever either way
   const N = PLACE_ORDER.length;
-  const f = clamp(g.scrollX / g.stride, 0, N + 1);
-  const s0 = Math.min(N, Math.floor(f)), frac = f - s0;
-  const slotPlace = sl => ((sl - 1) % N + N) % N;
-  const i0 = slotPlace(s0), i1 = slotPlace(s0 + 1);
-  if (!g.flight) setFocus(slotPlace(Math.round(f)));
+  if (g.slide) {
+    const sl = g.slide, t = clamp((now - sl.t0) / sl.dur, 0, 1);
+    g.pos = sl.from + (sl.to - sl.from) * easeOut(t);
+    if (t >= 1) { g.pos = sl.to; g.slide = null; }
+  }
+  if (!g.slide && !g.swipe && (g.pos < 0 || g.pos >= N)) { // the same card, by a smaller number
+    const k = Math.floor(g.pos / N) * N;
+    g.pos -= k; g.drawnPos -= k;
+  }
+  placeCards();
+
+  // which card is in the middle of the rail
+  const f = g.pos;
+  const s0 = Math.floor(f), frac = f - s0;
+  const mod = i => ((i % N) + N) % N;
+  const i0 = mod(s0), i1 = mod(s0 + 1);
+  if (!g.flight) setFocus(mod(Math.round(f)));
 
   let zoomTo = 1;
   if (g.flight) {
     const fl = g.flight, t = clamp((now - fl.t0) / fl.dur, 0, 1), te = easeInOut(t);
     const F = slerp(fl.from, fl.to, te);
     const [la, lo] = vecLL(F);
-    v.cam.lat = la - LIFT; v.cam.lon = wrapLon(lo, v.cam.lon);
+    v.cam.lat = la - lift; v.cam.lon = wrapLon(lo, v.cam.lon);
     v.cam.vlat = v.cam.vlon = 0;
     zoomTo = 1 - .3 * Math.sin(Math.PI * te) * Math.min(1, fl.ang / 1.6);
     v.cam.zoom = zoomTo;
-    v.arc = { a: fl.from, b: fl.to, t: te, alpha: 1, head: true };
-    if (t >= 1) { g.flight = null; g.arcFade = { a: fl.from, b: fl.to, t0: now }; }
+    if (t >= 1) g.flight = null;
   } else if (g.mode === 'free') {
     // a flick keeps the globe turning for a moment
     const decay = Math.exp(-dt * 2.6);
     v.cam.lon += v.cam.vlon * dt; v.cam.lat = clamp(v.cam.lat + v.cam.vlat * dt, -70, 75);
     v.cam.vlon *= decay; v.cam.vlat *= decay;
     v.cam.zoom += (1 - v.cam.zoom) * (1 - Math.exp(-dt * 4));
-    if (!g.drag && now - g.lastTouch > 3600) g.mode = 'rail'; // then drift home to the chosen city
+    if (!g.drag && !g.pinch && now - g.lastTouch > 3600) g.mode = 'rail'; // then drift home to the chosen city
   } else {
-    // follow the rail: between two cards, the globe sits partway along the flight between their cities
+    // follow the rail: between two cards, the globe sits partway along the way between their cities
     const a = placeVec(PLACE_ORDER[i0]), b = placeVec(PLACE_ORDER[i1]);
     const F = slerp(a, b, frac);
     const [la, lo] = vecLL(F);
     const ang = vangle(a, b);
     zoomTo = 1 - .2 * Math.sin(Math.PI * frac) * Math.min(1, ang / 1.4);
-    const k = g.drag ? 0 : 1 - Math.exp(-dt * (T.t < 1 ? 5 : 9));
-    v.cam.lat += (la - LIFT - v.cam.lat) * k;
+    const k = 1 - Math.exp(-dt * (T.t < 1 ? 5 : 9));
+    v.cam.lat += (la - lift - v.cam.lat) * k;
     v.cam.lon += (wrapLon(lo, v.cam.lon) - v.cam.lon) * k;
     v.cam.zoom += (zoomTo - v.cam.zoom) * k;
-    if (frac > .002 && frac < .998) {
-      v.arc = { a, b, t: frac, alpha: Math.pow(Math.sin(Math.PI * frac), .5), head: true };
-      g.arcFade = null;
-    } else if (g.arcFade) {
-      const t = (now - g.arcFade.t0) / 900;
-      v.arc = t < 1 ? { a: g.arcFade.a, b: g.arcFade.b, t: 1, alpha: 1 - t, head: false } : null;
-      if (t >= 1) g.arcFade = null;
-    } else v.arc = null;
     // a ripple when you land somewhere new
-    const settled = Math.abs(f - Math.round(f)) < .004 && Math.abs(la - LIFT - v.cam.lat) < 1.5;
+    const settled = Math.abs(f - Math.round(f)) < .004 && Math.abs(la - lift - v.cam.lat) < 1.5;
     if (settled && g.landed !== g.idx && T.t >= 1) { g.landed = g.idx; if (!still) v.ripple(PLACE_ORDER[g.idx]); }
   }
-  if (g.flight === null && v.arc && v.arc.head && g.mode !== 'rail') v.arc = null;
 
   // light up the chosen city's region
   for (const id of Object.keys(v.glowFor)) {
@@ -8059,26 +8663,11 @@ function globeFrame(now, dt) {
   }
 
   // settled on a city with nothing moving: half rate is plenty for the gentle pulse and twinkle
-  const resting = !g.drag && !g.flight && g.mode === 'rail' && T.t >= 1 && !g.closing && !v.arc && !v.ripples.length
-    && Math.abs(f - Math.round(f)) < .002 && Math.abs(v.cam.vlon) < .01;
+  const resting = !g.drag && !g.pinch && !g.swipe && !g.slide && !g.flight && g.mode === 'rail' && T.t >= 1 && !g.closing
+    && !v.ripples.length && Math.abs(f - Math.round(f)) < .002 && Math.abs(v.cam.vlon) < .01 && v.uz === zWant;
   if (!resting || now - v.lastDraw > 30) v.draw(now, dt);
 
   if (g.closing && T.t <= 0) finishCloseGlobe();
-}
-
-// Resting on a copy at either end: hop to the real card, so the rail goes round and round.
-function wrapRail() {
-  const g = globeUI;
-  if (!g.open || !g.rail || g.railTouch || g.drag) return;
-  const N = PLACE_ORDER.length, f = g.rail.scrollLeft / g.stride, slot = Math.round(f);
-  if (Math.abs(f - slot) > .02) { g.wrapTimer = setTimeout(wrapRail, 120); return; } // still gliding into place
-  if (slot !== 0 && slot !== N + 1) return;
-  const to = slot === 0 ? N : 1;
-  g.rail.style.scrollSnapType = 'none';
-  g.rail.scrollLeft = to * g.stride;
-  g.scrollX = g.rail.scrollLeft;
-  g.rail.getBoundingClientRect();
-  g.rail.style.scrollSnapType = '';
 }
 
 function closeGlobe(instant = false) {
@@ -8126,7 +8715,8 @@ function finishCloseGlobe() {
   if (from) { from.classList.remove('gw-away'); from.focus({ preventScroll: true }); }
   updateThemeWindow();
   if (themeWindow) themeWindow.dirty = true;
-  Object.assign(globeUI, { el: null, v: null, rail: null, cards: null });
+  clearTimeout(g.wheelTimer);
+  Object.assign(globeUI, { el: null, v: null, rail: null, cards: null, swipe: null, slide: null, pinch: null, zoomTo: null, zoomBtns: null });
 }
 
 async function setTheme(id, { quiet = false } = {}) {
@@ -8640,6 +9230,134 @@ const TASTES = {
       ['Legend', 'In Hawaiian tradition the first taro plant is the elder brother of the Hawaiian people. Pounded into poi, it was the islands’ staple food.'],
       ['1850s', 'Sugar plantations began recruiting workers from China, then Japan, Portugal, Korea and the Philippines. Sharing lunch pails in the fields gave rise to the plate lunch.'],
       ['1882', 'ʻIolani Palace was finished for King Kalākaua. It had electric lights a few years before the White House did.'],
+    ],
+  },
+  pikeplace: {
+    intro: "Seattle sits between Puget Sound and Lake Washington, with the Olympic Mountains to the west and Mount Rainier to the southeast. Its cooking leans on what the cold water and wet hills give: salmon, oysters, Dungeness crab, berries and wild mushrooms.",
+    facts: [["Where", "Puget Sound, Washington"], ["Founded", "Settled at Alki Point in 1851"], ["Spoken", "English, Spanish, Chinese and Vietnamese"]],
+    dishes: [
+      ["Cedar-plank salmon", "Wild salmon roasted on a soaked cedar board until it picks up the wood’s smoke."],
+      ["Teriyaki", "Grilled chicken thighs glazed in sweet soy over rice, sold by small shops all over town since the 1970s."],
+      ["Dungeness crab", "Sweet crab from the cold water of the Sound, cracked at the table and dipped in butter."],
+      ["Seattle dog", "A late-night street hot dog topped with cream cheese and grilled onions."],
+    ],
+    pantry: ["Wild salmon", "Dungeness crab", "Oysters", "Chanterelles", "Rainier cherries", "Walla Walla onions"],
+    history: [
+      ["1907", "Pike Place Market opened so farmers could sell straight to shoppers. It’s one of the oldest continuously running public markets in the country."],
+      ["1962", "The World’s Fair brought the Space Needle, built in about 400 days."],
+      ["1971", "The first Starbucks opened near the market, selling roasted beans rather than drinks."],
+    ],
+  },
+  trailmap: {
+    intro: "Park City sits at about 7,000 feet in the Wasatch Range, half an hour from Salt Lake City. It began as a silver-mining camp, and its Main Street of old brick storefronts now runs up to the ski lifts.",
+    facts: [["Where", "Wasatch Back, Utah"], ["Founded", "Mining camp in the 1870s, a city in 1884"], ["Spoken", "English and Spanish"]],
+    dishes: [
+      ["Fry sauce", "Ketchup and mayonnaise stirred together for fries. Utah has claimed it since the late 1940s."],
+      ["Funeral potatoes", "A cheesy hash-brown casserole under crushed cornflakes, brought to gatherings across Utah."],
+      ["Utah scones", "Fried dough puffs served hot with honey butter, closer to a sopaipilla than an English scone."],
+      ["Dutch-oven cobbler", "Fruit cobbler baked in a cast-iron pot over coals. The Dutch oven is Utah’s official state cooking pot."],
+    ],
+    pantry: ["Honey", "Russet potatoes", "Tart cherries", "Bison", "Rye whiskey", "Cornflakes"],
+    history: [
+      ["1868", "Soldiers found silver ore in the hills. Mines like the Ontario soon made the camp one of the richest in the West."],
+      ["1898", "A fire burned most of Main Street. It was rebuilt, and many of those buildings still stand."],
+      ["2002", "The Winter Olympics held skiing, snowboarding and bobsled events in and around Park City."],
+    ],
+  },
+  honkytonk: {
+    intro: "Austin spreads along the Colorado River where the Blackland Prairie meets the Texas Hill Country. It’s the state capital and a college town, and its food runs from smoked brisket to breakfast tacos eaten out of trailers.",
+    facts: [["Where", "Central Texas, on the Colorado River"], ["Founded", "Capital of the Republic of Texas from 1839"], ["Spoken", "English and Spanish"]],
+    dishes: [
+      ["Brisket", "Beef brisket rubbed with salt and pepper and smoked for half a day over post oak, Central Texas style."],
+      ["Breakfast tacos", "Flour tortillas wrapped around eggs, potato, bacon or chorizo, eaten every morning."],
+      ["Queso", "Melted cheese with chiles and tomatoes, scooped up with tortilla chips."],
+      ["Migas", "Eggs scrambled with crisp strips of corn tortilla, onion, peppers and cheese."],
+    ],
+    pantry: ["Post oak", "Pecans", "Flour tortillas", "Jalapeños", "Black pepper", "Ruby Red grapefruit"],
+    history: [
+      ["1839", "Surveyors laid out a new capital for the Republic of Texas on the Colorado River and named it after Stephen F. Austin."],
+      ["1888", "The Texas State Capitol was finished in pink granite. It stands taller than the U.S. Capitol."],
+      ["1974", "Austin City Limits taped its first show. It became the longest-running music program on American television."],
+    ],
+  },
+  subway: {
+    intro: "Toronto lines the north shore of Lake Ontario and is Canada’s largest city. Nearly half its people were born outside the country, so one streetcar ride can pass Portuguese bakeries, Chinatown, Little India and Caribbean roti shops.",
+    facts: [["Where", "North shore of Lake Ontario"], ["Founded", "As York in 1793; Toronto since 1834"], ["Spoken", "English, and well over 100 other languages"]],
+    dishes: [
+      ["Peameal bacon sandwich", "Cured pork loin rolled in cornmeal, griddled and piled on a bun at St. Lawrence Market."],
+      ["Butter tarts", "Flaky tarts filled with butter, sugar and egg that set into a runny caramel. Raisins are hotly debated."],
+      ["Roti", "Caribbean flatbread wrapped around curried goat, chicken or potato, brought by Trinidadian and Guyanese families."],
+      ["Jamaican patties", "Flaky golden pastries filled with spiced beef, sold in bakeries and corner stores across the city."],
+    ],
+    pantry: ["Maple syrup", "Peameal bacon", "Cornmeal", "Scotch bonnets", "Niagara peaches", "Ice wine"],
+    history: [
+      ["1793", "John Graves Simcoe founded the town of York on the harbor. It was renamed Toronto in 1834."],
+      ["1954", "Canada’s first subway opened under Yonge Street, its stations lined with tile."],
+      ["1976", "The CN Tower opened. For more than thirty years it was the tallest free-standing structure in the world."],
+    ],
+  },
+  grachten: {
+    intro: "Amsterdam grew up around a dam on the Amstel River, and in the 1600s it ringed itself with canals lined by narrow, gabled merchant houses. Its food is Dutch comfort cooking with a strong thread of Indonesian and Surinamese flavors.",
+    facts: [["Where", "North Holland, on the IJ"], ["Founded", "City rights around 1300"], ["Spoken", "Dutch and English"]],
+    dishes: [
+      ["Stroopwafels", "Thin waffles sandwiched with caramel syrup, best warm from a market stall."],
+      ["Haring", "Lightly brined raw herring with onions and pickles, eaten from a street cart."],
+      ["Bitterballen", "Crisp fried balls of beef ragout, dipped in mustard and served alongside a beer."],
+      ["Rijsttafel", "An Indonesian “rice table” of a dozen or more small dishes, a legacy of colonial times."],
+    ],
+    pantry: ["Gouda", "Herring", "Speculaas spice", "Mustard", "Hagelslag", "Stroop"],
+    history: [
+      ["1275", "The name first appears in a toll exemption for the people living by the dam on the Amstel."],
+      ["1613", "Work began on the canal ring, now a UNESCO World Heritage Site."],
+      ["1637", "Dutch tulip prices collapsed in the first famous speculative bubble."],
+    ],
+  },
+  biergarten: {
+    intro: "Munich sits on the Isar River at the foot of the Alps and is the capital of Bavaria. Its kitchen is hearty: pork roasts, dumplings and pretzels, with beer brewed under a purity law more than five centuries old.",
+    facts: [["Where", "On the Isar, southern Bavaria"], ["Founded", "1158, by Duke Henry the Lion"], ["Spoken", "German and Bavarian"]],
+    dishes: [
+      ["Weißwurst", "Veal sausages simmered, never grilled, peeled and eaten with sweet mustard and a pretzel before noon."],
+      ["Schweinshaxe", "Roast pork knuckle with crackling, served with potato dumplings."],
+      ["Obatzda", "Ripe Camembert mashed with butter, paprika and onion, spread on dark bread in the beer garden."],
+      ["Brezn", "Bavarian pretzels with a glossy lye-dipped crust and coarse salt."],
+    ],
+    pantry: ["Sweet mustard", "Caraway", "Horseradish", "White radish", "Hops", "Lebkuchen spice"],
+    history: [
+      ["1158", "Duke Henry the Lion set up a market and toll bridge on the Isar, the start of the city."],
+      ["1516", "Bavaria’s purity law limited beer to barley, hops and water. Yeast was added once it was understood."],
+      ["1810", "The first Oktoberfest was a horse race celebrating the wedding of Crown Prince Ludwig and Princess Therese."],
+    ],
+  },
+  getreidegasse: {
+    intro: "Salzburg sits on the Salzach River beneath the Hohensalzburg Fortress, its old town a maze of baroque churches and narrow lanes. The city grew rich on salt, was ruled for centuries by prince-archbishops, and is Mozart’s birthplace.",
+    facts: [["Where", "On the Salzach, by the German border"], ["Founded", "By Saint Rupert, around 700"], ["Spoken", "German and Austro-Bavarian"]],
+    dishes: [
+      ["Salzburger Nockerl", "Three peaks of sweet soufflé, said to stand for the hills around the city."],
+      ["Mozartkugel", "Pistachio marzipan and nougat in dark chocolate, first made by confectioner Paul Fürst in 1890."],
+      ["Kasnocken", "Little dumplings tossed with sharp mountain cheese and crisp onions, from the alpine valleys."],
+      ["Bosna", "A grilled sausage in a bun with onions and curry powder, a Salzburg street snack since 1949."],
+    ],
+    pantry: ["Salt", "Mountain cheese", "Marzipan", "Pistachios", "Quark", "Apricots"],
+    history: [
+      ["1077", "Work began on the Hohensalzburg Fortress, now one of the largest medieval castles in Europe."],
+      ["1756", "Wolfgang Amadeus Mozart was born at Getreidegasse 9."],
+      ["1964", "The Sound of Music was filmed around the city and its lakes."],
+    ],
+  },
+  secession: {
+    intro: "Vienna lies on the Danube at the eastern edge of the Alps, for centuries the seat of the Habsburgs. Its coffeehouses, where one coffee buys an afternoon at a marble table, are part of Austria’s list of intangible cultural heritage.",
+    facts: [["Where", "On the Danube, eastern Austria"], ["Founded", "As the Roman camp of Vindobona"], ["Spoken", "German and Viennese dialect"]],
+    dishes: [
+      ["Wiener Schnitzel", "Veal pounded thin, breaded and fried until the crust ripples away from the meat."],
+      ["Sachertorte", "Chocolate cake with a layer of apricot jam under a dark chocolate glaze, first made in 1832."],
+      ["Tafelspitz", "Boiled beef in its broth with apple-horseradish and chive sauce, a Habsburg favorite."],
+      ["Apfelstrudel", "Apples, raisins and cinnamon in pastry stretched so thin you can read through it."],
+    ],
+    pantry: ["Apricot jam", "Poppy seeds", "Horseradish", "Paprika", "Veal", "Dark chocolate"],
+    history: [
+      ["1683", "The Ottoman siege of Vienna was lifted. Legend says the sacks of coffee left behind started the city’s coffeehouses."],
+      ["1897", "Gustav Klimt, Josef Hoffmann and others founded the Vienna Secession to break with the academy."],
+      ["1903", "Hoffmann and Koloman Moser founded the Wiener Werkstätte, known for its black-and-white grids."],
     ],
   },
 };
