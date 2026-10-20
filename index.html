@@ -8345,7 +8345,7 @@ function wireGlobe() {
     if (!sw.moved) {
       if (Math.abs(e.clientX - sw.x) < 7) return;
       sw.moved = true; sw.x = e.clientX; sw.pos = g.pos; // start from here, so the cards don't jump
-      try { rail.setPointerCapture(e.pointerId); } catch { /* the touch already ended */ }
+      if (e.pointerType === 'mouse') try { rail.setPointerCapture(e.pointerId); } catch { /* already let go */ }
       g.slide = null; g.flight = null; g.mode = 'rail';
     }
     g.pos = sw.pos - (e.clientX - sw.x) / g.stride;
@@ -8370,7 +8370,7 @@ function wireGlobe() {
   };
   rail.addEventListener('pointerup', swipeEnd);
   rail.addEventListener('pointercancel', swipeEnd);
-  rail.addEventListener('lostpointercapture', swipeEnd);
+  rail.addEventListener('lostpointercapture', e => { if (e.target === rail) swipeEnd(e); });
   // trackpads and mouse wheels slide the cards too
   rail.addEventListener('wheel', e => {
     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
