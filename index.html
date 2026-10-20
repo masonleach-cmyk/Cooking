@@ -3577,14 +3577,11 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 }
 [data-theme="honkytonk"] .ticket::before { display: none; }
 [data-theme="honkytonk"] .ticket-num {
-  display: grid; place-items: center; width: 38px; height: 38px; padding-bottom: 7px; transform: rotate(-8deg);
+  display: grid; place-items: center; width: 38px; height: 38px; padding-bottom: 6px;
   clip-path: path('M19 38C8 31 0 19 1 10C2 3 9 0 19 0C29 0 36 3 37 10C38 19 30 31 19 38Z');
-  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .28), transparent 45%), #1B3354;
-  color: #FFF1D2; font: 800 1.02rem/1 var(--text);
+  background: #E8742A; color: #1F2A44; font: 800 1.05rem/1 var(--text);
 }
-[data-theme="honkytonk"] .ticket:nth-child(3n+2) .ticket-num { background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .3), transparent 45%), #B8481E; transform: rotate(6deg); }
-[data-theme="honkytonk"] .ticket:nth-child(3n) .ticket-num { background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .3), transparent 45%), #2A9188; transform: rotate(-3deg); }
-[data-mode="dark"] [data-theme="honkytonk"] .ticket:nth-child(3n+1) .ticket-num, [data-mode="dark"][data-theme="honkytonk"] .ticket:nth-child(3n+1) .ticket-num { background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .3), transparent 45%), #3A5A8C; }
+[data-theme="honkytonk"] .ticket:nth-child(even) .ticket-num { background: #2A9D8F; color: #FFFFFF; }
 [data-theme="honkytonk"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); }
 /* Subway Tile */
 [data-theme="subway"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .24em; }
@@ -3669,6 +3666,8 @@ html[data-theme="getreidegasse"]:not([data-view="page"]) .band-settings { backgr
 [data-theme="herbarium"], [data-theme="jaipur"], [data-theme="mercado"], [data-theme="lanterns"], [data-theme="aloha"], [data-theme="biergarten"], [data-theme="getreidegasse"], [data-theme="honkytonk"] { --trim-bar: var(--trim); --trim-home-bar: var(--trim-home); }
 /* and nothing of the bar fades in behind a pinned trim, so the gaps stay clear */
 .navbar.trim-pinned .nav-edge { opacity: 0; transition: none; }
+/* the bar's soft fade edge would show through the gaps as the trim slides up to it, so these themes go without */
+[data-theme="herbarium"] .nav-edge, [data-theme="jaipur"] .nav-edge, [data-theme="mercado"] .nav-edge, [data-theme="lanterns"] .nav-edge, [data-theme="aloha"] .nav-edge, [data-theme="biergarten"] .nav-edge, [data-theme="getreidegasse"] .nav-edge, [data-theme="honkytonk"] .nav-edge, [data-theme="patisserie"] .nav-edge, [data-theme="izakaya"] .nav-edge { display: none; }
   </style>
 
   <script>
