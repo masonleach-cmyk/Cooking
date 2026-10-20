@@ -2774,22 +2774,6 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
 .gx-titles h2 { margin: 0; font: 800 1rem/1.2 var(--text); letter-spacing: .01em; }
 .gx-titles p { margin: .15rem 0 0; font: 700 .76rem/1.2 var(--text); opacity: .6; }
 
-/* zoom buttons, just above the cards on the right (pinching works too) */
-.gx-zoom {
-  position: absolute; z-index: 2; right: .8rem; top: calc(var(--gx-rail-top, 70vh) - 6.6rem);
-  display: flex; flex-direction: column; gap: .45rem;
-  transition: opacity .4s ease .3s;
-}
-.gx-zbtn {
-  display: grid; place-items: center; width: 2.6rem; height: 2.6rem; padding: 0;
-  border: 0; border-radius: 50%; cursor: pointer; color: #FFFFFF;
-  background: rgba(20, 24, 40, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  transition: opacity .2s ease;
-}
-.gx-zbtn:disabled { opacity: .35; cursor: default; }
-.gx-zbtn:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
-.gx.gx-enter .gx-zoom, .gx.gx-leave .gx-zoom { opacity: 0; transition-delay: 0s; transition-duration: .2s; }
 
 /* the cards all sit in one spot; script slides each one sideways (the translate property),
    wrapping round, so the rail has no ends and swiping goes on forever */
@@ -2836,7 +2820,7 @@ html.gx-lock, html.gx-lock body { overflow: hidden; }
   .gx-note { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gx, .gx-rail, .gx-head, .gx-card, .gx-zoom { transition: none; }
+  .gx, .gx-rail, .gx-head, .gx-card { transition: none; }
   .gx-card.just-chosen { animation: none; }
 }
 
@@ -3220,25 +3204,24 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
 /* ================================================================
    Third set: Seattle, Park City, Austin, Toronto, Amsterdam, Munich, Salzburg, Vienna.
    ================================================================ */
-/* ---------- Pike Place: a neon market sign over evergreens in the rain ---------- */
+/* ---------- Salish Sea: Coast Salish salmon, circles and crescents, and a woven wool border ---------- */
 [data-theme="pikeplace"] {
-  --cream: #F5F4EF; --card: #FFFFFF; --aqua: #1E4A3D; --aqua-deep: #22313A; --heading: #1E5A48; --cherry: #C3302A;
-  --cherry-ink: #FFFFFF; --ink: #1B2326; --muted: #515C60; --line: #E0E4E1; --dash: #D6DBD6; --star-off: #E3E5E0;
-  --tab: #172024; --tab-text: #B7C3C6; --mustard: #C9961E; --display: 'Oswald', 'Arial Narrow', sans-serif;
+  --cream: #F5F1E8; --card: #FFFFFF; --aqua: #1D4F5C; --aqua-deep: #1E1A18; --heading: #1A5866; --cherry: #B0302A;
+  --cherry-ink: #FFFFFF; --ink: #1C1A18; --muted: #56514A; --line: #E6E0D3; --dash: #DCD3C2; --star-off: #E7E1D5;
+  --tab: #14262B; --tab-text: #BCCBCD; --mustard: #B8861F; --display: 'Bitter', 'Rockwell', Georgia, serif;
   --text: 'Source Sans 3', -apple-system, 'Helvetica Neue', sans-serif; --display-weight: 700; --display-style: normal;
-  --radius: 10px; --pill-r: 8px;
-  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.09)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #22313A;
-  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.1)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #1E4A3D;
-  --band-ink: #F2F0EA; --band-home-ink: #F2F0EA; --sign-ink: #F2F0EA; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .35); --sign-spacing: .02em;
-  --plate-bg: #191D20; --plate-ink: #FF6B5F; --plate-border: 2px solid #C9C3B4;
-  --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #C9C3B4, 0 14px 24px -10px rgba(0, 0, 0, .6); --plate-radius: 8px;
-  --plate-pad: .85rem 1.5rem .75rem; --plate-kicker: 'Public Market';
-  --plate-sign-shadow: 0 0 4px rgba(255, 90, 78, .9), 0 0 14px rgba(255, 60, 50, .55); --plate-accent: #C9C3B4;
-  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%232E5566'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%23143528'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.35)'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 26px; --trim-mask: none;
-  --pill-light-bg: #F2F0EA; --pill-light-ink: #1B2326;
-  --rating-bg: #F2F0EA; --rating-on: #C3302A; --rating-off: #E3E5E0; --rating-focus: #1E5A48; --tab-active: #8FD3B4;
-  --tab-badge: #C3302A; --tab-badge-ink: #FFFFFF; --fav-on: #FF8A80; --label-bg: #191D20; --label-ink: #F2F0EA;
-  --kicker: #F4C35A;
+  --radius: 12px; --pill-r: 999px;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%231E1A18'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.2)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%231E1A18'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%231E1A18'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%231E1A18'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.2)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%231E1A18'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%231E1A18'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%231E1A18'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(214,90,70,0.2)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%231E1A18'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(214,90,70,0.2)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%231E1A18'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%231E1A18'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(214,90,70,0.2)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%231E1A18'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(214,90,70,0.2)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%231E1A18'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%231E1A18'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(214,90,70,0.2)'/%3E%3C/svg%3E") 0 0 / 120px 84px;
+  --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%231D4F5C'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.13)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%231D4F5C'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%231D4F5C'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%231D4F5C'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.13)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%231D4F5C'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%231D4F5C'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%231D4F5C'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(236,228,212,0.13)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%231D4F5C'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(236,228,212,0.13)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%231D4F5C'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%231D4F5C'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(236,228,212,0.13)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%231D4F5C'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(236,228,212,0.13)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%231D4F5C'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%231D4F5C'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(236,228,212,0.13)'/%3E%3C/svg%3E") 0 0 / 120px 84px;
+  --band-ink: #F5F1E8; --band-home-ink: #F5F1E8; --sign-ink: #F5F1E8; --sign-shadow: 0 2px 0 rgba(0, 0, 0, .3); --sign-spacing: 0;
+  --plate-bg: #F1E9D8; --plate-ink: #1C1A18; --plate-border: 3px solid #1C1A18;
+  --plate-ring: 0 0 0 4px #F1E9D8, 0 0 0 7px #B0302A, 0 14px 22px -10px rgba(0, 0, 0, .5); --plate-radius: 999px;
+  --plate-pad: .85rem 1.9rem .8rem; --plate-kicker: none; --plate-sign-shadow: none; --plate-accent: #B0302A;
+  --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect width='32' height='30' fill='%23EDE3CF'/%3E%3Crect width='32' height='2.2' fill='%231C1A18'/%3E%3Crect y='27.8' width='32' height='2.2' fill='%231C1A18'/%3E%3Crect y='4' width='32' height='1' fill='%23B0302A'/%3E%3Crect y='25' width='32' height='1' fill='%23B0302A'/%3E%3Cpath d='M-8 9L0 22L8 9L16 22L24 9L32 22L40 9' fill='none' stroke='%23B0302A' stroke-width='3.6'/%3E%3Cpath d='M0 11L3 15L0 19L-3 15Z M16 11L19 15L16 19L13 15Z M32 11L35 15L32 19L29 15Z' fill='%231C1A18'/%3E%3Cpath d='M8 15.5L10 18.5L8 21.5L6 18.5Z M24 15.5L26 18.5L24 21.5L22 18.5Z' fill='%231C1A18'/%3E%3C/svg%3E"); --trim-home: var(--trim); --trim-h: 30px; --trim-mask: none;
+  --pill-light-bg: #FFFFFF; --pill-light-ink: #1C1A18;
+  --rating-bg: #FFFFFF; --rating-on: #B0302A; --rating-off: #E7E1D5; --rating-focus: #1A5866; --tab-active: #7FC6CF;
+  --tab-badge: #B0302A; --tab-badge-ink: #FFFFFF; --fav-on: #FF8A7A; --label-bg: #14262B; --label-ink: #F5F1E8;
+  --kicker: #B0302A;
   color-scheme: light;
 }
 /* ---------- Trail Map: ski-run signs over a topo map and snowy Wasatch peaks ---------- */
@@ -3385,13 +3368,13 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
   color-scheme: light;
 }
 [data-mode="dark"][data-theme="pikeplace"], [data-mode="dark"] [data-theme="pikeplace"] {
-    --cream: #0F1416; --card: #182024; --aqua: #173A30; --aqua-deep: #182329; --heading: #8FD6B8; --cherry: #F0645A;
-    --cherry-ink: #2A0705; --ink: #ECEFEA; --muted: #A6B1B0; --line: #25323A; --dash: #2E3B42; --star-off: #34424A;
-    --tab: #080C0E; --tab-text: #9FACAF; --mustard: #E6B44E;
-    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.06)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #182329; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.07)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #173A30;
-    --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #8E897D, 0 14px 24px -10px rgba(0, 0, 0, .8); --plate-border: 2px solid #8E897D;
-    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%231C3640'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%230B2119'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.18)'/%3E%3C/svg%3E");
-    --rating-off: #DCE0DC; --tab-badge: #F0645A; --tab-badge-ink: #2A0705; --label-bg: #0A0D0F;
+    --cream: #0F1314; --card: #192022; --aqua: #133A44; --aqua-deep: #121010; --heading: #8FD0DA; --cherry: #E35F55;
+    --cherry-ink: #2A0503; --ink: #EEF1EF; --muted: #A9B2B1; --line: #263133; --dash: #2F3A3C; --star-off: #374244;
+    --tab: #080B0C; --tab-text: #9FADAF; --mustard: #E2B04A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%23121010'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.16)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23121010'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23121010'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23121010'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.16)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23121010'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23121010'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23121010'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(214,90,70,0.16)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%23121010'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(214,90,70,0.16)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%23121010'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%23121010'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(214,90,70,0.16)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%23121010'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(214,90,70,0.16)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%23121010'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%23121010'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(214,90,70,0.16)'/%3E%3C/svg%3E") 0 0 / 120px 84px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%23133A44'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.1)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23133A44'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23133A44'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23133A44'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.1)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23133A44'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23133A44'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23133A44'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(236,228,212,0.1)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%23133A44'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(236,228,212,0.1)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%23133A44'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%23133A44'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(236,228,212,0.1)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%23133A44'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(236,228,212,0.1)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%23133A44'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%23133A44'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(236,228,212,0.1)'/%3E%3C/svg%3E") 0 0 / 120px 84px;
+    --plate-bg: #E6DDCB; --plate-ring: 0 0 0 4px #E6DDCB, 0 0 0 7px #C8463D, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect width='32' height='30' fill='%23CFC4AD'/%3E%3Crect width='32' height='2.2' fill='%23151312'/%3E%3Crect y='27.8' width='32' height='2.2' fill='%23151312'/%3E%3Crect y='4' width='32' height='1' fill='%23A82C26'/%3E%3Crect y='25' width='32' height='1' fill='%23A82C26'/%3E%3Cpath d='M-8 9L0 22L8 9L16 22L24 9L32 22L40 9' fill='none' stroke='%23A82C26' stroke-width='3.6'/%3E%3Cpath d='M0 11L3 15L0 19L-3 15Z M16 11L19 15L16 19L13 15Z M32 11L35 15L32 19L29 15Z' fill='%23151312'/%3E%3Cpath d='M8 15.5L10 18.5L8 21.5L6 18.5Z M24 15.5L26 18.5L24 21.5L22 18.5Z' fill='%23151312'/%3E%3C/svg%3E");
+    --rating-off: #E1DBCF; --tab-badge: #E35F55; --tab-badge-ink: #2A0503; --label-bg: #0A1518;
     color-scheme: dark;
   }
 [data-mode="dark"][data-theme="trailmap"], [data-mode="dark"] [data-theme="trailmap"] {
@@ -3467,13 +3450,13 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
   }
 @media (prefers-color-scheme: dark) {
   [data-mode="auto"][data-theme="pikeplace"], [data-mode="auto"] [data-theme="pikeplace"] {
-    --cream: #0F1416; --card: #182024; --aqua: #173A30; --aqua-deep: #182329; --heading: #8FD6B8; --cherry: #F0645A;
-    --cherry-ink: #2A0705; --ink: #ECEFEA; --muted: #A6B1B0; --line: #25323A; --dash: #2E3B42; --star-off: #34424A;
-    --tab: #080C0E; --tab-text: #9FACAF; --mustard: #E6B44E;
-    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.06)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #182329; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 2l-3 8M23 14l-3 8M13 26l-3 8M33 5l-2 5' stroke='rgba(255,255,255,0.07)' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 36px 36px, #173A30;
-    --plate-ring: 0 0 0 4px #191D20, 0 0 0 6px #8E897D, 0 14px 24px -10px rgba(0, 0, 0, .8); --plate-border: 2px solid #8E897D;
-    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Crect width='34' height='26' fill='%231C3640'/%3E%3Cpath d='M9 4.0L12.3 15.0L5.7 15.0ZM9 10.2L13.8 20.7L4.2 20.7ZM9 15.4L15.0 24.5L3.0 24.5ZM8.1 24.4h1.8v1.6h-1.8zM26 11.0L28.5 18.5L23.5 18.5ZM26 15.2L29.6 22.4L22.4 22.4ZM26 18.8L30.5 24.5L21.5 24.5ZM25.1 24.4h1.8v1.6h-1.8z' fill='%230B2119'/%3E%3Crect y='24.6' width='34' height='1.4' fill='rgba(255,255,255,.18)'/%3E%3C/svg%3E");
-    --rating-off: #DCE0DC; --tab-badge: #F0645A; --tab-badge-ink: #2A0705; --label-bg: #0A0D0F;
+    --cream: #0F1314; --card: #192022; --aqua: #133A44; --aqua-deep: #121010; --heading: #8FD0DA; --cherry: #E35F55;
+    --cherry-ink: #2A0503; --ink: #EEF1EF; --muted: #A9B2B1; --line: #263133; --dash: #2F3A3C; --star-off: #374244;
+    --tab: #080B0C; --tab-text: #9FADAF; --mustard: #E2B04A;
+    --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%23121010'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.16)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23121010'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23121010'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23121010'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(214,90,70,0.16)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23121010'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23121010'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23121010'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(214,90,70,0.16)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%23121010'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(214,90,70,0.16)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%23121010'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%23121010'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(214,90,70,0.16)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%23121010'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(214,90,70,0.16)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%23121010'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%23121010'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(214,90,70,0.16)'/%3E%3C/svg%3E") 0 0 / 120px 84px; --band-home-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='84' viewBox='0 0 120 84'%3E%3Crect width='120' height='84' fill='%23133A44'/%3E%3Cg transform='translate(8 10) scale(0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.1)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23133A44'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23133A44'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23133A44'/%3E%3C/g%3E%3Cg transform='translate(107.8 52) scale(-0.95 0.95)'%3E%3Cpath d='M0 10C7 1 25 0 33 8L43 1.5L40.5 10L43 18.5L33 12C25 20 7 19 0 10Z' fill='rgba(236,228,212,0.1)'/%3E%3Cpath d='M9.5 4.6C7.4 7.6 7.4 12.4 9.5 15.4C8.8 12 8.8 8 9.5 4.6Z' fill='%23133A44'/%3E%3Ccircle cx='5.4' cy='9' r='1.5' fill='%23133A44'/%3E%3Cpath d='M14 7.2L20.5 7.2L17.2 10.6Z M22 12.8L28.5 12.8L25.2 9.4Z M30 8.4L34.5 9.6L30.6 11.8Z' fill='%23133A44'/%3E%3C/g%3E%3Ccircle cx='92' cy='20' r='7' fill='rgba(236,228,212,0.1)'/%3E%3Ccircle cx='92' cy='20' r='4.34' fill='%23133A44'/%3E%3Ccircle cx='92' cy='20' r='2.52' fill='rgba(236,228,212,0.1)'/%3E%3Crect x='84.00' y='19.10' width='2.94' height='1.8' fill='%23133A44'/%3E%3Crect x='97.06' y='19.10' width='2.94' height='1.8' fill='%23133A44'/%3E%3Ccircle cx='28' cy='62' r='5' fill='rgba(236,228,212,0.1)'/%3E%3Ccircle cx='28' cy='62' r='3.10' fill='%23133A44'/%3E%3Ccircle cx='28' cy='62' r='1.80' fill='rgba(236,228,212,0.1)'/%3E%3Crect x='22.00' y='61.10' width='2.10' height='1.8' fill='%23133A44'/%3E%3Crect x='31.90' y='61.10' width='2.10' height='1.8' fill='%23133A44'/%3E%3Cpath d='M58 32L64 32L61 36Z M100 72L106 72L103 76Z M16 38L21 38L18.5 41.5Z' fill='rgba(236,228,212,0.1)'/%3E%3C/svg%3E") 0 0 / 120px 84px;
+    --plate-bg: #E6DDCB; --plate-ring: 0 0 0 4px #E6DDCB, 0 0 0 7px #C8463D, 0 14px 22px -10px rgba(0, 0, 0, .8);
+    --trim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='30' viewBox='0 0 32 30'%3E%3Crect width='32' height='30' fill='%23CFC4AD'/%3E%3Crect width='32' height='2.2' fill='%23151312'/%3E%3Crect y='27.8' width='32' height='2.2' fill='%23151312'/%3E%3Crect y='4' width='32' height='1' fill='%23A82C26'/%3E%3Crect y='25' width='32' height='1' fill='%23A82C26'/%3E%3Cpath d='M-8 9L0 22L8 9L16 22L24 9L32 22L40 9' fill='none' stroke='%23A82C26' stroke-width='3.6'/%3E%3Cpath d='M0 11L3 15L0 19L-3 15Z M16 11L19 15L16 19L13 15Z M32 11L35 15L32 19L29 15Z' fill='%23151312'/%3E%3Cpath d='M8 15.5L10 18.5L8 21.5L6 18.5Z M24 15.5L26 18.5L24 21.5L22 18.5Z' fill='%23151312'/%3E%3C/svg%3E");
+    --rating-off: #E1DBCF; --tab-badge: #E35F55; --tab-badge-ink: #2A0503; --label-bg: #0A1518;
     color-scheme: dark;
   }
   [data-mode="auto"][data-theme="trailmap"], [data-mode="auto"] [data-theme="trailmap"] {
@@ -3548,17 +3531,19 @@ body[data-view="cook"] .toast.show { transform: translate(-50%, 0); }
     color-scheme: dark;
   }
 }
-/* Pike Place */
-[data-theme="pikeplace"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .3em; text-shadow: 0 0 6px rgba(244, 195, 90, .7); }
-[data-theme="pikeplace"] .ticket { border: 1.5px solid var(--line); border-radius: 10px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.7rem 1fr; padding: 1rem; }
+/* Salish Sea */
+[data-theme="pikeplace"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .28em; }
+/* step numbers in a circle held between two crescents */
+[data-theme="pikeplace"] .ticket { border: 1.5px solid var(--line); border-radius: 12px; box-shadow: 0 2px 0 var(--dash); grid-template-columns: 2.8rem 1fr; padding: 1rem; }
 [data-theme="pikeplace"] .ticket::before { display: none; }
 [data-theme="pikeplace"] .ticket-num {
-  display: grid; place-items: center; width: 2.35rem; height: 2.35rem; border-radius: 7px;
-  background: #191D20; color: #FF6B5F; font-size: 1.25rem; text-shadow: 0 0 5px rgba(255, 90, 78, .85);
-  box-shadow: inset 0 0 0 1.5px #C9C3B4;
+  display: grid; place-items: center; width: 2.45rem; height: 2.45rem; border-radius: 50%;
+  border: 3.5px solid transparent; border-left-color: #B0302A; border-right-color: #B0302A;
+  background: #1C1A18 padding-box; color: #F5F1E8; font: 700 1.05rem/1 var(--text);
+  box-shadow: inset 0 0 0 2.5px var(--card);
 }
-[data-theme="pikeplace"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); text-shadow: none; box-shadow: none; }
-[data-theme="pikeplace"] .tp-num { text-shadow: none; }
+[data-mode="dark"] [data-theme="pikeplace"] .ticket-num, [data-mode="dark"][data-theme="pikeplace"] .ticket-num { background-color: #E6DDCB; color: #1C1A18; }
+[data-theme="pikeplace"] .ticket.done .ticket-num { background: var(--line); color: var(--muted); border-color: transparent; box-shadow: none; }
 /* Trail Map */
 [data-theme="trailmap"] .sign-plate::before { color: var(--kicker); opacity: 1; letter-spacing: .22em; }
 /* steps marked like ski runs: green circle, blue square, black diamond, round and round */
@@ -3766,8 +3751,8 @@ html[data-theme="getreidegasse"]:not([data-view="page"]) .band-settings { backgr
     aloha: { name: "Aloha", tagline: "Hibiscus aloha print, a plumeria lei & Pacific teal",
       color: ["#127A86", "#0A4B55"], fonts: "family=Pacifico&family=Quicksand:wght@400;600;700",
       steps: "Hoʻomākaukau", stepHint: STEP },
-    pikeplace: { name: "Pike Place", tagline: "A neon market sign, evergreen rain & Puget Sound blue",
-      color: ["#1E4A3D", "#173A30"], fonts: "family=Oswald:wght@600;700&family=Source+Sans+3:wght@400;600;700;800",
+    pikeplace: { name: "Salish Sea", tagline: "Coast Salish salmon, circles & crescents, with a woven wool border",
+      color: ["#1D4F5C", "#133A44"], fonts: "family=Bitter:wght@700;800&family=Source+Sans+3:wght@400;600;700;800",
       steps: "The method", stepHint: STEP },
     trailmap: { name: "Trail Map", tagline: "Ski-run trail signs, a topo map & alpenglow over the peaks",
       color: ["#2C5A8C", "#1C3A5C"], fonts: "family=Bowlby+One&family=Barlow:wght@400;600;700;800",
@@ -7309,8 +7294,8 @@ const PLACES = {
                 note: "Masi bark cloth, stenciled in rust and black, for feasts and weddings" },
   aloha:      { city: "Honolulu", country: "United States", lat: 21.31, lon: -157.86, glow: '#FF7A6B', night: '#06202A',
                 note: "Hibiscus aloha shirts and plumeria leis on the Waikīkī shore" },
-  pikeplace: { city: "Seattle", country: "United States", lat: 47.61, lon: -122.34, glow: "#FF6B5F", night: "#0B1618",
-                note: "The neon Public Market sign, salmon on ice and evergreens in the rain" },
+  pikeplace: { city: "Seattle", country: "United States", lat: 47.61, lon: -122.34, glow: "#E35F55", night: "#081A1E",
+                note: "Coast Salish salmon and crescents, and wool woven in zigzags, on the shores of the Salish Sea" },
   trailmap: { city: "Park City", country: "United States", lat: 40.65, lon: -111.5, glow: "#7FB8FF", night: "#0A1528",
                 note: "Trail-map signs, a silver-mining Main Street and powder days in the Wasatch" },
   honkytonk: { city: "Austin", country: "United States", lat: 30.27, lon: -97.74, glow: "#FF9A3D", night: "#1A0F0A",
@@ -8258,10 +8243,6 @@ function openGlobe() {
       <div class="gx-titles"><h2 id="gxTitle">Tastes of the World</h2><p>Swipe the cards, pinch to zoom</p></div>
       <span aria-hidden="true"></span>
     </header>
-    <div class="gx-zoom" role="group" aria-label="Zoom">
-      <button class="gx-zbtn" data-zoom="in" aria-label="Zoom in"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-      <button class="gx-zbtn" data-zoom="out" aria-label="Zoom out" disabled><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-    </div>
     <div class="gx-rail" role="group" aria-label="Themes">${PLACE_ORDER.map(id => globeCard(id)).join('')}</div>`;
   document.body.appendChild(el);
 
@@ -8380,8 +8361,11 @@ function wireGlobe() {
     g.eatClick = performance.now() + 400;
     const [t0, x0] = sw.pts[0], dtm = performance.now() - t0;
     const vel = dtm > 0 && dtm < 160 ? -(e.clientX - x0) / g.stride / (dtm / 1000) : 0; // cards per second
-    let to = Math.round(g.pos + clamp(vel, -24, 24) * .22);
-    if (to === Math.round(g.pos) && Math.abs(vel) > .9) to = vel > 0 ? Math.floor(g.pos) + 1 : Math.ceil(g.pos) - 1; // a short flick still moves one
+    const from = Math.round(sw.pos), moved = g.pos - sw.pos;
+    let to = Math.round(g.pos);
+    const dir = Math.abs(vel) > .5 ? Math.sign(vel) : Math.abs(moved) > .18 ? Math.sign(moved) : 0;
+    if (to === from && dir) to = from + dir; // a short swipe or flick moves exactly one
+    if (dir && Math.sign(to - g.pos) === -dir && Math.abs(to - from) >= 1) to += dir; // never bounce back against the flick
     slideTo(to);
   };
   rail.addEventListener('pointerup', swipeEnd);
@@ -8471,13 +8455,7 @@ function wireGlobe() {
     setZoom(v.uz * Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0022)));
     g.lastTouch = performance.now();
   }, { passive: false });
-  el.querySelector('.gx-zoom').addEventListener('click', e => {
-    const b = e.target.closest('[data-zoom]');
-    if (!b) return;
-    let z = clamp((g.zoomTo ?? v.uz) * (b.dataset.zoom === 'in' ? 1.6 : 1 / 1.6), ZOOM_MIN, ZOOM_MAX);
-    if (z < 1.04) z = 1;
-    g.zoomTo = z;
-  });
+
 
   g.onResize = () => { layoutGlobe(); placeCards(); };
   window.addEventListener('resize', g.onResize);
@@ -8594,12 +8572,6 @@ function globeFrame(now, dt) {
   // zoom: the buttons ease toward their step, a pinch past either end settles back, closing zooms out
   const zWant = g.closing ? 1 : g.zoomTo ?? (g.pinch ? v.uz : clamp(v.uz, ZOOM_MIN, ZOOM_MAX));
   if (Math.abs(zWant - v.uz) > .0005) v.uz += (zWant - v.uz) * (1 - Math.exp(-dt * 9)); else v.uz = zWant;
-  const zb = `${v.uz <= ZOOM_MIN + .01}${v.uz >= ZOOM_MAX - .01}`;
-  if (g.zoomBtns !== zb) {
-    g.zoomBtns = zb;
-    g.el.querySelector('[data-zoom="out"]').disabled = v.uz <= ZOOM_MIN + .01;
-    g.el.querySelector('[data-zoom="in"]').disabled = v.uz >= ZOOM_MAX - .01;
-  }
   const lift = liftFor(v);
 
   // the cards glide to rest; the position can run on forever either way
@@ -8716,7 +8688,7 @@ function finishCloseGlobe() {
   updateThemeWindow();
   if (themeWindow) themeWindow.dirty = true;
   clearTimeout(g.wheelTimer);
-  Object.assign(globeUI, { el: null, v: null, rail: null, cards: null, swipe: null, slide: null, pinch: null, zoomTo: null, zoomBtns: null });
+  Object.assign(globeUI, { el: null, v: null, rail: null, cards: null, swipe: null, slide: null, pinch: null, zoomTo: null });
 }
 
 async function setTheme(id, { quiet = false } = {}) {
@@ -9233,7 +9205,7 @@ const TASTES = {
     ],
   },
   pikeplace: {
-    intro: "Seattle sits between Puget Sound and Lake Washington, with the Olympic Mountains to the west and Mount Rainier to the southeast. Its cooking leans on what the cold water and wet hills give: salmon, oysters, Dungeness crab, berries and wild mushrooms.",
+    intro: "Seattle, named for Chief Si’ahl of the Duwamish and Suquamish, sits between Puget Sound and Lake Washington, with the Olympics to the west and Mount Rainier to the southeast. Its cooking leans on what the cold water and wet hills give: salmon, oysters, Dungeness crab, berries and wild mushrooms.",
     facts: [["Where", "Puget Sound, Washington"], ["Founded", "Settled at Alki Point in 1851"], ["Spoken", "English, Spanish, Chinese and Vietnamese"]],
     dishes: [
       ["Cedar-plank salmon", "Wild salmon roasted on a soaked cedar board until it picks up the wood’s smoke."],
@@ -9245,7 +9217,7 @@ const TASTES = {
     history: [
       ["1907", "Pike Place Market opened so farmers could sell straight to shoppers. It’s one of the oldest continuously running public markets in the country."],
       ["1962", "The World’s Fair brought the Space Needle, built in about 400 days."],
-      ["1971", "The first Starbucks opened near the market, selling roasted beans rather than drinks."],
+      ["1940", "A new totem pole, carved by Tlingit artists in Alaska, went up in Pioneer Square. It replaced one that Seattle businessmen had taken from a Tlingit village in 1899."],
     ],
   },
   trailmap: {
