@@ -2903,13 +2903,13 @@ html.hdr-past body::before { visibility: hidden; }
 
 .navbar {
   position: fixed; z-index: 8; top: 0; left: 0; right: 0;
-  height: calc(var(--nav-h) + var(--nav-fade));
+  height: var(--nav-h);
   color: var(--hdr-ink); pointer-events: none;
 }
 .nav-bg { position: absolute; top: 0; left: 0; right: 0; height: var(--nav-h); overflow: hidden; }
 /* once the page moves, the bar's bottom edge melts into it, so content slides softly under */
 .nav-edge {
-  position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity .2s ease;
+  position: absolute; top: 0; left: 0; right: 0; height: calc(var(--nav-h) + var(--nav-fade)); overflow: hidden; opacity: 0; transition: opacity .2s ease;
   -webkit-mask: linear-gradient(transparent var(--nav-h), #000 var(--nav-h), transparent);
   mask: linear-gradient(transparent var(--nav-h), #000 var(--nav-h), transparent);
 }
