@@ -2949,16 +2949,18 @@ html.hdr-past body::before { background: var(--cream); }
 
 .checker { position: sticky; top: var(--nav-h); z-index: 9; background: var(--trim-bar, var(--trim)); }
 .band-home + .checker { background: var(--trim-home-bar, var(--trim-home)); }
-/* Once the trim reaches the bar it hands over to an identical copy that lives inside the fixed
-   bar, so the two move as one piece. (On iPhone a sticky strip under a fixed bar can lag a
-   frame behind on a fast scroll, which made the trim jitter and flash a seam.) */
+/* Once the trim reaches the bar it hands over to an identical copy pinned just under it, so the
+   two never drift apart. (On iPhone a sticky strip under a fixed bar can lag a frame behind on a
+   fast scroll, which made the trim jitter and flash a seam.) The copy is its own fixed layer, not
+   part of the bar: iOS 26 shades behind a fixed header, and with the trim inside the bar that
+   shading filled the gaps of see-through trims with a dark box. */
 .nav-trim {
-  position: absolute; left: 0; right: 0; top: var(--nav-h); height: var(--trim-h);
+  position: fixed; z-index: 8; left: 0; right: 0; top: var(--nav-h); height: var(--trim-h);
   background: var(--trim-bar, var(--trim)); -webkit-mask: var(--trim-mask); mask: var(--trim-mask);
   visibility: hidden; pointer-events: none;
 }
 html[data-view="home"] .nav-trim { background: var(--trim-home-bar, var(--trim-home)); }
-.navbar.trim-pinned .nav-trim { visibility: visible; }
+.navbar.trim-pinned + .nav-trim { visibility: visible; }
 .navbar.trim-pinned ~ .checker { visibility: hidden; }
 
 /* see-through trims get the page color behind them, since they pin over the content */
@@ -6385,13 +6387,13 @@ function band(inner, cls = '', nav = {}) {
     <div class="navbar">
       <div class="nav-bg" aria-hidden="true"><i></i></div>
       <div class="nav-edge" aria-hidden="true"><i></i></div>
-      <div class="nav-trim" aria-hidden="true"></div>
       <div class="nav-row">
         <div class="nav-side nav-left">${left}</div>
         <div class="nav-title" aria-hidden="true"><span>${esc(title)}</span></div>
         <div class="nav-side nav-right">${right}</div>
       </div>
     </div>
+    <div class="nav-trim" aria-hidden="true"></div>
     <header class="band ${cls}">${inner}</header><div class="checker" aria-hidden="true"></div>`;
 }
 const backTo = (href, label) => `<a class="back" href="${href}">${label}</a>`;
